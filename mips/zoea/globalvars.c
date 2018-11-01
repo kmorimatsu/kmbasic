@@ -75,5 +75,10 @@ int* g_libparams;
 // Number of long name variables
 int g_long_name_var_num;
 
+// Class name being compiled
+int g_class;
+// Pointer to lass list
+int* g_classlist;
+
 // General purpose integer used for asigning value with pointer
 int g_temp;

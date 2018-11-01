@@ -32,6 +32,7 @@ const unsigned char _debug_filename[] __attribute__((address(FILENAME_FLASH_ADDR
 
 static const char initext[];
 static const char bastext[];
+static const char classtext[];
 
 static char* readtext;
 static int filepos;
@@ -61,8 +62,6 @@ int debugDump(){
 
 	printstr("BASIC "BASVER"\n");
 	wait60thsec(15);
-	// Initialize music
-	init_music();
 
 	printstr("Compiling...");
 
@@ -88,7 +87,6 @@ int debugDump(){
 	// Work area (used for A-Z values) is next to the object code area.
 	start_program((void*)(&(RAM[0])),(void*)(&g_var_mem[0]));
 	printstr("\nOK\n");
-	set_graphmode(0);
 	g_use_graphic=0;
 
 	return 1;
@@ -133,7 +131,12 @@ FSFILE* FSfopen(const char * fileName, const char *mode){
 		readtext=(char*)&initext[0];
 	} else if (fileName[i+1]=='B' && fileName[i+2]=='A' && fileName[i+3]=='S') {
 		// BAS file
-		readtext=(char*)&bastext[0];
+		if (fileName[i-6]=='C' && fileName[i-5]=='L' && fileName[i-4]=='A' &&
+			fileName[i-3]=='S' && fileName[i-2]=='S' && fileName[i-1]=='1') {
+			readtext=(char*)&classtext[0];
+		} else {
+			readtext=(char*)&bastext[0];
+		}
 		// Try debugDump.
 		if (debugDump()) return 0;
 	} else {
@@ -224,9 +227,13 @@ static const char initext[]=
 
 static const char bastext[]=
 "CLS\n"
-"DIM S(512)\n"
-"EXEC 0x8fdd0012, 0x27bd07fc\n"
-"print s\n"
+"useclass class1\n"
+"print \"MAIN\"\n"
+"\n";
+
+static const char classtext[]=
+"REM\n"
+"print \"CLASS1\"\n"
 "\n";
 
 /*

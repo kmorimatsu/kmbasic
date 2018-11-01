@@ -44,17 +44,16 @@ int runbasic(char *appname,int test){
 
 	// Set grobal pointer
 	g_gp=get_gp();
-	// Set source positions
+	// Set buffer positions
 	buff=(char*)&(RAM[RAMSIZE-512]);
-	g_source=(char*)(&buff[0]);
-	g_srcpos=0;
 	// Set object positions
 	g_object=(int*)(&RAM[0]);
 	g_objpos=0;
 	g_objmax=g_object+(RAMSIZE-512)/4; // Buffer area excluded.
 	// Clear object area
 	for(i=0;i<RAMSIZE/4;i++) g_object[i]=0x00000000;
-	// Initialize SD card file system
+
+	// Check file error
 	err=init_file(buff,appname);
 	if (err) {
 		setcursorcolor(COLOR_ERRORTEXT);
@@ -63,6 +62,7 @@ int runbasic(char *appname,int test){
 		printchar('\n');
 		return -1;
 	}
+	close_file();	
 
 	// Initialize parameters
 	g_pcg_font=0;
@@ -73,41 +73,17 @@ int runbasic(char *appname,int test){
 	g_long_name_var_num=0;
 	cmpdata_init();
 
+	// Initialize music system
+	init_music();
+
 	printstr("BASIC "BASVER"\n");
 	wait60thsec(15);
-	// Initialize music
-	init_music();
 
 	printstr("Compiling...");
 
 	// Compile the file
-	err=compile_file();
-	close_file();
-	if (err) {
-		// Compile error
-		printstr(err);
-		printstr("\nAround: '");
-		for(i=0;i<5;i++){
-			printchar(g_source[g_srcpos-2+i]);
-		}
-		printstr("' in line ");
-		printdec(g_line);
-		printstr("\n");
-		for(i=g_srcpos;0x20<=g_source[i];i++);
-		g_source[i]=0x00;
-		for(i=g_srcpos;0x20<=g_source[i];i--);
-		printstr(g_source+i);
-		return g_fileline;
-	}
-
-	// Link
-	err=link();
-	if (err) {
-		// Link error
-		printstr(err);
-		printstr(resolve_label(g_label));
-		return -2;
-	}
+	i=compile_and_link_file(buff,appname);
+	if (i) return i;
 
 	// All done
 	printstr("done\n");
@@ -134,14 +110,17 @@ int runbasic(char *appname,int test){
 	// Assign memory
 	set_free_area((void*)(g_object+g_objpos),(void*)(&RAM[RAMSIZE]));
 
+	// Warm up environment
+	pre_run();
+
 	// Execute program
 	// Start program from the beginning of RAM.
 	// Work area (used for A-Z values) is next to the object code area.
 	start_program((void*)(&(RAM[0])),(void*)(&g_var_mem[0]));
 	printstr("\nOK\n");
-	// Cool down
-	set_graphmode(0);
-	g_use_graphic=0;
+
+	// Cool down environment
+	post_run();
 	lib_file(FUNC_FINIT,0,0,0);
 
 	return 0;

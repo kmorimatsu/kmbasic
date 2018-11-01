@@ -5,6 +5,9 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+// Include envilonment specific configurations
+#include "envspecific.h"
+
 /* Definitions */
 // Number of variables (including temporary ones)
 #define ALLOC_VAR_NUM 36
@@ -12,17 +15,22 @@
 #define ALLOC_PCG_BLOCK 36
 // Block # dedicated for GRAPHIC
 #define ALLOC_GRAPHIC_BLOCK 37
+// Block # dedicated for PLAYWAVE
+#define ALLOC_WAVE_BLOCK 38
 // Start # for long name variables
-#define ALLOC_LNV_BLOCK 38
+#define ALLOC_LNV_BLOCK 39
 // Number of long name variables
 #define ALLOC_LNV_NUM 190
 // Start # of permanent blocks
-#define ALLOC_PERM_BLOCK 228
+#define ALLOC_PERM_BLOCK 229
 // Number of blocks that can be assigned for memory allocation (including all above)
-#define ALLOC_BLOCK_NUM 238
+#define ALLOC_BLOCK_NUM 239
 
 // Persistent RAM bytes used for object, heap and exception data
-#define PERSISTENT_RAM_SIZE (1024*53)
+#ifndef PERSISTENT_RAM_SIZE
+	// This must be defined in envspecific.h
+	#define PERSISTENT_RAM_SIZE (1024*53)
+#endif
 // Exception data area bytes
 #define EXCEPTION_DATA_SIZE (64)
 // RAM size used for object and heap
@@ -108,6 +116,8 @@ enum libs{
 	LIB_GRAPHIC        =LIB_STEP*46,
 	LIB_WIDTH          =LIB_STEP*47,
 	LIB_FILE           =LIB_STEP*48,
+	LIB_PLAYWAVE       =LIB_STEP*49,
+	LIB_PLAYWAVEFUNC   =LIB_STEP*50,
 	LIB_DEBUG          =LIB_STEP*127,
 };
 
@@ -203,6 +213,8 @@ extern char g_use_graphic;
 extern unsigned short* g_graphic_area;
 extern int* g_libparams;
 extern int g_long_name_var_num;
+extern int g_class;
+extern int* g_classlist;
 extern int g_temp;
 
 /* Prototypes */
@@ -218,6 +230,8 @@ char* init_file(char* buff,char* appname);
 void close_file();
 void read_file(int blocklen);
 char* compile_file();
+int compile_and_link_file(char* buff,char* appname);
+int compile_and_link_class(char* buff,int class);
 
 void err_break(void);
 void err_music(char* str);
@@ -230,17 +244,22 @@ void err_unkonwn(void);
 void err_unexp_next(void);
 void err_no_block(void);
 void err_invalid_param(void);
+void err_file(void);
+void err_wave(void);
 char* resolve_label(int s6);
 
-void set_sound(unsigned long* data);
-int musicRemaining(void);
-void set_music(char* str);
+void set_sound(unsigned long* data, int flagsLR);
+int musicRemaining(int flagsLR);
+int waveRemaining(int mode);
+void set_music(char* str, int flagsLR);
+void stop_music(void);
 void init_music(void);
+void play_wave(char* filename, int start);
 
 char* statement(void);
 char* gosub_statement();
 char* graphic_statement(enum functions func);
-char* fopen_statement(enum functions func);
+char* fopen_statement_main(enum functions func);
 char* fget_statement();
 char* fput_statement();
 char* fputc_statement();
@@ -258,6 +277,7 @@ void* alloc_memory(int size, int var_num);
 void* calloc_memory(int size, int var_num);
 void move_to_perm_block(int var_num);
 void move_from_perm_block(int var_num);
+int get_permanent_var_num(void);
 
 char* link(void);
 char* get_label(void);
@@ -289,12 +309,16 @@ char* cmpdata_insert(unsigned char type, short data16, int* data, unsigned char 
 void cmpdata_reset();
 int* cmpdata_find(unsigned char type);
 int* cmpdata_findfirst(unsigned char type);
+void cmpdata_delete(int* record);
 
 int check_var_name();
 int get_var_number();
 int search_var_name(int nameint);
 char* register_var_name(int nameint);
 
+char* update_class_info(int class);
+char* construct_class_structure(int class);
+void delete_cmpdata_for_class();
 
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])
@@ -318,10 +342,14 @@ char* register_var_name(int nameint);
 #define ERR_INVALID_PARAM (char*)(g_err_str[18])
 #define ERR_FILE (char*)(g_err_str[19])
 #define ERR_INVALID_VAR_NAME (char*)(g_err_str[20])
+#define ERR_WAVE (char*)(g_err_str[21])
+#define ERR_COMPILE_CLASS (char*)(g_err_str[22])
 
 /* comple data type numbers */
 #define CMPDATA_RESERVED 0
 #define CMPDATA_USEVAR   1
+#define CMPDATA_CLASS    2
+#define CMPDATA_FIELD    3
 
 /* Macros */
 
@@ -357,15 +385,3 @@ char* register_var_name(int nameint);
 // Divide by 36 (valid for 32 bits)
 #define div36_32(x) div32(x,0xe38e38e4,37)
 #define rem36_32(x) (x-36*div36_32(x))
-
-// Check break key or buttons when executing BASIC code.
-// In PS/2 mode, detect ctrl-break.
-// In button mode, detect pushing four buttons are pushed simultaneously.
-#define check_break() \
-	if (g_disable_break==0) {\
-		if (inPS2MODE()) {\
-			if (ps2keystatus[0x03]) err_break();\
-		} else {\
-			if ((PORTB&0x4c80)==0) err_break();\
-		}\
-	}

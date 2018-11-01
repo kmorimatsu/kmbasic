@@ -2142,6 +2142,7 @@ void run(int test){
 	while(vkey!=0);
 	ps2mode(); //キーボード有効化
 	inputchar(); //1文字入力待ち
+	stop_music(); //音楽再生停止
 	init_composite(); //パレット初期化のため画面初期化
 	//画面モードを戻す
 	if(widthmode==WIDTH_X1) set_width(0);

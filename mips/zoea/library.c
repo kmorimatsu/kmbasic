@@ -150,8 +150,8 @@ void lib_clear(void){
 	stopPCG();
 	g_pcg_font=0;
 	// Stop using graphic
-	set_graphmode(0);
-	g_use_graphic=0;
+	g_use_graphic=1; // Force set_graphmode(0) (see usegraphic() function)
+	usegraphic(0);
 }
 
 void lib_let_str(char* str, int var_num){
@@ -275,13 +275,7 @@ void lib_string(int mode){
 			return;
 		case 1:
 			// ,
-#ifdef MEGALOPA
-			i=rem9_32((unsigned int)(cursor-TVRAM));
-			printstr("         "+i);
-#else
-			i=rem10_32((unsigned int)(cursor-TVRAM));
-			printstr("          "+i);
-#endif
+			printcomma();
 			return;
 		default:
 			return;
@@ -308,12 +302,7 @@ void* lib_label(unsigned int label){
 
 int lib_keys(int mask){
 	int keys;
-	// Enable tact switches
-	if (inPS2MODE()) {
-		buttonmode();
-	}
-
-	keys=KEYPORT;
+	keys=readbuttons();
 	keys=
 		((keys&KEYUP)?    0:1)|
 		((keys&KEYDOWN)?  0:2)|
@@ -446,106 +435,11 @@ void lib_pcg(unsigned int ascii,unsigned int fontdata1,unsigned int fontdata2){
 	pcg[ascii+1]=(fontdata2>>24)|((fontdata2&0xff0000)>>8)|((fontdata2&0xff00)<<8)|(fontdata2<<24);
 }
 
-void lib_scroll(int x,int y){
-	int i,j;
-	int vector=y*WIDTH_X1+x;
-	if (vector<0) {
-		// Copy data from upper address to lower address
-		for(i=0-vector;i<WIDTH_X1*WIDTH_Y;i++){
-			TVRAM[i+vector]=TVRAM[i];
-			TVRAM[WIDTH_X1*WIDTH_Y+i+vector]=TVRAM[WIDTH_X1*WIDTH_Y+i];
-		}
-	} else if (0<vector) {
-		// Copy data from lower address to upper address
-		for(i=WIDTH_X1*WIDTH_Y-vector-1;0<=i;i--){
-			TVRAM[i+vector]=TVRAM[i];
-			TVRAM[WIDTH_X1*WIDTH_Y+i+vector]=TVRAM[WIDTH_X1*WIDTH_Y+i];
-		}
-	} else {
-		return;
-	}
-	if (x<0) {
-		// Fill blanc at right
-		for(i=x;i<0;i++){
-			for(j=WIDTH_X1+i;j<WIDTH_X1*WIDTH_Y;j+=WIDTH_X1){
-				TVRAM[j]=0x00;
-				TVRAM[WIDTH_X1*WIDTH_Y+j]=cursorcolor;
-			}
-		}
-	} else if (0<x) {
-		// Fill blanc at left
-		for(i=0;i<x;i++){
-			for(j=i;j<WIDTH_X1*WIDTH_Y;j+=WIDTH_X1){
-				TVRAM[j]=0x00;
-				TVRAM[WIDTH_X1*WIDTH_Y+j]=cursorcolor;
-			}
-		}
-	}
-	if (y<0) {
-		// Fill blanc at bottom
-		for(i=WIDTH_X1*(WIDTH_Y+y);i<WIDTH_X1*WIDTH_Y;i++){
-				TVRAM[i]=0x00;
-				TVRAM[WIDTH_X1*WIDTH_Y+i]=cursorcolor;
-		}
-	} else if (0<y) {
-		// Fill blanc at top
-		for(i=0;i<WIDTH_X1*y;i++){
-				TVRAM[i]=0x00;
-				TVRAM[WIDTH_X1*WIDTH_Y+i]=cursorcolor;
-		}
-	}
+void lib_usegraphic(int mode){
+	usegraphic(mode);
+	// Move current point to (0,0)
+	g_prev_x=g_prev_y=0;
 }
-
-void lib_scroll40(int x,int y){
-	int i,j;
-	int vector=y*WIDTH_X2+x;
-	if (vector<0) {
-		// Copy data from upper address to lower address
-		for(i=0-vector;i<WIDTH_X2*WIDTH_Y;i++){
-			TVRAM[i+vector]=TVRAM[i];
-			TVRAM[WIDTH_X2*WIDTH_Y+i+vector]=TVRAM[WIDTH_X2*WIDTH_Y+i];
-		}
-	} else if (0<vector) {
-		// Copy data from lower address to upper address
-		for(i=WIDTH_X2*WIDTH_Y-vector-1;0<=i;i--){
-			TVRAM[i+vector]=TVRAM[i];
-			TVRAM[WIDTH_X2*WIDTH_Y+i+vector]=TVRAM[WIDTH_X2*WIDTH_Y+i];
-		}
-	} else {
-		return;
-	}
-	if (x<0) {
-		// Fill blanc at right
-		for(i=x;i<0;i++){
-			for(j=WIDTH_X2+i;j<WIDTH_X2*WIDTH_Y;j+=WIDTH_X2){
-				TVRAM[j]=0x00;
-				TVRAM[WIDTH_X2*WIDTH_Y+j]=cursorcolor;
-			}
-		}
-	} else if (0<x) {
-		// Fill blanc at left
-		for(i=0;i<x;i++){
-			for(j=i;j<WIDTH_X2*WIDTH_Y;j+=WIDTH_X2){
-				TVRAM[j]=0x00;
-				TVRAM[WIDTH_X2*WIDTH_Y+j]=cursorcolor;
-			}
-		}
-	}
-	if (y<0) {
-		// Fill blanc at bottom
-		for(i=WIDTH_X2*(WIDTH_Y+y);i<WIDTH_X2*WIDTH_Y;i++){
-				TVRAM[i]=0x00;
-				TVRAM[WIDTH_X2*WIDTH_Y+i]=cursorcolor;
-		}
-	} else if (0<y) {
-		// Fill blanc at top
-		for(i=0;i<WIDTH_X2*y;i++){
-				TVRAM[i]=0x00;
-				TVRAM[WIDTH_X2*WIDTH_Y+i]=cursorcolor;
-		}
-	}
-}
-
 void lib_wait(int period){
 	int i;
 	unsigned short dcount;
@@ -555,52 +449,6 @@ void lib_wait(int period){
 			asm (WAIT);
 			check_break();
 		}
-	}
-}
-
-void allocate_graphic_area(){
-	if (!g_graphic_area) {
-		// Use this pointer like unsigned short GVRAM[G_H_WORD*G_Y_RES] __attribute__ ((aligned (4)));
-		g_graphic_area=alloc_memory(G_H_WORD*G_Y_RES/2,ALLOC_GRAPHIC_BLOCK);
-		// Start graphic and clear screen
-		init_graphic(g_graphic_area);
-		// Move current point to (0,0)
-		g_prev_x=g_prev_y=0;
-	}
-}
-
-void lib_usegraphic(int mode){
-	// Modes; 0: stop GRAPHIC, 1: use GRAPHIC, 2: reset GRAPHIC and use it
-	switch(mode){
-		case 0:
-			if (g_use_graphic){
-				// Stop GRAPHIC if used
-				set_graphmode(0);
-				g_use_graphic=0;
-				// Set timer4 for tempo
-				PR4=59473;       // 3632*262/16-1
-			} else {
-				// Prepare GRAPHIC area if not used and not allcated.
-				allocate_graphic_area();
-			}
-			break;
-		case 2:
-			// Reset GRAPHIC and use it
-			g_graphic_area=0;
-			// Continue to case 1:
-		case 1:
-		case 3:
-		default:
-			// Use GRAPHIC
-			allocate_graphic_area();
-			// Start showing GRAPHIC with mode 1, but not with mode 3
-			if (mode !=3 && !g_use_graphic){
-				set_graphmode(1);
-				g_use_graphic=1;
-				// Set timer4 for tempo
-				PR4=55756;       // ~=3405*262/16-1(55755.875)
-			}
-			break;
 	}
 }
 
@@ -625,28 +473,28 @@ int lib_graphic(int v0,enum functions func){
 			g_prev_y=y1;
 			break;
 		case FUNC_PSET:// X1,Y1[,C]
-			g_pset(x1,y1,v0&0x0F);
+			g_pset(x1,y1,v0);
 			g_prev_x=x1;
 			g_prev_y=y1;
 			break;
 		case FUNC_LINE:// X1,Y1,X2,Y2[,C]
-			if (y1==y2) g_hline(x1,x2,y1,v0&0x0F);
-			else g_gline(x1,y1,x2,y2,v0&0x0F);
+			if (y1==y2) g_hline(x1,x2,y1,v0);
+			else g_gline(x1,y1,x2,y2,v0);
 			g_prev_x=x2;
 			g_prev_y=y2;
 			break;
 		case FUNC_BOXFILL:// X1,Y1,X2,Y2[,C]
-			g_boxfill(x1,y1,x2,y2,v0&0x0F);
+			g_boxfill(x1,y1,x2,y2,v0);
 			g_prev_x=x2;
 			g_prev_y=y2;
 			break;
 		case FUNC_CIRCLE:// X1,Y1,R[,C]
-			g_circle(x1,y1,x2,v0&0x0F);
+			g_circle(x1,y1,x2,v0);
 			g_prev_x=x1;
 			g_prev_y=y1;
 			break;
 		case FUNC_CIRCLEFILL:// X1,Y1,R[,C]
-			g_circlefill(x1,y1,x2,v0&0x0F);
+			g_circlefill(x1,y1,x2,v0);
 			g_prev_x=x1;
 			g_prev_y=y1;
 			break;
@@ -759,51 +607,6 @@ void lib_var_pop(int a0, int a1, int* sp){
 	}
 }
 
-
-int lib_system(int a0,int v0){
-	switch(a0){
-		// Version info
-		case 0: return (int)SYSVER1;
-		case 1: return (int)SYSVER2;
-		case 2: return (int)BASVER;
-		case 3: return (int)FILENAME_FLASH_ADDRESS;
-		// Display info
-		case 20: return twidth;
-		case 21: return WIDTH_Y;
-		case 22: return G_X_RES;
-		case 23: return G_Y_RES;
-		case 24: return cursorcolor;
-		case 25: return g_gcolor;
-		case 26: return ((int)(cursor-TVRAM))%twidth;
-		case 27: return ((int)(cursor-TVRAM))/twidth;
-		case 28: return g_prev_x;
-		case 29: return g_prev_y;
-		// Keyboard info
-		case 40: return (int)inPS2MODE();
-		case 41: return (int)vkey;
-		case 42: return (int)lockkey;
-		case 43: return (int)keytype;
-		// Pointers to gloval variables
-		case 100: return (int)&g_var_mem[0];
-		case 101: return (int)&g_rnd_seed;
-		case 102: return (int)&TVRAM[0];
-		case 103: return (int)&FontData[0];
-		case 104: return (int)g_var_mem[ALLOC_PCG_BLOCK];
-		case 105: return (int)g_var_mem[ALLOC_GRAPHIC_BLOCK];
-		// Change system settings
-		case 200:
-			// ON/OFF monitor
-			if (v0) {
-				start_composite();
-			} else {
-				stop_composite();
-			}
-			break;
-		default:
-			break;
-	}
-	return 0;
-}
 
 char* lib_sprintf(char* format, int data){
 	char* str;
@@ -920,21 +723,6 @@ int* lib_dim(int varnum, int argsnum, int* sp){
 	}
 	return heap;
 };
-
-void lib_width(int width){
-#ifdef ZOEA
-	switch(width){
-		case 30:
-			if (twidth!=30) set_width(0);
-			break;
-		case 40:
-			if (twidth!=40) set_width(1);
-			break;
-		default:
-			break;
-	}
-#endif // ZOEA
-}
 
 int lib_file_textlen(FSFILE* fhandle){
 	char buff[128];
@@ -1197,8 +985,7 @@ int _call_library(int a0,int a1,int v0,enum libs a3){
 			lib_var_pop(a0,a1,g_libparams);
 			return v0;
 		case LIB_SCROLL:
-			if (twidth==40) lib_scroll40(g_libparams[1],v0);
-			else lib_scroll(g_libparams[1],v0);
+			scroll(g_libparams[1],v0);
 			return v0;
 		case LIB_FILE:
 			return lib_file((enum functions)(a3 & FUNC_MASK),g_libparams[1],g_libparams[2],v0);
@@ -1210,20 +997,25 @@ int _call_library(int a0,int a1,int v0,enum libs a3){
 			setcursor(g_libparams[1],v0,cursorcolor);
 			return v0;
 		case LIB_SOUND:
-			set_sound((unsigned long*)v0);
+			set_sound((unsigned long*)v0,a0);
 			return v0;
 		case LIB_MUSICFUNC:
-			return musicRemaining();
+			return musicRemaining(a0);
 		case LIB_MUSIC:
-			set_music((char*)v0);
+			set_music((char*)v0,a0);
 			return v0;
+		case LIB_PLAYWAVE:
+			play_wave((char*)g_libparams[1],v0);
+			return v0;
+		case LIB_PLAYWAVEFUNC:
+			return waveRemaining(v0);
 		case LIB_SETDRAWCOUNT:
 			drawcount=(v0&0x0000FFFF);
 			return v0;
 		case LIB_DRAWCOUNT:
 			return drawcount;
 		case LIB_SYSTEM:
-			return lib_system(a0,v0);
+			return lib_system(a0, a1 ,v0, a3, g_gcolor, g_prev_x, g_prev_y);
 		case LIB_RESTORE:
 			return lib_read(0,v0);
 		case LIB_RESTORE2:
@@ -1262,7 +1054,7 @@ int _call_library(int a0,int a1,int v0,enum libs a3){
 			g_prev_x=g_prev_y=0;
 			return v0;
 		case LIB_WIDTH:
-			lib_width(v0);
+			videowidth(v0);
 			return v0;
 		case LIB_COLOR:
 			setcursorcolor(v0);

@@ -71,9 +71,8 @@ void _general_exception_handler (void){
 	#ifdef __DEBUG
 		asm volatile("j 0xBFC00000");
 	#else
-		buttonmode();
 		for(i=0;i<100000;i++){
-			if((KEYPORT&(KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE))
+			if((readbuttons()&(KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE))
 				!=(KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE)) i=0;
 		}
 		asm volatile("j SoftReset");

@@ -37,12 +37,49 @@ char* sound_statement(){
 		if (err) return err;
 		call_lib_code(LIB_LABEL);
 	}
+	// 2nd param is optional
+	next_position();
+	if (g_source[g_srcpos]==',') {
+		g_srcpos++;
+		check_obj_space(2);
+		g_object[g_objpos++]=0x27BDFFFC; // addiu       sp,sp,-4
+		g_object[g_objpos++]=0xAFA20004; // sw          v0,4(sp)
+		err=get_value();
+		if (err) return err;
+		check_obj_space(3);
+		g_object[g_objpos++]=0x00402021; // addu        a0,v0,zero
+		g_object[g_objpos++]=0x8FA20004; // lw          v0,4(sp)
+		g_object[g_objpos++]=0x27BD0004; // addiu       sp,sp,4
+	} else {
+		// Set 3 if omitted
+		check_obj_space(1);
+		g_object[g_objpos++]=0x24040003; // addiu       a0,zero,xx
+	}
 	call_lib_code(LIB_SOUND);
 	return 0;
 }
 char* music_statement(){
 	char *err;
 	err=get_string();
+	if (err) return err;
+	// 2nd param is optional
+	next_position();
+	if (g_source[g_srcpos]==',') {
+		g_srcpos++;
+		check_obj_space(2);
+		g_object[g_objpos++]=0x27BDFFFC; // addiu       sp,sp,-4
+		g_object[g_objpos++]=0xAFA20004; // sw          v0,4(sp)
+		err=get_value();
+		if (err) return err;
+		check_obj_space(3);
+		g_object[g_objpos++]=0x00402021; // addu        a0,v0,zero
+		g_object[g_objpos++]=0x8FA20004; // lw          v0,4(sp)
+		g_object[g_objpos++]=0x27BD0004; // addiu       sp,sp,4
+	} else {
+		// Set 3 if omitted
+		check_obj_space(1);
+		g_object[g_objpos++]=0x24040003; // addiu       a0,zero,xx
+	}
 	call_lib_code(LIB_MUSIC);
 	return 0;
 }
@@ -656,7 +693,7 @@ char* let_statement(){
 	return 0;
 }
 
-char* print_statement(enum libs lib_printstr, enum libs lib_string){
+char* print_statement_main(enum libs lib_printstr, enum libs lib_string){
 	char* err;
 	char b1;
 	int i;
@@ -1302,7 +1339,7 @@ char* graphic_statement(enum functions func){
 	return 0;
 }
 
-char* fopen_statement(enum functions func){
+char* fopen_statement_main(enum functions func){
 	// func is either FUNC_FOPENST or FUNC_FOPEN
 	char* err;
 	// Get 1st
@@ -1357,10 +1394,6 @@ char* fclose_statement(){
 	return 0;
 }
 
-char* fprint_statement(){
-	return print_statement(LIB_FILE | FUNC_FPRINTSTR,LIB_FILE | FUNC_FSTRING);
-}
-
 char* fget_statement(){
 	return param2_statement(LIB_FILE | FUNC_FGET);
 }
@@ -1413,6 +1446,65 @@ char* usevar_statement(){
 	return 0;
 }
 
+char* playwave_statement(){
+	char* err;
+	err=get_string();
+	if (err) return err;
+	check_obj_space(2);
+	g_object[g_objpos++]=0x27BDFFFC; // addiu       sp,sp,-4
+	g_object[g_objpos++]=0xAFA20004; // sw          v0,4(sp)
+	if (g_source[g_srcpos]==',') {
+		g_srcpos++;
+		// Get 2nd
+		err=get_value();
+		if (err) return err;
+	} else {
+		// If 2rd parameter is omitted, use 0.
+		check_obj_space(1);
+		g_object[g_objpos++]=0x24020000;      // addiu       v0,zero,0
+	}
+	call_lib_code(LIB_PLAYWAVE);
+	check_obj_space(1);
+	g_object[g_objpos++]=0x27BD0004; // addiu       sp,sp,4
+	return 0;
+}
+
+char* useclass_statement(){
+	char* err;
+	int i;
+	int* cmpdata;
+	do {
+		next_position();
+		i=check_var_name();
+		if (i<65536) return ERR_SYNTAX;
+		// Check if the class already exists
+		cmpdata_reset();
+		while(cmpdata=cmpdata_find(CMPDATA_CLASS)){
+			if (cmpdata[1]==i) {
+				// The class was already defined.
+				i=0;
+				break;
+			}
+		}
+		if (i) {
+			// Remove a objects before USECLASS statement
+			g_objpos=0;
+			// Insert a NOP assembly. This will be replaced by jump statement.
+			check_obj_space(1);
+			g_object[g_objpos++]=0x00000000; // nop
+			// Load new file to define class statement.
+			g_class=i;
+			return ERR_COMPILE_CLASS;
+		}
+		if (g_source[g_srcpos]==',') {
+			g_srcpos++;
+		} else {
+			break;
+		}
+	} while(1);
+	return 0;
+}
+
 #ifdef __DEBUG
 	char* debug_statement(){
 		call_lib_code(LIB_DEBUG);
@@ -1420,142 +1512,148 @@ char* usevar_statement(){
 	}
 #endif
 
+// Aliases follow
+
+char* palette_statement(){
+	return param4_statement(LIB_PALETTE);
+}
+
+char* gpalette_statement(){
+	return param4_statement(LIB_GPALETTE);
+}
+
+char* print_statement(){
+	return print_statement_main(LIB_PRINTSTR,LIB_STRING);
+}
+
+char* pset_statement(){
+	return graphic_statement(FUNC_PSET);
+}
+
+char* line_statement(){
+	return graphic_statement(FUNC_LINE);
+}
+
+char* boxfill_statement(){
+	return graphic_statement(FUNC_BOXFILL);
+}
+
+char* circle_statement(){
+	return graphic_statement(FUNC_CIRCLE);
+}
+
+char* circlefill_statement(){
+	return graphic_statement(FUNC_CIRCLEFILL);
+}
+
+char* gprint_statement(){
+	return graphic_statement(FUNC_GPRINT);
+}
+
+char* putbmp_statement(){
+	return graphic_statement(FUNC_PUTBMP);
+}
+
+char* point_statement(){
+	return graphic_statement(FUNC_POINT);
+}
+
+char* fopen_statement(){
+	return fopen_statement_main(FUNC_FOPENST);
+}
+
+char* fprint_statement(){
+	return print_statement_main(LIB_FILE | FUNC_FPRINTSTR,LIB_FILE | FUNC_FSTRING);
+}
+
+static const void* statement_list[]={
+	"REM",rem_statement,
+	"SOUND ",sound_statement,
+	"MUSIC ",music_statement,
+	"DRAWCOUNT ",drawcount_statement,
+	"CURSOR ",cursor_statement,
+	"PALETTE ",palette_statement,
+	"GPALETTE ",gpalette_statement,
+	"BGCOLOR ",bgcolor_statement,
+	"CLS",cls_statement,
+	"GCLS",gcls_statement,
+	"COLOR ",color_statement,
+	"GCOLOR ",gcolor_statement,
+	"RESTORE ",restore_statement,
+	"DATA ",data_statement,
+	"CDATA ",cdata_statement,
+	"LABEL ",label_statement,
+	"DIM ",dim_statement,
+	"CLEAR",clear_statement,
+	"PRINT",print_statement,
+	"IF ",if_statement,
+	"ELSEIF ",elseif_statement,
+	"ELSE",else_statement,
+	"ENDIF",endif_statement,
+	"END",end_statement,
+	"EXEC ",exec_statement,
+	"GOTO ",goto_statement,
+	"GOSUB ",gosub_statement,
+	"RETURN",return_statement,
+	"POKE ",poke_statement,
+	"FOR ",for_statement,
+	"NEXT",next_statement,
+	"LET ",let_statement,
+	"PCG ",pcg_statement,
+	"USEPCG",usepcg_statement,
+	"SCROLL ",scroll_statement,
+	"WAIT ",wait_statement,
+	"USEGRAPHIC",usegraphic_statement,
+	"PSET ",pset_statement,
+	"LINE ",line_statement,
+	"BOXFILL ",boxfill_statement,
+	"CIRCLE ",circle_statement,
+	"CIRCLEFILL ",circlefill_statement,
+	"GPRINT ",gprint_statement,
+	"PUTBMP ",putbmp_statement,
+	"POINT ",point_statement,
+	"VAR ",var_statement,
+	"DO",do_statement,
+	"LOOP",loop_statement,
+	"WHILE ",while_statement,
+	"WEND",wend_statement,
+	"BREAK",break_statement,
+	"CONTINUE",continue_statement,
+	"SYSTEM",system_statement,
+	"WIDTH ",width_statement,
+	"FOPEN ",fopen_statement,
+	"FILE ",file_statement,
+	"FCLOSE",fclose_statement,
+	"FPRINT ",fprint_statement,
+	"FGET ",fget_statement,
+	"FPUT ",fput_statement,
+	"FPUTC ",fputc_statement,
+	"FSEEK ",fseek_statement,
+	"FREMOVE ",fremove_statement,
+	"USEVAR ",usevar_statement,
+	"PLAYWAVE ",playwave_statement,
+	"USECLASS ",useclass_statement,
+	// List of additional statements follows
+	ADDITIONAL_STATEMENTS
+};
 
 char* statement(void){
 	char* err;
 	int prevpos;
+	int i;
+	char* (*f)();
 	// Clear flag for temp area usage.
 	g_temp_area_used=0;
 	// Initialize stack handler used for value
 	g_sdepth=g_maxsdepth=0;
-	if (nextCodeIs("REM")) {
-		err=rem_statement();
-	} else if (nextCodeIs("SOUND ")) {
-		err=sound_statement();
-	} else if (nextCodeIs("MUSIC ")) {
-		err=music_statement();
-	} else if (nextCodeIs("DRAWCOUNT ")) {
-		err=drawcount_statement();
-	} else if (nextCodeIs("CURSOR ")) {
-		err=cursor_statement();
-	} else if (nextCodeIs("PALETTE ")) {
-		err=param4_statement(LIB_PALETTE);
-	} else if (nextCodeIs("GPALETTE ")) {
-		err=param4_statement(LIB_GPALETTE);
-	} else if (nextCodeIs("BGCOLOR ")) {
-		err=bgcolor_statement();
-	} else if (nextCodeIs("CLS")) {
-		err=cls_statement();
-	} else if (nextCodeIs("GCLS")) {
-		err=gcls_statement();
-	} else if (nextCodeIs("COLOR ")) {
-		err=color_statement();
-	} else if (nextCodeIs("GCOLOR ")) {
-		err=gcolor_statement();
-	} else if (nextCodeIs("RESTORE ")) {
-		err=restore_statement();
-	} else if (nextCodeIs("DATA ")) {
-		err=data_statement();
-	} else if (nextCodeIs("CDATA ")) {
-		err=cdata_statement();
-	} else if (nextCodeIs("LABEL ")) {
-		err=label_statement();
-	} else if (nextCodeIs("DIM ")) {
-		err=dim_statement();
-	} else if (nextCodeIs("CLEAR")) {
-		err=clear_statement();
-	} else if (nextCodeIs("PRINT")) {
-		err=print_statement(LIB_PRINTSTR,LIB_STRING);
-	} else if (nextCodeIs("IF ")) {
-		err=if_statement();
-	} else if (nextCodeIs("ELSEIF ")) {
-		err=elseif_statement();
-	} else if (nextCodeIs("ELSE")) {
-		err=else_statement();
-	} else if (nextCodeIs("ENDIF")) {
-		err=endif_statement();
-	} else if (nextCodeIs("END")) {
-		err=end_statement();
-	} else if (nextCodeIs("EXEC ")) {
-		err=exec_statement();
-	} else if (nextCodeIs("GOTO ")) {
-		err=goto_statement();
-	} else if (nextCodeIs("GOSUB ")) {
-		err=gosub_statement();
-	} else if (nextCodeIs("RETURN")) {
-		err=return_statement();
-	} else if (nextCodeIs("POKE ")) {
-		err=poke_statement();
-	} else if (nextCodeIs("FOR ")) {
-		err=for_statement();
-	} else if (nextCodeIs("NEXT")) {
-		err=next_statement();
-	} else if (nextCodeIs("LET ")) {
-		err=let_statement();
-	} else if (nextCodeIs("PCG ")) {
-		err=pcg_statement();
-	} else if (nextCodeIs("USEPCG")) {
-		err=usepcg_statement();
-	} else if (nextCodeIs("SCROLL ")) {
-		err=scroll_statement();
-	} else if (nextCodeIs("WAIT ")) {
-		err=wait_statement();
-	} else if (nextCodeIs("USEGRAPHIC")) {
-		err=usegraphic_statement();
-	} else if (nextCodeIs("PSET ")) {
-		err=graphic_statement(FUNC_PSET);
-	} else if (nextCodeIs("LINE ")) {
-		err=graphic_statement(FUNC_LINE);
-	} else if (nextCodeIs("BOXFILL ")) {
-		err=graphic_statement(FUNC_BOXFILL);
-	} else if (nextCodeIs("CIRCLE ")) {
-		err=graphic_statement(FUNC_CIRCLE);
-	} else if (nextCodeIs("CIRCLEFILL ")) {
-		err=graphic_statement(FUNC_CIRCLEFILL);
-	} else if (nextCodeIs("GPRINT ")) {
-		err=graphic_statement(FUNC_GPRINT);
-	} else if (nextCodeIs("PUTBMP ")) {
-		err=graphic_statement(FUNC_PUTBMP);
-	} else if (nextCodeIs("POINT ")) {
-		err=graphic_statement(FUNC_POINT);
-	} else if (nextCodeIs("VAR ")) {
-		err=var_statement();
-	} else if (nextCodeIs("DO")) {
-		err=do_statement();
-	} else if (nextCodeIs("LOOP")) {
-		err=loop_statement();
-	} else if (nextCodeIs("WHILE ")) {
-		err=while_statement();
-	} else if (nextCodeIs("WEND")) {
-		err=wend_statement();
-	} else if (nextCodeIs("BREAK")) {
-		err=break_statement();
-	} else if (nextCodeIs("CONTINUE")) {
-		err=continue_statement();
-	} else if (nextCodeIs("SYSTEM")) {
-		err=system_statement();
-	} else if (nextCodeIs("WIDTH ")) {
-		err=width_statement();
-	} else if (nextCodeIs("FOPEN ")) {
-		err=fopen_statement(FUNC_FOPENST);
-	} else if (nextCodeIs("FILE ")) {
-		err=file_statement();
-	} else if (nextCodeIs("FCLOSE")) {
-		err=fclose_statement();
-	} else if (nextCodeIs("FPRINT ")) {
-		err=fprint_statement();
-	} else if (nextCodeIs("FGET ")) {
-		err=fget_statement();
-	} else if (nextCodeIs("FPUT ")) {
-		err=fput_statement();
-	} else if (nextCodeIs("FPUTC ")) {
-		err=fputc_statement();
-	} else if (nextCodeIs("FSEEK ")) {
-		err=fseek_statement();
-	} else if (nextCodeIs("FREMOVE ")) {
-		err=fremove_statement();
-	} else if (nextCodeIs("USEVAR ")) {
-		err=usevar_statement();
+	// Seek the statement
+	for (i=0;i<sizeof(statement_list)/sizeof(statement_list[0]);i+=2){
+		if (nextCodeIs((char*)statement_list[i])) break;
+	}
+	if (i<sizeof(statement_list)/sizeof(statement_list[0])) {
+		// Statement found. Call it.
+		f=statement_list[i+1];
+		err=f();
 #ifdef __DEBUG
 	} else if (nextCodeIs("DEBUG")) {
 		err=debug_statement();

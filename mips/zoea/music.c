@@ -12,8 +12,6 @@
 /*
 	Timer3: 1/32 prescaler, toggle mode : 894886.25 Hz
 	PR3=2047 <-> 437 Hz
-	Timer4: 1/32 prescaler: 1789772.5 Hz
-	Timer4 29737 counts: 262 NTSC lines.
 */
 
 /*
@@ -56,8 +54,8 @@ const static int g_keys[]={
 	1/(2^(1/12) ~= 1933/(2^11)
 */
 
-#define toneFlat(x) ((((unsigned long)x)*69433)>>16)
-#define toneSharp(x) ((((unsigned long)x)*1933)>>11)
+#define toneFlat(x) ((((unsigned long)(x))*69433)>>16)
+#define toneSharp(x) ((((unsigned long)(x))*1933)>>11)
 
 /* local global vars */
 static int* g_tones;
@@ -78,65 +76,116 @@ static int g_soundend;
 static int g_soundwait;
 static int g_soundrepeat;
 
-int musicRemaining(){
+static char g_sound_mode=0;
+static FSFILE* g_fhandle=0;
+static char* g_wavtable=0;
+
+#define SOUND_MODE_MUSIC 1
+#define SOUND_MODE_WAVE 2
+
+#define start_dma() T4CONSET=0x8000; DCH2CONSET=0x00000080; g_sound_mode=SOUND_MODE_WAVE
+#define stop_dma()  T4CONCLR=0x8000; DCH2CONCLR=0x00000080; g_sound_mode=SOUND_MODE_MUSIC
+
+int waveRemaining(int mode){
+	if (!g_fhandle) return 0;
+	switch(mode){
+		case 1: // current position (header excluded)
+			return g_fhandle->seek-0x2c;
+			break;
+		case 2: // file size (header excluded)
+			return g_fhandle->size-0x2c;
+			break;
+		case 0: // remaining
+		default:
+			return g_fhandle->size-g_fhandle->seek;
+			break;
+	}
+}
+int musicRemaining(int flagsLR){
+	// flagsLR is ignored
 	return (g_musicend-g_musicstart)&31;
 }
 
-#pragma interrupt timer4int IPL3SOFT vector 16
-void timer4int(){
+#pragma interrupt musicint IPL3SOFT vector 1
+void musicint(){
 	unsigned int i;
+	static unsigned short wavtable_pos;
 	// This function is called every 1/60 sec.
-	IFS0CLR=_IFS0_T4IF_MASK; //IFS0bits.T4IF=0;
-	if (g_soundstart!=g_soundend){
-		// Start timer & OC4
-		i=g_sound[g_soundstart];
-		if (i<0xffff) {
-			T3CONSET=0x8000;
-			PR3=i;
-			if (i<TMR3) TMR3=0;
-		} else {
-			T3CONCLR=0x8000;
-		}
-		if ((--g_soundwait)<=0) {
-			g_soundstart++;
-			if (g_soundstart==g_soundend || 31<g_soundstart) {
-				g_soundstart=0;
-				g_soundrepeat--;
-				if (0<g_soundrepeat) {
-					g_soundwait=g_soundlen[g_soundstart];
+	IFS0bits.CS0IF=0;
+	switch(g_sound_mode){
+		case SOUND_MODE_MUSIC:
+			if (g_soundstart!=g_soundend){
+				// Start timer & OC4
+				i=g_sound[g_soundstart];
+				if (i<0xffff) {
+					T3CONSET=0x8000;
+					PR3=i;
+					if (i<TMR3) TMR3=0;
 				} else {
-					g_soundend=g_soundrepeat=g_soundwait=0;
+					T3CONCLR=0x8000;
+				}
+				if ((--g_soundwait)<=0) {
+					g_soundstart++;
+					if (g_soundstart==g_soundend || 31<g_soundstart) {
+						g_soundstart=0;
+						g_soundrepeat--;
+						if (0<g_soundrepeat) {
+							g_soundwait=g_soundlen[g_soundstart];
+						} else {
+							g_soundend=g_soundrepeat=g_soundwait=0;
+						}
+					} else {
+						g_soundwait=g_soundlen[g_soundstart];
+					}
+				}
+				// Shift music data even though without output.
+				if (g_musicstart!=g_musicend) {
+					if ((--g_musicwait)<=0) {
+						g_musicstart++;
+						g_musicstart&=31;
+						g_musicwait=g_musiclen[g_musicstart];
+					}
+				}
+			} else if (g_musicstart!=g_musicend) {
+				// Start timer & OC4
+				i=g_music[g_musicstart];
+				if (i<0xffff) {
+					T3CONSET=0x8000;
+					PR3=i;
+					if (i<TMR3) TMR3=0;
+				} else {
+					T3CONCLR=0x8000;
+				}
+				if ((--g_musicwait)<=0) {
+					g_musicstart++;
+					g_musicstart&=31;
+					g_musicwait=g_musiclen[g_musicstart];
 				}
 			} else {
-				g_soundwait=g_soundlen[g_soundstart];
+				// Stop timer
+				T3CONCLR=0x8000;
 			}
-		}
-		// Shift music data even though without output.
-		if (g_musicstart!=g_musicend) {
-			if ((--g_musicwait)<=0) {
-				g_musicstart++;
-				g_musicstart&=31;
-				g_musicwait=g_musiclen[g_musicstart];
+			break;
+		case SOUND_MODE_WAVE:
+			// Initialize parameters
+			if (!T4CONbits.ON){
+				start_dma();
+				wavtable_pos=0;
 			}
-		}
-	} else if (g_musicstart!=g_musicend) {
-		// Start timer & OC4
-		i=g_music[g_musicstart];
-		if (i<0xffff) {
-			T3CONSET=0x8000;
-			PR3=i;
-			if (i<TMR3) TMR3=0;
-		} else {
-			T3CONCLR=0x8000;
-		}
-		if ((--g_musicwait)<=0) {
-			g_musicstart++;
-			g_musicstart&=31;
-			g_musicwait=g_musiclen[g_musicstart];
-		}
-	} else {
-		// Stop timer
-		T3CONCLR=0x8000;
+			wavtable_pos=262-wavtable_pos;
+			// Read from file
+			if (0 == FSfread((void*)&g_wavtable[wavtable_pos],1,262,g_fhandle)) {
+				// End of file.
+				stop_dma();
+				FSfclose(g_fhandle);
+				g_fhandle=0;
+				g_sound_mode=SOUND_MODE_MUSIC;
+				stop_music();
+				break;
+			}
+			break;
+		default:
+			break;
 	}
 }
 
@@ -157,7 +206,9 @@ int musicGetNum(){
 	return ret;
 }
 
-void init_music(){
+void stop_music(){
+	// Initialize normal music mode.
+
 	// Use Timer3 and OC4 for sound.
 	RPB13R=5;        //Use RPB13 for OC4
 	OC4R=0;
@@ -165,24 +216,38 @@ void init_music(){
 	OC4CONSET=0x8000;// Start OC4
 	T3CON=0x0050;    // Prescaller: 1:32 (1.8 MHz), not yet started
 
-	// Timer4 is used to intterupt every 1/60 sec, just after NTSC view.
-	T4CON=0x0040;    // Prescaller: 1:16
-	PR4=59473;       // 3632*262/16-1
-	// Timer 4 interruption, IPL3
-	IPC4bits.T4IP=3;
-	IPC4bits.T4IS=0;
-	IFS0bits.T4IF=0;
-	IEC0bits.T4IE=1;
-	// Wait until end of NTSC view.
-	while(!drawing);
-	while(drawing);
-	T4CONSET=0x8000; // Start timer 4.
+	// Software interrupt every 1/60 sec (triggered by Timer5)
+	IPC0bits.CS0IP=3;
+	IPC0bits.CS0IS=0;
+	IFS0bits.CS0IF=0;
+	IEC0bits.CS0IE=1;	
+
+	// Initializations for music/sound.
+	g_musicstart=g_musicend=g_musicwait=g_soundstart=g_soundend=g_soundwait=g_soundrepeat=0;
+	g_sound_mode=SOUND_MODE_MUSIC;
+
+	// Initialize DMA (see also init_dma_music())
+
+	// Stop Timer4
+	T4CON=0x0000; // Not start yet
+
+	// Enable DMA, stop DMA2
+	DMACONSET=0x8000;
+	DCH2CONCLR=0x0080;
+
+	// Close handle if open.
+	if (g_fhandle) FSfclose(g_fhandle);
+	g_fhandle=0;
+}
+
+void init_music(){
+	// Initilize music system
+	stop_music();
 	
 	// Initializations for music/sound.
 	g_qvalue=160; // Q: 1/4=90
 	g_lvalue=20;   // L: 1/8
 	g_tones=(int*)&(g_keys[49]); // C major
-	g_musicstart=g_musicend=g_musicwait=g_soundstart=g_soundend=g_soundwait=g_soundrepeat=0;
 }
 
 void musicSetL(){
@@ -338,7 +403,8 @@ void musicSetM(){
 	musicGetNum();
 }
 
-void set_sound(unsigned long* data){
+void set_sound(unsigned long* data, int flagsLR){
+	// flagsLR is ignored
 	int sound;
 	int len;
 	int pos;
@@ -381,7 +447,8 @@ void set_sound(unsigned long* data){
 	IEC0bits.T4IE=1; // Restart interrupt.
 }
 
-void set_music(char* str){
+void set_music(char* str, int flagsLR){
+	// flagsLR is ignored
 	char b;
 	unsigned long tone,tonenatural;
 	int len;
@@ -480,4 +547,93 @@ void set_music(char* str){
 		// Go to next character
 		while(0<g_mstr[g_mspos] && g_mstr[g_mspos]<=0x20 || g_mstr[g_mspos]=='|') g_mspos++;
 	}
+}
+
+/*
+	PLAYWAVE routines follow
+*/
+
+int checkChars(char* str1, char* str2, int num){
+	int i;
+	for(i=0;i<num;i++){
+		if (str1[i]!=str2[i]) return 1;
+	}
+	return 0;
+}
+
+void init_dma_music(){
+	// Timer4 for 15700 Hz
+	T4CON=0x0000; // Not start yet
+	if (g_use_graphic) {
+		PR4=3405-1;
+	} else {
+		PR4=3632-1;
+	}
+	TMR4=PR4-1;
+
+	// Timer3 for PWM
+	TMR3=0;
+	PR3=0x100;
+	T3CON=0x8000;
+
+	// OC4 setting
+	RPB13R=5;        //Use RPB13 for OC4
+	OC4RS=0x80;
+	OC4CON=0x000e;
+	OC4CONSET=0x8000;
+
+	//DMA2 settings for OC4
+	DMACONSET=0x8000;
+	DCH2CON=0x00000012;  // CHBUSY=0, CHCHNS=0, CHEN=0, CHAED=0, CHCHN=0, CHAEN=1, CHEDET=0, CHPRI=b10
+	DCH2ECON=0x1310;     // CHAIRQ=0, CHSIRQ=19, CFORCE=0, CABRT=0, PATEN=0, SIRQEN=1, AIRQEN=0
+	                     // CHSIRQ=19: Timer4 interrupt
+	DCH2SSA=((unsigned int)&(g_wavtable[0]))&0x1fffffff;
+	DCH2DSA=0x1F803620; // OC4RS
+	DCH2SSIZ=524;
+	DCH2DSIZ=1;
+	DCH2CSIZ=1;
+	DCH2INTCLR=0x00FF00FF;
+	DCH2CONSET=0x00000080;
+}
+
+void play_wave(char* filename, int start){
+	int i;
+	// Stop the previous play
+	stop_music();
+	// Exit function if null filename
+	if (filename[0]==0x00) {
+		return;
+	}
+	// Alocate 524 byte buffer if not assigned
+	if (g_var_size[ALLOC_WAVE_BLOCK]==0) {
+		g_wavtable=(char*)alloc_memory(524/4,ALLOC_WAVE_BLOCK);
+	}
+	// Open file
+	if (g_fhandle) FSfclose(g_fhandle);
+	g_fhandle=FSfopen(filename,"r");
+	if (!g_fhandle) err_file();
+	// Read header and check if monaural 8 bit 16000 Hz.
+	if (0x2c != FSfread((void*)&g_wavtable[0],1,0x2c,g_fhandle)) err_file();
+	i=0;
+	i+=checkChars((char*)&g_wavtable[0],"RIFF",4);                      // Check RIFF
+	i+=checkChars((char*)&g_wavtable[8],"WAVEfmt ",8);                  // Check WAVE and fmt
+	i+=checkChars((char*)&g_wavtable[16],"\x10\x00\x00\x00\x01\x00",6); // Check if liear PCM
+	if (!checkChars((char*)&g_wavtable[22],"\x01\x00\x80\x3e\x00\x00\x80\x3e\x00\x00\x01\x00",12)) {
+		// Monaural 16000 Hz
+	} else if (!checkChars((char*)&g_wavtable[22],"\x01\x00\x54\x3d\x00\x00\x54\x3d\x00\x00\x01\x00",12)) {
+		// Monaural 15700 Hz
+	} else {
+		i=1;
+	}
+	i+=checkChars((char*)&g_wavtable[34],"\x08\x00\x64\x61\x74\x61",6); // Check bit # and data
+	if (i) err_wave();
+	// Support defined start position here to skip file pointer here.
+	FSfseek(g_fhandle, start, SEEK_CUR);
+	// Read first 262 bytes.
+	if (262 != FSfread((void*)&g_wavtable[0],1,262,g_fhandle)) err_file();
+
+	// Initialize DMA
+	init_dma_music();	
+	g_sound_mode=SOUND_MODE_WAVE;
+
 }

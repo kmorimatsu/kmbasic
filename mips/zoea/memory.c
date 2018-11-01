@@ -173,3 +173,12 @@ void move_from_perm_block(int var_num){
 	// Clear block
 	g_var_size[i]=0;
 }
+
+int get_permanent_var_num(){
+	int i;
+	for (i=ALLOC_PERM_BLOCK;i<ALLOC_BLOCK_NUM;i++) {
+		if (g_var_size[i]==0) return i;
+	}
+	err_no_block();
+	return 0;
+}

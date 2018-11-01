@@ -29,6 +29,8 @@ const char* g_err_str[]={
 	"Invalid parameter(s)",
 	"File error",
 	"Invalid variable name",
+	"WAVE format error",
+	"ERR_COMPILE_CLASS",
 };
 
 char* resolve_label(int s6){
@@ -68,6 +70,9 @@ char* resolve_label(int s6){
 void pre_end_addr(int s6){
 	int i,j;
 	char str[7];
+	// Cool down the system
+	stop_music();
+	// Resolve line and show it
 	if (s6<0) s6=s6&0x7fffffff;
 	g_label=s6;
 	if (s6<65536) {
@@ -89,6 +94,7 @@ void pre_end_addr(int s6){
 	asm volatile("j pre_end_addr")
 
 void err_break(void){
+	stop_music();
 	printstr(ERR_BREAK);
 	end_exec();
 }
@@ -155,6 +161,11 @@ void err_invalid_param(void){
 
 void err_file(void){
 	printstr(ERR_FILE);
+	end_exec();	
+}
+
+void err_wave(void){
+	printstr(ERR_WAVE);
 	end_exec();	
 }
 

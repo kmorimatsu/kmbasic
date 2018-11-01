@@ -9,6 +9,15 @@
 #include "api.h"
 
 char* music_function(){
+	char* err;
+	next_position();
+	if (g_source[g_srcpos]==')') {
+		check_obj_space(1);
+		g_object[g_objpos++]=0x34020003; //ori         v0,zero,0x03
+	} else {
+		err=get_value();
+		if (err) return err;
+	}
 	call_lib_code(LIB_MUSICFUNC);
 	return 0;
 }
@@ -353,6 +362,22 @@ char* feof_function(){
 	return 0;
 }
 
+char* playwave_function(){
+	char* err;
+	next_position();
+	if (g_source[g_srcpos]!=')') {
+		// Get param
+		err=get_value();
+		if (err) return err;
+	} else {
+		// If parameter is omitted, use 0.
+		check_obj_space(1);
+		g_object[g_objpos++]=0x24020000;      // addiu       v0,zero,0
+	}
+	call_lib_code(LIB_PLAYWAVEFUNC);
+	return 0;
+}
+
 char* float_constant(float val){
 	volatile int i;
 	((float*)(&i))[0]=val;
@@ -458,30 +483,34 @@ char* float_function(void){
 	return 0;
 }
 
+static const void* str_func_list[]={
+	"CHR$(",chr_function,
+	"HEX$(",hex_function,
+	"DEC$(",dec_function,
+	"INPUT$(",input_function,
+	"GOSUB$(",gosub_function,
+	"ARGS$(",args_function,
+	"READ$(",read_function,
+	"SPRINTF$(",sprintf_function,
+	"FLOAT$(",floatstr_function,
+	"SYSTEM$(",system_function,
+	"FINPUT$(",finput_function,
+	// Additional functions follow
+	ADDITIONAL_STR_FUNCTIONS
+};
+
 char* str_function(void){
 	char* err;
-	if (nextCodeIs("CHR$(")) {
-		err=chr_function();
-	} else if (nextCodeIs("HEX$(")) {
-		err=hex_function();
-	} else if (nextCodeIs("DEC$(")) {
-		err=dec_function();
-	} else if (nextCodeIs("INPUT$(")) {
-		err=input_function();
-	} else if (nextCodeIs("GOSUB$(")) {
-		err=gosub_function();
-	} else if (nextCodeIs("ARGS$(")) {
-		err=args_function();
-	} else if (nextCodeIs("READ$(")) {
-		err=read_function();
-	} else if (nextCodeIs("SPRINTF$(")) {
-		err=sprintf_function();
-	} else if (nextCodeIs("FLOAT$(")) {
-		err=floatstr_function();
-	} else if (nextCodeIs("SYSTEM$(")) {
-		err=system_function();
-	} else if (nextCodeIs("FINPUT$(")) {
-		err=finput_function();
+	int i;
+	char* (*f)();
+	// Seek the function
+	for (i=0;i<sizeof(str_func_list)/sizeof(str_func_list[0]);i+=2){
+		if (nextCodeIs((char*)str_func_list[i])) break;
+	}
+	if (i<sizeof(str_func_list)/sizeof(str_func_list[0])) {
+		// Function found. Call it.
+		f=str_func_list[i+1];
+		err=f();
 	} else {
 		return ERR_SYNTAX;
 	}
@@ -491,73 +520,69 @@ char* str_function(void){
 	return 0;
 }
 
+// Aliases follow
+
+char* gcolor_function(){
+	return graphic_statement(FUNC_GCOLOR);
+}
+
+char* fopen_function(){
+	return fopen_statement_main(FUNC_FOPEN);
+}
+
+static const void* int_func_list[]={
+	"NOT(",not_function,
+	"DRAWCOUNT(",drawcount_function,
+	"MUSIC(",music_function,
+	"TVRAM(",tvram_function,
+	"KEYS(",keys_function,
+	"READ(",read_function,
+	"CREAD(",cread_function,
+	"GOSUB(",gosub_function,
+	"STRNCMP(",strncmp_function,
+	"PEEK(",peek_function,
+	"LEN(",len_function,
+	"ASC(",asc_function,
+	"SGN(",sgn_function,
+	"ABS(",abs_function,
+	"RND(",rnd_function,
+	"VAL(",val_function,
+	"INKEY(",inkey_function,
+	"ARGS(",args_function,
+	"SYSTEM(",system_function,
+	"INT(",int_function,
+	"GCOLOR(",gcolor_function,
+	"FOPEN(",fopen_function,
+	"FSEEK(",fseek_function,
+	"FLEN(",flen_function,
+	"FGET(",fget_statement,
+	"FPUT(",fput_statement,
+	"FGETC(",fgetc_function,
+	"FPUTC(",fputc_statement,
+	"FREMOVE(",fremove_statement,
+	"FEOF(",feof_function,
+	"PLAYWAVE(",playwave_function,
+	// Additional functions follow
+	ADDITIONAL_INT_FUNCTIONS
+};
+
 char* function(void){
 	char* err;
-	if (nextCodeIs("NOT(")) {
-		err=not_function();
-	} else if (nextCodeIs("DRAWCOUNT(")) {
-		err=drawcount_function();
-	} else if (nextCodeIs("MUSIC(")) {
-		err=music_function();
-	} else if (nextCodeIs("TVRAM(")) {
-		err=tvram_function();
-	} else if (nextCodeIs("KEYS(")) {
-		err=keys_function();
-	} else if (nextCodeIs("READ(")) {
-		err=read_function();
-	} else if (nextCodeIs("CREAD(")) {
-		err=cread_function();
-	} else if (nextCodeIs("GOSUB(")) {
-		err=gosub_function();
-	} else if (nextCodeIs("STRNCMP(")) {
-		err=strncmp_function();
-	} else if (nextCodeIs("PEEK(")) {
-		err=peek_function();
-	} else if (nextCodeIs("LEN(")) {
-		err=len_function();
-	} else if (nextCodeIs("ASC(")) {
-		err=asc_function();
-	} else if (nextCodeIs("SGN(")) {
-		err=sgn_function();
-	} else if (nextCodeIs("ABS(")) {
-		err=abs_function();
-	} else if (nextCodeIs("RND(")) {
-		err=rnd_function();
-	} else if (nextCodeIs("VAL(")) {
-		err=val_function();
-	} else if (nextCodeIs("INKEY(")) {
-		err=inkey_function();
-	} else if (nextCodeIs("ARGS(")) {
-		err=args_function();
-	} else if (nextCodeIs("SYSTEM(")) {
-		err=system_function();
-	} else if (nextCodeIs("INT(")) {
-		err=int_function();
-	} else if (nextCodeIs("GCOLOR(")) {
-		err=graphic_statement(FUNC_GCOLOR);
-	} else if (nextCodeIs("FOPEN(")) {
-		err=fopen_statement(FUNC_FOPEN);
-	} else if (nextCodeIs("FSEEK(")) {
-		err=fseek_function();
-	} else if (nextCodeIs("FLEN(")) {
-		err=flen_function();
-	} else if (nextCodeIs("FGET(")) {
-		err=fget_statement();
-	} else if (nextCodeIs("FPUT(")) {
-		err=fput_statement();
-	} else if (nextCodeIs("FGETC(")) {
-		err=fgetc_function();
-	} else if (nextCodeIs("FPUTC(")) {
-		err=fputc_statement();
-	} else if (nextCodeIs("FREMOVE(")) {
-		err=fremove_statement();
-	} else if (nextCodeIs("FEOF(")) {
-		err=feof_function();
+	int i;
+	char* (*f)();
+	// Seek the function
+	for (i=0;i<sizeof(int_func_list)/sizeof(int_func_list[0]);i+=2){
+		if (nextCodeIs((char*)int_func_list[i])) break;
+	}
+	if (i<sizeof(int_func_list)/sizeof(int_func_list[0])) {
+		// Function found. Call it.
+		f=int_func_list[i+1];
+		err=f();
 	} else {
 		return ERR_SYNTAX;
 	}
 	if (err) return err;
 	if (g_source[g_srcpos]!=')') return ERR_SYNTAX;
 	g_srcpos++;
-	return err;
+	return 0;
 }

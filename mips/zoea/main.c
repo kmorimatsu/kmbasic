@@ -214,3 +214,4 @@ int main(void){
 	runbasic(tempfile,0);
 	while(1) asm(WAIT);
 }
+

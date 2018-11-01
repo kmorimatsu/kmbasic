@@ -114,6 +114,8 @@ static const int reserved_var_names[]={
 	0x0011a9e9, //WEND
 	0x025aef62, //WHILE
 	0x025b8d75, //WIDTH
+	// Additional names follow
+	ADDITIONAL_RESERVED_VAR_NAMES
 };
 
 /*

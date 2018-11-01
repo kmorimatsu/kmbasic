@@ -15,11 +15,16 @@ extern unsigned int g_DEVCFG1;
 #define ps2init() not_ps2init_but_init_Timer1()
 int not_ps2init_but_init_Timer1();
 
-// Do not use set_graphmode()
-#define set_graphmode(m) (0)
-
 // Do not use asm("wait") but use asm("nop")
 #undef WAIT
 #define WAIT "nop"
 
 #endif // __DEBUG
+
+// key waiting macro
+
+#define debug_wait() lineinput((char*)&g_temp,3)
+#define debug_wait_char(x) do {\
+		printchar(x); \
+		lineinput((char*)&g_temp,3);\
+	} while(0)	
