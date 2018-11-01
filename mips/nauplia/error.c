@@ -1,0 +1,130 @@
+/*
+   This file is provided under the LGPL license ver 2.1.
+   Written by Katsumi.
+   http://hp.vector.co.jp/authors/VA016157/
+   kmorimatsu@users.sourceforge.jp
+*/
+
+#include "compiler.h"
+
+const char* g_err_str[]={
+	"Syntax error",
+	"Not enough binary space",
+	"Not enough memory",
+	"Divided by zero",
+	"Not yet implemented",
+	"Label or line number not found: ",
+	"Label too long",
+	"String too complexed",
+	"Data not found",
+	"Unknown error",
+	"Music syntax error\n",
+	" found more than twice",
+	"Break",
+	"Unexpected NEXT or RETURN statement",
+};
+
+char* resolve_label(int s6){
+	static char str[7];
+	int i,j;
+	if (s6<65536) {
+		// Line number
+		for(i=0;i<5;i++){
+			str[5-i]='0'+rem10_32(s6);
+			s6=div10_32(s6);
+		}
+		str[6]=0x00;
+		for(j=1;j<5;j++){
+			if (str[j]!='0') break;
+		}
+		return (char*)(str+j);
+	} else {
+		// Label
+		s6-=65536;
+		str[6]=0x00;
+		for(i=5;0<=i;i--){
+			if (s6<36) {
+				// First character must be A-Z, corresponding to 1-26 but not 10-35.
+				// See get_label() for the detail.
+				str[i]=s6-1+'A';
+				break;
+			} else {
+				// From second, 0-9 corresponds to 0-9 and A-Z corresponds to 10-35.
+				str[i]="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rem36_32(s6)];
+				s6=div36_32(s6);
+			}
+		}
+		return (char*)(str+i);
+	}
+}
+
+void pre_end_addr(int s6){
+	int i,j;
+	char str[7];
+	if (s6<0) s6=0-s6;
+	g_label=s6;
+	if (s6<65536) {
+		// Line number
+		printstr("\nIn line ");
+	} else {
+		// Label
+		printstr("\nAfter label ");
+	}
+	printstr(resolve_label(s6));
+	asm volatile("la $v0,%0"::"i"(&g_end_addr));
+	asm volatile("lw $v0,0($v0)");
+	asm volatile("nop");
+	asm volatile("jr $v0");
+}
+
+#define end_exec() \
+	asm volatile("addu $a0,$s6,$zero");\
+	asm volatile("j pre_end_addr")
+
+void err_break(void){
+	printstr(ERR_BREAK);
+	end_exec();
+}
+
+void err_data_not_found(void){
+	printstr(ERR_DATA_NF);
+	end_exec();
+}
+
+void err_label_not_found(void){
+	printstr(ERR_LABEL_NF);
+	printstr(resolve_label(g_label));
+	printstr("\n");
+	end_exec();
+}
+
+void err_div_zero(void){
+	printstr(ERR_DIV_0);
+	end_exec();
+}
+
+void err_no_mem(void){
+	printstr(ERR_NE_MEMORY);
+	end_exec();
+}
+
+void err_str_complex(void){
+	printstr(ERR_STR_COMPLEX);
+	end_exec();
+}
+
+void err_unknown(void){
+	printstr(ERR_UNKNOWN);
+	end_exec();
+}
+
+void err_music(char* str){
+	printstr(ERR_MUSIC);
+	printstr(str);
+	end_exec();
+}
+
+void err_unexp_next(void){
+	printstr(ERR_UNEXP_NEXT);
+	end_exec();	
+}
