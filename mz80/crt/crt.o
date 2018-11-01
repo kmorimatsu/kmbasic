@@ -1,0 +1,21 @@
+XL
+H 1 areas A global symbols
+S _main Ref0000
+S _init Ref0000
+S _freeMemory Ref0000
+S _strncmp Ref0000
+S _allocateMemory Ref0000
+S .__.ABS. Def0000
+A _CODE size 30 flags 0 addr 0
+S _printBreak Def0018
+S __allocateMemory Def0022
+S _checkBreak Def001B
+S __freeMemory Def002A
+T 00 00 CD 00 00 31 EE 10 C3 00 00 C3 18 00 C3
+R 00 00 00 00 02 03 01 00 02 09 00 00 00 0C 00 00
+T 0D 00 1B 00 C3 22 00 C3 2A 00 C3
+R 00 00 00 00 00 02 00 00 00 05 00 00 00 08 00 00
+T 16 00 00 00 CD 15 00 CD 1E 00 C0 C3 03 12 C5 CD
+R 00 00 00 00 02 02 03 00
+T 24 00 00 00 54 5D C1 C9 E5 CD 00 00 E1 C9
+R 00 00 00 00 02 02 04 00 02 0A 02 00

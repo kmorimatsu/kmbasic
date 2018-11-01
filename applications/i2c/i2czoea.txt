@@ -1,0 +1,279 @@
+REM I2C test program for MachiKania
+REM Zoea and Microchip MCP23017
+REM This is a LED-blinking example.
+REM GPA0 (pin #21) is connected to LED
+REM through 330 ohm resistor.
+REM Pull-up rsistors (2.2 kohm) are
+REM connected to I2C lines.
+REM PIC32MX170F256B pins #16 and #21
+REM (RB7 and RB10; down and up buttons)
+REM are connected to MCP23017 pins #13
+REM and #12, respectively.
+
+print "Initialize"
+
+REM Initialize
+gosub I2CZIN
+
+REM Initialize MCP23017 and set GPA0
+REM for output
+REM Send address: 0x00 for IODIRA
+REM Send data for IODIRA: 0xfe for
+REM output at GPA0
+gosub I2CZ,0x40,0x00,0xFE,-1
+
+REM Set GPPUB to 0xff
+REM Send address: 0x0D for GPPUB
+REM Send data for GPPUB for pull up all
+gosub I2CZ,0x40,0x0D,0xFF,-1
+
+print "Start"
+
+for i=1 to 10
+
+  REM Set GPA0 to H
+  REM Send address: 0x14 for OLATA
+  REM Send data for OLATA: 0x01 for H
+  REM at GPA0
+  gosub I2CZ,0x40,0x14,0x01,-1
+  
+  wait 30
+  
+  REM Set GPA0 to L
+  REM Send address: 0x14 for OLATA
+  REM Send data for OLATA: 0x00 for H
+  REM at GPA0
+  gosub I2CZ,0x40,0x14,0x00,-1
+  
+  wait 30
+  
+  REM Read from GPB
+  REM Send address: 0x13 for GPIOB
+  REM Restart and send control byte for
+  REM read
+  print hex$(gosub(I2CZ,0x40,0x13,-3,0x41,-2))
+  
+  wait 30
+
+next
+
+REM All done. Reset peripherals.
+gosub I2CZEN
+
+end
+
+REM I2C routine wrapper for MachiKania
+REM Zoea ver 0.5
+REM Written by Katsumi
+REM This code is in public domain.
+REM 
+REM This code requres I2C routine for
+REM Nauplia.
+REM 
+REM Subroutines:
+REM   I2CZIN: Initialize I2C peripheral
+REM   I2CZEN: End using I2C
+REM   I2CZ  : Send data to I2C
+REM           Parameters must end either
+REM           -1 or -2
+REM             -1: STOP communication
+REM             -2: Read 1 bytes and
+REM                 STOP communication
+REM                 with NAK
+REM             -3: Do repeated START
+REM   These subroutines do not destroy
+REM   variables.
+
+end
+
+REM Initialize I2C peripheral
+label I2CZIN
+var B,D,E
+gosub I2CINI
+return
+
+REM End using I2C
+label I2CZEN
+var B,D,E
+gosub I2CEND
+return
+
+REM Send to I2C peripheral
+REM Parameters for calling this
+REM subroutine must end with -1 or -2
+REM For reading byte data from
+REM peripheral, use -2.
+REM For repeated START, use -3
+label I2CZ
+var B,D,E,I
+gosub I2CS
+I=1
+while 1
+  D=args(I)
+  I=I+1
+  if D=-1 then
+    break
+  elseif D=-2 then
+    E=gosub(I2C8RN)
+    break
+  elseif D=-3 then
+    gosub I2CS
+  elseif 0<=D and D<=0xff then
+    if gosub(I2C8BD)<0 then
+      print "No ACK"
+      gosub I2CEND
+      end
+    endif
+  else
+    print "Wrong I2C parameter: ";D
+    gosub I2CEND
+    end
+  endif
+wend
+gosub I2CP
+return E
+
+REM I2C routine for MachiKania Nauplia ver 0.5
+REM Written by Katsumi
+REM This code is in public domain.
+REM 
+REM Use RB7  (RB: 0x0080) for CLK line
+REM Use RB10 (RB: 0x0400) for DAT line
+REM Maximum (peak) speed for I2C communication is 100 kHz.
+REM Note that actual speed is lower than this,
+REM because NTSC video signal construction is needed by CPU.
+REM 
+REM Subroutines:
+REM   I2CINI: Initialize I2C peripheral
+REM   I2CEND: End using I2C
+REM   I2CS  : Start signal
+REM   I2CP  : Stop signal
+REM   I2C8BD: Send 8 bit data in D and reveive in E (-1 if failed)
+REM   I2C8RA: Read 8 bit in E and send ACK
+REM   I2C8RN: Read 8 bit in E and send NAK
+REM   All routines destroy B. I2C8BD, I2CRA, and I2C8RN also destroys E.
+REM 
+REM PIX32MX peripheral:
+REM   TRISB   =0xBF886110
+REM   TRISBCLR=0xBF886114 (TRISB+4*1)
+REM   TRISBSET=0xBF886118 (TRISB+4*2)
+REM   PORTB   =0xBF886120 (TRISB+4*4)
+REM   LATBCLR =0xBF886134 (TRISB+4*9)
+
+end
+
+REM Assign PIC32 ports to I2C CLK and DAT
+REM Use RB10 (RB: 0x0400) for CLK line
+REM Use RB7  (RB: 0x0080) for DAT line
+REM Modify following lines to change port #.
+label I2CCLK
+return 0x0400
+label I2CDAT
+return 0x0080
+
+REM Initialize I2C
+REM Both input for RB7 and RB10
+REM LATB7 and LATB10 are both 0
+REM Wait for 5.2 usec before return
+
+label I2CINI
+B=0xBF886110
+B(2)=gosub(I2CCLK)+gosub(I2CDAT)
+B(9)=gosub(I2CCLK)+gosub(I2CDAT)
+exec 0x34020240,0x1440FFFF,0x2442FFFF
+return
+
+REM End using I2C
+REM Both input for RB7 and RB10
+
+label I2CEND
+B=0xBF886110
+B(2)=gosub(I2CCLK)+gosub(I2CDAT)
+return
+
+REM Start signal
+label I2CS
+B=0xBF886110
+B(2)=gosub(I2CDAT)                    :REM SDA=H
+exec 0x34020090,0x1440FFFF,0x2442FFFF :REM 2.6 usec
+B(2)=gosub(I2CCLK)                    :REM SCL=H
+exec 0x34020090,0x1440FFFF,0x2442FFFF :REM 2.6 usec
+B(1)=gosub(I2CDAT)                    :REM SDA=L
+exec 0x34020090,0x1440FFFF,0x2442FFFF :REM 2.6 usec
+B(1)=gosub(I2CCLK)                    :REM SCL=L
+exec 0x34020090,0x1440FFFF,0x2442FFFF :REM 2.6 usec
+return
+
+REM Stop signal
+label I2CP
+B(1)=gosub(I2CDAT)                    :REM SDA=L
+exec 0x34020090,0x1440FFFF,0x2442FFFF :REM 2.6 usec
+B(2)=gosub(I2CCLK)                    :REM SCL=H
+exec 0x34020240,0x1440FFFF,0x2442FFFF :REM 5.2 usec
+B(2)=gosub(I2CDAT)                    :REM SDA=H
+exec 0x34020240,0x1440FFFF,0x2442FFFF :REM 5.2 usec
+return
+
+REM Send and receive 8 bit data
+REM This returns -1 if ACK bit is H
+REM Prepare D for sending 8 bit data.
+REM Read data will be in E.
+REM For reading 8 bits, let D=0x1ff (NAK) or D=0x2ff (ACK)
+
+label I2C8BD
+E=0
+if D and 0x80 then E=E+gosub(I2CWHR)*0x80 else gosub I2CWL
+if D and 0x40 then E=E+gosub(I2CWHR)*0x40 else gosub I2CWL
+if D and 0x20 then E=E+gosub(I2CWHR)*0x20 else gosub I2CWL
+if D and 0x10 then E=E+gosub(I2CWHR)*0x10 else gosub I2CWL
+if D and 0x08 then E=E+gosub(I2CWHR)*0x08 else gosub I2CWL
+if D and 0x04 then E=E+gosub(I2CWHR)*0x04 else gosub I2CWL
+if D and 0x02 then E=E+gosub(I2CWHR)*0x02 else gosub I2CWL
+if D and 0x01 then E=E+gosub(I2CWHR)*0x01 else gosub I2CWL
+if D and 0x100 then gosub I2CWHR: return E
+if D and 0x200 then gosub I2CWL:  return E
+if gosub(I2CWHR) then E=-1
+return E
+
+REM Receive 8 bit data with ACK
+
+label I2C8RA
+D=0x2ff
+goto I2C8BD
+
+REM Receive 8 bit data with NAK
+
+label I2C8RN
+D=0x1ff
+goto I2C8BD
+
+REM 1 bit write/read routines, I2CWHR and I2CWL
+REM To read, use I2CWHR.
+
+label I2CWHR
+B=0xBF886110
+B(2)=gosub(I2CDAT)                      :REM SDA=H
+exec 0x34020090,0x1440FFFF,0x2442FFFF   :REM 2.6 usec
+B(2)=gosub(I2CCLK)                      :REM SCL=H
+exec 0x34020240,0x1440FFFF,0x2442FFFF   :REM 5.2 usec
+if B(4) and gosub(I2CDAT) then I2CWH2
+  REM read SDA as L
+  B(1)=gosub(I2CDAT)                    :REM SDA=L
+  B(1)=gosub(I2CCLK)                    :REM SCL=L
+  exec 0x34020090,0x1440FFFF,0x2442FFFF :REM 2.6 usec
+  return 0
+label I2CWH2
+  REM read SDA as H
+  B(1)=gosub(I2CCLK)                    :REM SCL=L
+  exec 0x34020090,0x1440FFFF,0x2442FFFF :REM 2.6 usec
+  return 1
+
+label I2CWL
+B=0xBF886110
+B(1)=gosub(I2CDAT)                    :REM SDA=L
+exec 0x34020090,0x1440FFFF,0x2442FFFF :REM 2.6 usec
+B(2)=gosub(I2CCLK)                    :REM SCL=H
+exec 0x34020240,0x1440FFFF,0x2442FFFF :REM 5.2 usec
+B(1)=gosub(I2CCLK)                    :REM SCL=L
+exec 0x34020090,0x1440FFFF,0x2442FFFF :REM 2.6 usec
+return 0

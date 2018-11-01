@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<!--
+/**********************************
+* KM-BASIC web written by Katsumi *
+*     This script is released     *
+*       under the LGPL v2.1.      *
+**********************************/
+-->
+<head>
+	<meta charset="UTF-8" />
+	<link rel="stylesheet" type="text/css" href="./style.css" />
+	<!-- Load javascript fies -->
+	<script type="text/javascript" src="./get.js"></script>
+	<script type="text/javascript" src="./dom.js"></script>
+	<script type="text/javascript" src="./interrupt.js"></script>
+	<script type="text/javascript" src="./button.js"></script>
+	<script type="text/javascript" src="./display.js"></script>
+	<script type="text/javascript" src="./audio.js"></script>
+	<script type="text/javascript" src="./music.js"></script>
+	<script type="text/javascript" src="./basic.js"></script>
+	<title>KM-BASIC web v0.5 for KM-1120</title>
+</head>
+<body>
+	<div class="side" id="side">
+		<iframe src="help.txt" class="help"></iframe>
+	</div>
+	<div class="main">
+		<!-- Main canvas used for display with 30x27 character resolution -->
+		<canvas id="display" width="240" height="216"></canvas>
+		<!-- Canvas used for constructing character image -->
+		<canvas id="font" width="8" height="8" style="display:none;"></canvas>
+		<!-- Debug buttons -->
+		<div class="buttons">
+			<input id="RUNbutton" value="Run" type="button" onclick="button.run();"/>
+			<input id="STOPbutton" value="Stop" type="button" onclick="button.stop();" /><br />
+			<input id="Sbutton" value="S" type="button" onmousedown="button.start(1);" onmouseout="button.start(0);" onmouseup="button.start(0);"/>
+			<input id="Fbutton" value="F" type="button" onmousedown="button.fire(1);" onmouseout="button.fire(0);" onmouseup="button.fire(0);"/>
+			<input id="Lbutton" value="←" type="button" onmousedown="button.left(1);" onmouseout="button.left(0);" onmouseup="button.left(0);"/>
+			<input id="Ubutton" value="↑" type="button" onmousedown="button.up(1);" onmouseout="button.up(0);" onmouseup="button.up(0);"/>
+			<input id="Dbutton" value="↓" type="button" onmousedown="button.down(1);" onmouseout="button.down(0);" onmouseup="button.down(0);"/>
+			<input id="Rbutton" value="→" type="button" onmousedown="button.right(1);" onmouseout="button.right(0);" onmouseup="button.right(0);"/>
+		</div>
+		<!-- BASIC Source -->
+		<textarea id="basicsource" class="basicsource">REM Write BASIC code here.</textarea>
+		<!-- BASIC code -->
+		<textarea id="code" class="basicsource" class="debug"></textarea>
+	</div>
+	<!-- Load main script -->
+	<script type="text/javascript" src="main.js"></script>
+</body>
+</html>

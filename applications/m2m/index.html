@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja">
+<!--
+/********************************
+* Japanese for MachiKania       *
+*    This script is released    *
+*      under the LGPL v2.1.     *
+********************************/
+-->
+<head>
+	<meta charset="UTF-8" />
+	<link rel="stylesheet" type="text/css" href="./style.css" />
+	<!-- Load javascript fies -->
+	<script type="text/javascript" src="./dom.js"></script>
+	<script type="text/javascript" src="./font.js"></script>
+	<script type="text/javascript" src="./main.js"></script>
+	<title>Japanese for MachiKania ver 0.3</title>
+</head>
+<body>
+	<p>日本語をここに入力（カナは全角で）:<textarea id="textarea" class="main"></textarea></p>
+	<p><input type="button" value="↓ MachiKania BASIC code に変換 ↓" onclick="main();"/>
+	<input type="checkbox" id="toZoea" name="zoea" onclick="clickzoea(this);">Zoea用コードを作成</p>
+	<p id="labelprefix">ラベルプレフィックス：<input id="prefix" type="text" value="JTXT" /></p>
+	<textarea id="basiccode" class="main"></textarea>
+</body>
+</html>

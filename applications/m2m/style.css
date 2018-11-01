@@ -1,0 +1,14 @@
+/**********************************
+*     This script is released     *
+*       under the LGPL v2.1.      *
+**********************************/
+
+body {
+	background: #c0c0c0;
+	width: 600px;
+}
+.main {
+	width: 600px;
+	height: 350px;
+	float: left;
+}
