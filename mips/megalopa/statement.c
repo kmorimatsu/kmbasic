@@ -1231,6 +1231,7 @@ char* graphic_statement(enum functions func){
 		v0: C/S$/BMP
 	*/
 	char* err;
+	int spos;
 	int paramnum;
 	switch(func){
 		case FUNC_PSET:// X1,Y1[,C]
@@ -1305,7 +1306,15 @@ char* graphic_statement(enum functions func){
 		// BMP
 		if (g_source[g_srcpos]!=',') return ERR_SYNTAX;
 		g_srcpos++;
+		spos=g_srcpos;
 		err=get_label();
+		if (g_label && !err) {
+			if (search_var_name(g_label)!=-1) {
+				// This is a long var name.
+				g_label=0;
+				g_srcpos=spos;
+			}
+		}
 		if (g_label && !err) {
 			// Label/number is constant.
 			// Linker will change following codes later.
