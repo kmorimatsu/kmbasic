@@ -32,13 +32,17 @@ void post_run(void);
 
 // Megalopa specific lists of statements and functions
 #define ADDITIONAL_STATEMENTS \
-	"OUT "      ,out_statement,\
-	"OUT8H "    ,out8h_statement,\
-	"OUT8L "    ,out8l_statement,\
-	"OUT16 "    ,out16_statement,\
-	"PWM "      ,pwm_statement,\
-	"SERIAL "   ,serial_statement,\
-	"SERIALOUT ",serialout_statement,
+	"OUT "         ,out_statement,\
+	"OUT8H "       ,out8h_statement,\
+	"OUT8L "       ,out8l_statement,\
+	"OUT16 "       ,out16_statement,\
+	"PWM "         ,pwm_statement,\
+	"SERIAL "      ,serial_statement,\
+	"SERIALOUT "   ,serialout_statement,\
+	"I2CWRITE "    ,i2cwrite_statement,\
+	"I2CWRITEDATA ",i2cwritedata_statement,\
+	"I2CREADDATA " ,i2creaddata_statement,\
+	"I2C"          ,i2c_statement,
 
 #define ADDITIONAL_INT_FUNCTIONS \
 	"IN("  ,    in_function,\
@@ -46,7 +50,9 @@ void post_run(void);
 	"IN8L("  ,  in8l_function,\
 	"IN16("  ,  in16_function,\
 	"ANALOG("  ,analog_function,\
-	"SERIALIN(",serialin_function,
+	"SERIALIN(",serialin_function,\
+	"I2CREAD(",i2cread_function,\
+	"I2CERROR(",i2cerror_function,
 
 #define ADDITIONAL_STR_FUNCTIONS
 #define ADDITIONAL_RESERVED_VAR_NAMES \
@@ -63,28 +69,35 @@ void post_run(void);
 	0x45f58f5d, /*SERIAL*/ \
 	0x000163c6, /*SPI*/ \
 	0x47093355, /*SPIOUT*/ \
-	0x01fa1cff, /*SPIIN*/
+	0x01fa1cff, /*SPIIN*/ \
+	0x00012de4, /*I2C*/
 
 
 #define EXTRA_MASK 0x003F
 #define EXTRA_STEP 0x0001
 enum extra{
-	EXTRA_SYSTEM     =EXTRA_STEP*0,
-	EXTRA_OUT        =EXTRA_STEP*1,
-	EXTRA_OUT8H      =EXTRA_STEP*2,
-	EXTRA_OUT8L      =EXTRA_STEP*3,
-	EXTRA_OUT16      =EXTRA_STEP*4,
-	EXTRA_IN         =EXTRA_STEP*5,
-	EXTRA_IN8H       =EXTRA_STEP*6,
-	EXTRA_IN8L       =EXTRA_STEP*7,
-	EXTRA_IN16       =EXTRA_STEP*8,
-	EXTRA_ANALOG     =EXTRA_STEP*9,
-	EXTRA_PWM        =EXTRA_STEP*10,
-	EXTRA_SERIALOUT  =EXTRA_STEP*11,
-	EXTRA_SERIALIN   =EXTRA_STEP*12,
-	EXTRA_SERIAL     =EXTRA_STEP*13,
-	EXTRA_SPIOUT     =EXTRA_STEP*14,
-	EXTRA_SPIIN      =EXTRA_STEP*15,
-	EXTRA_SPI        =EXTRA_STEP*16,
+	EXTRA_SYSTEM       =EXTRA_STEP*0,
+	EXTRA_OUT          =EXTRA_STEP*1,
+	EXTRA_OUT8H        =EXTRA_STEP*2,
+	EXTRA_OUT8L        =EXTRA_STEP*3,
+	EXTRA_OUT16        =EXTRA_STEP*4,
+	EXTRA_IN           =EXTRA_STEP*5,
+	EXTRA_IN8H         =EXTRA_STEP*6,
+	EXTRA_IN8L         =EXTRA_STEP*7,
+	EXTRA_IN16         =EXTRA_STEP*8,
+	EXTRA_ANALOG       =EXTRA_STEP*9,
+	EXTRA_PWM          =EXTRA_STEP*10,
+	EXTRA_SERIALOUT    =EXTRA_STEP*11,
+	EXTRA_SERIALIN     =EXTRA_STEP*12,
+	EXTRA_SERIAL       =EXTRA_STEP*13,
+	EXTRA_SPIOUT       =EXTRA_STEP*14,
+	EXTRA_SPIIN        =EXTRA_STEP*15,
+	EXTRA_SPI          =EXTRA_STEP*16,
+	EXTRA_I2C          =EXTRA_STEP*17,
+	EXTRA_I2CWRITE     =EXTRA_STEP*18,
+	EXTRA_I2CREAD      =EXTRA_STEP*19,
+	EXTRA_I2CWRITEDATA =EXTRA_STEP*20,
+	EXTRA_I2CREADDATA  =EXTRA_STEP*21,
+	EXTRA_I2CERROR     =EXTRA_STEP*22,
 	// MAX 63
 };

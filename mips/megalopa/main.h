@@ -7,8 +7,8 @@
 
 #define MEGALOPA
 #define SYSVER1 "Megalopa"
-#define SYSVER2 "1.0"
-#define BASVER "KM-1300"
+#define SYSVER2 "1.01"
+#define BASVER "KM-1301"
 
 #define INIFILE "MACHIKAM.INI" // 初期設定ファイル
 #define HEXFILE "MACHIKAM.HEX" // 実行中HEXファイル名がこれと一致した場合はエディタ起動

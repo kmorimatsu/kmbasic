@@ -221,7 +221,18 @@ static const char initext[]=
 
 static const char bastext[]=
 "CLS\n"
-"print NOT(0);IN(0)\n"
+"gosub LABEL2\n"
+"end\n"
+"label LABEL2\n"
+"  gosub LABEL1,1,2,3\n"
+"  a=gosub(LABEL1,101,102,103)\n"
+"return\n"
+"label LABEL1\n"
+"  for i=0 to 3\n"
+"    print args(i);chr$(32);\n"
+"  next\n"
+"return\n"
+"\n"
 "\n";
 
 /*
