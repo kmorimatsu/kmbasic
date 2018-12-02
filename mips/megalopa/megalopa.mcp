@@ -65,6 +65,7 @@ file_037=.
 file_038=.
 file_039=.
 file_040=.
+file_041=.
 [GENERATED_FILES]
 file_000=no
 file_001=no
@@ -107,6 +108,7 @@ file_037=no
 file_038=no
 file_039=no
 file_040=no
+file_041=no
 [OTHER_FILES]
 file_000=no
 file_001=no
@@ -149,6 +151,7 @@ file_037=no
 file_038=no
 file_039=no
 file_040=yes
+file_041=yes
 [FILE_INFO]
 file_000=compiler.c
 file_001=debug.c
@@ -191,6 +194,7 @@ file_037=sdfsio370fLib.X.a
 file_038=lib_videoout_megalopa.X.a
 file_039=app_p32MX370F512H.ld
 file_040=help.txt
+file_041=reservednames.js
 [SUITE_INFO]
 suite_guid={62D235D8-2DB2-49CD-AF24-5489A6015337}
 suite_state=

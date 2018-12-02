@@ -236,10 +236,10 @@ int lib_system(int a0, int a1 ,int v0, int a3, int g_gcolor, int g_prev_x, int g
 		case EXTRA_I2CREAD:
 			return lib_i2cread(v0,g_libparams);
 		case EXTRA_I2CWRITEDATA:
-			lib_i2cwritedata(v0,g_libparams+2,g_libparams[2],g_libparams[1]);
+			lib_i2cwritedata(v0,g_libparams+2,g_libparams[2],(unsigned char*)g_libparams[1]);
 			return v0;
 		case EXTRA_I2CREADDATA:
-			lib_i2creaddata(v0,g_libparams+2,g_libparams[2],g_libparams[1]);
+			lib_i2creaddata(v0,g_libparams+2,g_libparams[2],(unsigned char*)g_libparams[1]);
 			return v0;
 		case EXTRA_I2CERROR:
 			return lib_i2cerror();

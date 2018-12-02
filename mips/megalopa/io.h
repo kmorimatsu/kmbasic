@@ -44,9 +44,9 @@ char* serialin_function();
 void lib_i2c(int freq);
 int lib_i2cerror();
 void lib_i2cwrite(int num, int* data);
-void lib_i2cwritedata(int num1, int* data1, int num2, int* data2);
+void lib_i2cwritedata(int num1, int* data1, int num2, unsigned char* data2);
 unsigned int lib_i2cread(int num, int* data);
-void lib_i2creaddata(int num1, int* data1, int num2, unsigned int* data2);
+void lib_i2creaddata(int num1, int* data1, int num2, unsigned char* data2);
 
 char* i2c_statement();
 char* i2cerror_function();

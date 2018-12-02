@@ -220,18 +220,16 @@ static const char initext[]=
 
 
 static const char bastext[]=
-"CLS\n"
-"gosub LABEL2\n"
-"end\n"
-"label LABEL2\n"
-"  gosub LABEL1,1,2,3\n"
-"  a=gosub(LABEL1,101,102,103)\n"
-"return\n"
-"label LABEL1\n"
-"  for i=0 to 3\n"
-"    print args(i);chr$(32);\n"
-"  next\n"
-"return\n"
+"I2C 100\n"
+"DIM D(5)\n"
+"T$=\"Hello MachiKania!\"\n"
+"I2CREADDATA 0x50,D,18,0x00,0x00\n"
+"PRINT I2CERROR()\n"
+"PRINT D$\n"
+"I2CWRITEDATA 0x50,T,18,0x00,0x00\n"
+"PRINT I2CERROR()\n"
+"WAIT 60\n"
+"I2CREADDATA 0x50,D,18,0x00,0x00\n"
 "\n"
 "\n";
 

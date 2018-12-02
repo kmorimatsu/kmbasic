@@ -110,7 +110,7 @@ void lib_i2cwrite(int num, int* data){
 	g_ack=ack;
 }
 
-void lib_i2cwritedata(int num1, int* data1, int num2, int* data2){
+void lib_i2cwritedata(int num1, int* data1, int num2, unsigned char* data2){
 	int ack;
 	int i;
 	// Start signal
@@ -169,7 +169,7 @@ unsigned int lib_i2cread(int num, int* data){
 	return (unsigned int) ret;
 }
 
-void lib_i2creaddata(int num1, int* data1, int num2, unsigned int* data2){
+void lib_i2creaddata(int num1, int* data1, int num2, unsigned char* data2){
 	int ack;
 	int i;
 	// Start signal
@@ -211,14 +211,16 @@ void lib_i2creaddata(int num1, int* data1, int num2, unsigned int* data2){
 
 char* i2c_statement(){
 	char* err;
-	next_position();
-	if (g_source[g_srcpos]==')') {
+	int spos,opos;
+	spos=g_srcpos;
+	opos=g_objpos;
+	err=get_value();
+	if (err) {
+		g_srcpos=spos;
+		g_objpos=opos;
 		// Use 100 kHz if parameter is omitted
-		g_object[g_objpos++]=0x34020064;                      // ori   v0,zero,100
-	} else {
-		// Or use integer value
-		err=get_value();
-		if (err) return err;
+		check_obj_space(1);
+		g_object[g_objpos++]=0x34020064; // ori   v0,zero,100
 	}
 	call_lib_code(LIB_SYSTEM | EXTRA_I2C);
 	return 0;
@@ -276,6 +278,9 @@ char* i2cwritedata_readdata(enum libs lib){
 	// Get address
 	err=get_value();
 	if (err) return err;
+	next_position();
+	if (g_source[g_srcpos]!=',') return ERR_SYNTAX;
+	g_srcpos++;
 	// Prepare stack and store $v0
 	opos=g_objpos;
 	check_obj_space(2);
@@ -284,6 +289,9 @@ char* i2cwritedata_readdata(enum libs lib){
 	// Get buffer address
 	err=get_value();
 	if (err) return err;
+	next_position();
+	if (g_source[g_srcpos]!=',') return ERR_SYNTAX;
+	g_srcpos++;
 	check_obj_space(1);
 	g_object[g_objpos++]=0xAFA20004;              // sw          v0,4(sp)
 	// Get buffer size
@@ -302,7 +310,7 @@ char* i2cwritedata_readdata(enum libs lib){
 	g_object[opos]=0x27BD0000|((0-stack)&0xffff); // addiu       sp,sp,-xxxx (see above)
 	// v0 is the number of data to send (including 7 bit address)
 	check_obj_space(1);
-	g_object[g_objpos++]=0x34020000|(stack/4-8);  // ori         v0,zero,xxxx
+	g_object[g_objpos++]=0x34020000|(stack/4-2);  // ori         v0,zero,xxxx
 	// Call library
 	call_lib_code(lib);
 	// Remove stack
