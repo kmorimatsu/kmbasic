@@ -75,7 +75,8 @@ void lib_i2c(int freq){
 			=47727267 / Fsck - 9.93 -2
 	*/
 	int brg = 47727/freq - 10 - 2;
-	if (brg<2) brg=2;
+	if (brg<2) brg=2;       // Max 3409 kHz
+	if (4095<brg) brg=4905; // Min 11.6 kHz
 
 	// Note that there are no RPG2R and RPG3R registors.
 	// The pins G2 and G3 will be activated when I2C1CONbits.ON=1

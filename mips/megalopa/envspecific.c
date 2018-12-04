@@ -10,7 +10,6 @@
 #include "compiler.h"
 #include "lib_video_megalopa.h"
 #include "ps2keyboard.h"
-#include "io.h"
 
 /*
 	int readbuttons();
@@ -227,6 +226,20 @@ int lib_system(int a0, int a1 ,int v0, int a3, int g_gcolor, int g_prev_x, int g
 			return v0;
 		case EXTRA_SERIALIN:
 			return lib_serialin(v0);
+		case EXTRA_SPI:
+			lib_spi(g_libparams[1],g_libparams[2],v0);
+			return v0;
+		case EXTRA_SPIWRITE:
+			lib_spiwrite(v0,g_libparams);
+			return v0;
+		case EXTRA_SPIREAD:
+			return lib_spiread(v0,g_libparams);
+		case EXTRA_SPIWRITEDATA:
+			lib_spiwritedata(v0,g_libparams+2,g_libparams[2],(unsigned int*)g_libparams[1]);
+			return v0;
+		case EXTRA_SPIREADDATA:
+			lib_spireaddata(v0,g_libparams+2,g_libparams[2],(unsigned int*)g_libparams[1]);
+			return v0;
 		case EXTRA_I2C:
 			lib_i2c(v0);
 			return v0;
@@ -243,11 +256,6 @@ int lib_system(int a0, int a1 ,int v0, int a3, int g_gcolor, int g_prev_x, int g
 			return v0;
 		case EXTRA_I2CERROR:
 			return lib_i2cerror();
-		case EXTRA_SPI:
-		case EXTRA_SPIOUT:
-		case EXTRA_SPIIN:
-			// TODO: Implement IO functions
-			return v0;
 		default:
 			err_unknown();
 			return v0;

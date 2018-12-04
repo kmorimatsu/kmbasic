@@ -54,3 +54,19 @@ char* i2cwrite_statement();
 char* i2cread_function();
 char* i2cwritedata_statement();
 char* i2creaddata_statement();
+
+/*
+	Library and statements/functions in spi.c
+*/
+
+void lib_spi(int baud, int bitmode, int csdata);
+void lib_spiwrite(int num, int* data);
+void lib_spiwritedata(int num1, int* data1, int num2, unsigned int* data2);
+unsigned int lib_spiread(int num, int* data);
+void lib_spireaddata(int num1, int* data1, int num2, unsigned int* data2);
+
+char* spi_statement();
+char* spiwrite_statement();
+char* spiread_function();
+char* spiwritedata_statement();
+char* spireaddata_statement();

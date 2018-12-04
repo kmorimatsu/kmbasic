@@ -42,7 +42,11 @@ void post_run(void);
 	"I2CWRITE "    ,i2cwrite_statement,\
 	"I2CWRITEDATA ",i2cwritedata_statement,\
 	"I2CREADDATA " ,i2creaddata_statement,\
-	"I2C"          ,i2c_statement,
+	"I2C"          ,i2c_statement,\
+	"SPI "         ,spi_statement,\
+	"SPIWRITE "    ,spiwrite_statement,\
+	"SPIWRITEDATA ",spiwritedata_statement,\
+	"SPIREADDATA " ,spireaddata_statement,
 
 #define ADDITIONAL_INT_FUNCTIONS \
 	"IN("  ,    in_function,\
@@ -51,8 +55,9 @@ void post_run(void);
 	"IN16("  ,  in16_function,\
 	"ANALOG("  ,analog_function,\
 	"SERIALIN(",serialin_function,\
-	"I2CREAD(",i2cread_function,\
-	"I2CERROR(",i2cerror_function,
+	"I2CREAD(" ,i2cread_function,\
+	"I2CERROR(",i2cerror_function,\
+	"SPIREAD(" ,spiread_function,
 
 #define ADDITIONAL_STR_FUNCTIONS
 #define ADDITIONAL_RESERVED_VAR_NAMES \
@@ -68,8 +73,6 @@ void post_run(void);
 	0x00015596, /*PWM*/ \
 	0x45f58f5d, /*SERIAL*/ \
 	0x000163c6, /*SPI*/ \
-	0x47093355, /*SPIOUT*/ \
-	0x01fa1cff, /*SPIIN*/ \
 	0x00012de4, /*I2C*/
 
 
@@ -90,14 +93,16 @@ enum extra{
 	EXTRA_SERIALOUT    =EXTRA_STEP*11,
 	EXTRA_SERIALIN     =EXTRA_STEP*12,
 	EXTRA_SERIAL       =EXTRA_STEP*13,
-	EXTRA_SPIOUT       =EXTRA_STEP*14,
-	EXTRA_SPIIN        =EXTRA_STEP*15,
-	EXTRA_SPI          =EXTRA_STEP*16,
-	EXTRA_I2C          =EXTRA_STEP*17,
-	EXTRA_I2CWRITE     =EXTRA_STEP*18,
-	EXTRA_I2CREAD      =EXTRA_STEP*19,
-	EXTRA_I2CWRITEDATA =EXTRA_STEP*20,
-	EXTRA_I2CREADDATA  =EXTRA_STEP*21,
-	EXTRA_I2CERROR     =EXTRA_STEP*22,
+	EXTRA_I2C          =EXTRA_STEP*14,
+	EXTRA_I2CWRITE     =EXTRA_STEP*15,
+	EXTRA_I2CREAD      =EXTRA_STEP*16,
+	EXTRA_I2CWRITEDATA =EXTRA_STEP*17,
+	EXTRA_I2CREADDATA  =EXTRA_STEP*18,
+	EXTRA_I2CERROR     =EXTRA_STEP*19,
+	EXTRA_SPI          =EXTRA_STEP*20,
+	EXTRA_SPIWRITE     =EXTRA_STEP*21,
+	EXTRA_SPIREAD      =EXTRA_STEP*22,
+	EXTRA_SPIWRITEDATA =EXTRA_STEP*23,
+	EXTRA_SPIREADDATA  =EXTRA_STEP*24,
 	// MAX 63
 };

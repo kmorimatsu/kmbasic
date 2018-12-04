@@ -151,8 +151,6 @@ var namearray=[
 	'PWM',
 	'SERIAL',
 	'SPI',
-	'SPIOUT',
-	'SPIIN',
 	'I2C',
 ];
 var result='';
