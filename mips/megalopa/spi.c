@@ -82,6 +82,7 @@ void lib_spi(int baud, int bitmode, int csdata){
 	SPI1CONbits.ON=0;
 	// CS setting
 	if (0x10<=csdata && csdata<0x70) {
+// TODO: avoid batting (output to input pin)
 		// Set cs global valiables
 		g_csaddress=(unsigned int*)(0xBF886030| ((csdata&0xF0)<<4));
 		g_csbit=1<<(csdata&0x0F);
@@ -296,7 +297,6 @@ char* spi_statement(){
 
 // Local prototyping: use I2C routines for SPI statements
 char* i2cwrite_read(enum libs lib);
-char* i2cwritedata_readdata(enum libs lib);
 
 char* spiwrite_statement(){
 	return i2cwrite_read(LIB_SYSTEM | EXTRA_SPIWRITE);
@@ -304,9 +304,51 @@ char* spiwrite_statement(){
 char* spiread_function(){
 	return i2cwrite_read(LIB_SYSTEM | EXTRA_SPIREAD);
 }
+
+char* spiwritedata_readdata(enum libs lib){
+	char* err;
+	int opos;
+	int stack=8;
+	// Prepare stack
+	opos=g_objpos;
+	check_obj_space(1);
+	g_object[g_objpos++]=0x27BD0000;              // addiu       sp,sp,-xxxx
+	// Get buffer address
+	err=get_value();
+	if (err) return err;
+	next_position();
+	if (g_source[g_srcpos]!=',') return ERR_SYNTAX;
+	g_srcpos++;
+	check_obj_space(1);
+	g_object[g_objpos++]=0xAFA20004;              // sw          v0,4(sp)
+	// Get buffer size
+	err=get_value();
+	if (err) return err;
+	check_obj_space(1);
+	g_object[g_objpos++]=0xAFA20008;              // sw          v0,8(sp)
+	// Additional data to send to device
+	while(g_source[g_srcpos]==','){
+		g_srcpos++;
+		stack+=4;
+		err=get_value();
+		if (err) return err;
+		g_object[g_objpos++]=0xAFA20000|stack;    // sw          v0,xxxx(sp)
+	}
+	g_object[opos]=0x27BD0000|((0-stack)&0xffff); // addiu       sp,sp,-xxxx (see above)
+	// v0 is the number of data to send
+	check_obj_space(1);
+	g_object[g_objpos++]=0x34020000|(stack/4-2);  // ori         v0,zero,xxxx
+	// Call library
+	call_lib_code(lib);
+	// Remove stack
+	check_obj_space(1);
+	g_object[g_objpos++]=0x27BD0000|stack;        // addiu       sp,sp,xxxx
+	return 0;
+}
+
 char* spiwritedata_statement(){
-	return i2cwritedata_readdata(LIB_SYSTEM | EXTRA_SPIWRITEDATA);
+	return spiwritedata_readdata(LIB_SYSTEM | EXTRA_SPIWRITEDATA);
 }
 char* spireaddata_statement(){
-	return i2cwritedata_readdata(LIB_SYSTEM | EXTRA_SPIREADDATA);
+	return spiwritedata_readdata(LIB_SYSTEM | EXTRA_SPIREADDATA);
 }
