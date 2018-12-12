@@ -229,7 +229,13 @@ static const char bastext[]=
 "CLS\n"
 "useclass class1\n"
 "print \"MAIN\"\n"
+"a=new(class1)\n"
+"\n"
+"\n"
+"\n"
+"\n"
 "\n";
+
 
 static const char classtext[]=
 "REM\n"
@@ -240,10 +246,23 @@ static const char classtext[]=
     Test function for constructing assemblies from C codes.
 */
 
+static const void* debugjumptable[]={
+	FSfread,
+	FSfopen,
+};
+
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
-//	if (a0<0xa0008192) return 0xa0000000;
-	asm volatile("lw $sp,18($fp)");
-	asm volatile("addiu $sp,$sp,2044");
+	asm volatile(".set noreorder");
+	asm volatile("sw $v0,-4($sp)");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
 	return a2+a3;
 }
 

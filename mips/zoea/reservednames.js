@@ -104,6 +104,7 @@ var namearray=[
 	'MODF',
 	'MUSIC',
 	'NEXT',
+	'NEW',
 	'NOT',
 	'PCG',
 	'PEEK',

@@ -5,6 +5,27 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+/*
+	Usage of MIPS32 registors
+	$zero:   always zero
+	$at:     not used
+	$v0:     return value or result of last calculation
+	$v1:     for calculation (like $v0=$v1*$v0)
+	$a0-$a2: parameters for calling library ($a2=$v0)
+	$a3:     function # for library
+	$t0-$t7: used as temporary registors
+	$s0-$s4: not used
+	$s5:     pointer to parameters list
+	$s6:     line or label number
+	$s7:     address of call_library()
+	$t8-$t9: used as temporary registors
+	$k0-$k1: not used
+	$gp:     for accessing global valiables by C
+	$sp:     stack pointer
+	$fp($s8) for accessing valiables by BASIC
+	$ra:     contains return address
+*/
+
 #include "compiler.h"
 
 void start_program(void* addr, void* memory){

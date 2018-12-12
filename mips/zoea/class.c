@@ -149,3 +149,111 @@ void construct_class_list(){
 		g_classlist=0;
 	}
 }
+
+void* search_method(int* classdata,int method){
+	int pos,i;
+	int nums=classdata[1];
+	pos=1;
+	pos+=nums&0xff;      // exclude public field
+	pos+=(nums>>8)&0xff; // exclude private field
+	for(i=2*((nums>>16)&0xff-1);i>=0;i=i-2){ // Start loop at the last of method
+		if (classdata[pos+i]==method) return (void*)classdata[pos+i+1];
+	}
+	return 0; // not found
+}
+
+int object_size(int* classdata){
+	int nums=classdata[1];
+	int size=nums&0xff;   // public field
+	size+=(nums>>8)&0xff; // private
+	return size;	
+}
+
+char* new_function(){
+	char* err;
+	int class,size;
+	int i,stack, opos;
+	int* data;
+	int* classdata;
+	void* init_method;
+	// Resolve class name
+	err=get_label();
+	if (err) return err;
+	if (!g_label) return ERR_SYNTAX;
+	class=g_label;
+	// Get class data from cmpdata
+	cmpdata_reset();
+	while(data=cmpdata_find(CMPDATA_CLASS)){
+		if (data[1]==class) break;
+	}
+	if (!data) return ERR_NO_CLASS;
+	classdata=(int*)data[2];
+	size=object_size(classdata);
+	// Check if INIT method exists
+	init_method=search_method(classdata,LABEL_INIT);
+	if (!init_method) {
+		// INIT method does not exist
+		// Create object
+		call_quicklib_code(lib_calloc_memory,ASM_ORI_A0_ZERO_|size);
+		// All done
+		return 0;
+	}
+	// INIT method exists
+	// Construct stacks for parameters
+	stack=0;
+	opos=g_objpos;
+	check_obj_space(1);
+	g_object[g_objpos++]=0x27BD0000;               // addiu       sp,sp,-xx
+	// Check if there is/are parameter(s)
+	next_position();
+	if (g_source[g_srcpos]==',') {
+		// Parameter(s) exist(s)
+		stack=+4;
+		while(g_source[g_srcpos]==','){
+			g_srcpos++;
+			stack+=4;
+			err=get_stringFloatOrValue();
+			if (err) return err;
+			check_obj_space(1);
+			g_object[g_objpos++]=0xAFA20000|stack; // sw          v0,xx(sp)
+			next_position();
+		}
+		check_obj_space(2);
+		g_object[g_objpos++]=0xAFB50004;           // sw          s5,4(sp)
+		g_object[g_objpos++]=0x03A0A821;           // addu        s5,sp,zero
+	}
+	stack+=4; // For $v0 (see below)
+	g_object[opos]|=((0-stack)&0xFFFF);            // addiu       sp,sp,-xx (See above)
+	// Create object
+	// Note that $v0 will contain the address of object
+	call_quicklib_code(lib_calloc_memory,ASM_ORI_A0_ZERO_|size);
+	check_obj_space(1);
+	g_object[g_objpos++]=0xAFA20000;               // sw          v0,0(sp)
+	// Call INIT method
+	check_obj_space(6);
+	g_object[g_objpos++]=0x04130001;               // bgezall     zero,label1
+	g_object[g_objpos++]=0x27BDFFFC;               // addiu       sp,sp,-4
+	                                               //label1:
+	g_object[g_objpos++]=0x27FF000C;               // addiu       ra,ra,12
+	g_object[g_objpos++]=0x08000000|
+		((((int)init_method)>>2)&0x03ffffff);      // j           init_method
+	g_object[g_objpos++]=0xAFBF0004;               // sw          ra,4(sp)
+	// Reload #v0
+	g_object[g_objpos++]=0x8FA20000|stack;         // lw          v0,xx(sp)
+	// Remove stack
+	check_obj_space(2);
+	if (4<stack) {
+		g_object[g_objpos++]=0x8FB50008;           // lw          s5,4(sp)
+	}
+	g_object[g_objpos++]=0x27BD0000|stack;         // addiu       sp,sp,xx
+	// All done. $v0 will be
+	return 0;
+
+}
+
+
+/*
+	TODO:
+	1. Improve gosub statement and args() function for args(0) being # of arguments.
+
+*/

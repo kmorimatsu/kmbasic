@@ -562,6 +562,7 @@ static const void* int_func_list[]={
 	"FREMOVE(",fremove_statement,
 	"FEOF(",feof_function,
 	"PLAYWAVE(",playwave_function,
+	"NEW(",new_function,
 	// Additional functions follow
 	ADDITIONAL_INT_FUNCTIONS
 };

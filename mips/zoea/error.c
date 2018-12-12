@@ -31,6 +31,7 @@ const char* g_err_str[]={
 	"Invalid variable name",
 	"WAVE format error",
 	"ERR_COMPILE_CLASS",
+	"Class not found",
 };
 
 char* resolve_label(int s6){

@@ -182,3 +182,25 @@ int get_permanent_var_num(){
 	err_no_block();
 	return 0;
 }
+
+int get_varnum_from_address(void* address){
+	int i;
+	for (i=0;i<ALLOC_BLOCK_NUM;i++){
+		if (g_var_mem[i]==(int)address) return i;
+	}
+	// not found
+	return -1;
+}
+
+void* lib_calloc_memory(int size){
+	int var_num;
+	void* ret;
+	// Allocate memory
+	ret=calloc_memory(size,-1);
+	var_num=get_varnum_from_address(ret);
+	if (var_num<0) err_no_mem();
+	// Move to permanent area
+	move_from_perm_block(var_num);
+	// Return address
+	return ret;
+}

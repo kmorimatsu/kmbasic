@@ -24,7 +24,7 @@
 // Start # of permanent blocks
 #define ALLOC_PERM_BLOCK 229
 // Number of blocks that can be assigned for memory allocation (including all above)
-#define ALLOC_BLOCK_NUM 239
+#define ALLOC_BLOCK_NUM 329
 
 // Persistent RAM bytes used for object, heap and exception data
 #ifndef PERSISTENT_RAM_SIZE
@@ -278,6 +278,8 @@ void* calloc_memory(int size, int var_num);
 void move_to_perm_block(int var_num);
 void move_from_perm_block(int var_num);
 int get_permanent_var_num(void);
+int get_varnum_from_address(void* address);
+void* lib_calloc_memory(int size);
 
 char* link(void);
 char* get_label(void);
@@ -320,6 +322,8 @@ char* update_class_info(int class);
 char* construct_class_structure(int class);
 void delete_cmpdata_for_class();
 
+char* new_function();
+
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])
 #define ERR_NE_BINARY (char*)(g_err_str[1])
@@ -344,6 +348,7 @@ void delete_cmpdata_for_class();
 #define ERR_INVALID_VAR_NAME (char*)(g_err_str[20])
 #define ERR_WAVE (char*)(g_err_str[21])
 #define ERR_COMPILE_CLASS (char*)(g_err_str[22])
+#define ERR_NO_CLASS (char*)(g_err_str[23])
 
 /* comple data type numbers */
 #define CMPDATA_RESERVED 0
@@ -352,6 +357,9 @@ void delete_cmpdata_for_class();
 #define CMPDATA_FIELD    3
 
 /* Macros */
+
+// Lables as 31 bit integer
+#define LABEL_INIT 0x0007df55
 
 // Skip blanc(s) in source code
 #define next_position() while(g_source[g_srcpos]==' ') {g_srcpos++;}
@@ -369,6 +377,22 @@ void delete_cmpdata_for_class();
 	check_obj_space(2);\
 	g_object[g_objpos++]=0x02E0F809;\
 	g_object[g_objpos++]=0x24070000|((x)&0x0000FFFF)
+
+// Insert code for calling quick library
+//3C081234   lui         t0,0x1234
+//35085678   ori         t0,t0,0x5678
+//01000008   jr          t0
+//00000000   nop         
+#define call_quicklib_code(x,y) \
+	check_obj_space(4);\
+	g_object[g_objpos++]=0x3C080000|(((unsigned int)(x))>>16);\
+	g_object[g_objpos++]=0x35080000|(((unsigned int)(x))&0x0000FFFF);\
+	g_object[g_objpos++]=0x01000008;\
+	g_object[g_objpos++]=(y)
+
+#define ASM_NOP 0x00000000
+#define ASM_ADDU_A0_V0_ZERO 0x00402021
+#define ASM_ORI_A0_ZERO_ 0x34040000
 
 // Division macro for unsigned long
 // Valid for 31 bits for all cases and 32 bits for some cases

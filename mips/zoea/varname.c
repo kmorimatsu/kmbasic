@@ -81,6 +81,7 @@ static const int reserved_var_names[]={
 	0x000abca3, //MODF
 	0x016418d4, //MUSIC
 	0x000b4321, //NEXT
+	0x000148f8, //NEW
 	0x00014a5d, //NOT
 	0x000152c0, //PCG
 	0x000cacec, //PEEK
