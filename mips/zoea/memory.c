@@ -200,7 +200,7 @@ void* lib_calloc_memory(int size){
 	var_num=get_varnum_from_address(ret);
 	if (var_num<0) err_no_mem();
 	// Move to permanent area
-	move_from_perm_block(var_num);
+	move_to_perm_block(var_num);
 	// Return address
 	return ret;
 }

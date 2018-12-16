@@ -194,7 +194,12 @@ char* new_function(){
 	if (!init_method) {
 		// INIT method does not exist
 		// Create object
-		call_quicklib_code(lib_calloc_memory,ASM_ORI_A0_ZERO_|size);
+		call_quicklib_code(lib_calloc_memory,ASM_ORI_A0_ZERO_|(size+1));
+		// First word of object is pointer to classdata
+		check_obj_space(3);
+		g_object[g_objpos++]=0x3C080000|(((unsigned int)classdata)>>16);        // lui         t0,0x1234
+		g_object[g_objpos++]=0x35080000|(((unsigned int)classdata)&0x0000FFFF); // ori         t0,t0,0x5678
+		g_object[g_objpos++]=0xAC480000; // sw          t0,0(v0)
 		// All done
 		return 0;
 	}

@@ -381,14 +381,15 @@ char* new_function();
 // Insert code for calling quick library
 //3C081234   lui         t0,0x1234
 //35085678   ori         t0,t0,0x5678
-//01000008   jr          t0
+//0100F809   jalr        ra,t0
 //00000000   nop         
-#define call_quicklib_code(x,y) \
-	check_obj_space(4);\
-	g_object[g_objpos++]=0x3C080000|(((unsigned int)(x))>>16);\
-	g_object[g_objpos++]=0x35080000|(((unsigned int)(x))&0x0000FFFF);\
-	g_object[g_objpos++]=0x01000008;\
-	g_object[g_objpos++]=(y)
+#define call_quicklib_code(x,y) do {\
+		check_obj_space(4);\
+		g_object[g_objpos++]=0x3C080000|(((unsigned int)(x))>>16);\
+		g_object[g_objpos++]=0x35080000|(((unsigned int)(x))&0x0000FFFF);\
+		g_object[g_objpos++]=0x0100F809;\
+		g_object[g_objpos++]=(y);\
+	} while (0)	
 
 #define ASM_NOP 0x00000000
 #define ASM_ADDU_A0_V0_ZERO 0x00402021

@@ -226,11 +226,9 @@ static const char initext[]=
 
 
 static const char bastext[]=
-"CLS\n"
 "useclass class1\n"
-"print \"MAIN\"\n"
 "a=new(class1)\n"
-"\n"
+"print hex$(a)\n"
 "\n"
 "\n"
 "\n"
@@ -253,8 +251,8 @@ static const void* debugjumptable[]={
 
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
-	asm volatile("sw $v0,-4($sp)");
-	asm volatile("nop");
+	asm volatile("sw $t0,0($v0)");
+	asm volatile("jalr $ra,$t0");
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");
