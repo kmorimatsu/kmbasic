@@ -323,6 +323,7 @@ char* construct_class_structure(int class);
 void delete_cmpdata_for_class();
 
 char* new_function();
+char* field_statement();
 
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])

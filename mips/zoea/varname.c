@@ -48,6 +48,7 @@ static const int reserved_var_names[]={
 	0x00058fcf, //FEOF
 	0x00059895, //FGET
 	0x00a67500, //FGETC
+	0x00a7e061, /*FIELD*/
 	0x0005a3a2, //FILE
 	0x177f0ca5, //FINPUT
 	0x0005b1df, //FLEN

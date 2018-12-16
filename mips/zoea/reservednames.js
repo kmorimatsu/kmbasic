@@ -71,6 +71,7 @@ var namearray=[
 	'FEOF',
 	'FGET',
 	'FGETC',
+	'FIELD',
 	'FILE',
 	'FINPUT',
 	'FLEN',

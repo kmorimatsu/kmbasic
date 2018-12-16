@@ -237,7 +237,7 @@ static const char bastext[]=
 
 static const char classtext[]=
 "REM\n"
-"print \"CLASS1\"\n"
+"FIELD test,test2\n"
 "\n";
 
 /*

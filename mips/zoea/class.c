@@ -66,8 +66,8 @@ char* update_class_info(int class){
 */
 
 char* construct_class_structure(int class){
-	int num;
 	int* record;
+	int num=0;
 	// Register current address to global var
 	g_class_structure=&g_object[g_objpos];
 	// Construct a class structure in object area in following lines
@@ -78,7 +78,7 @@ char* construct_class_structure(int class){
 	// Public fields
 	cmpdata_reset();
 	while(record=cmpdata_find(CMPDATA_FIELD)){
-		if (record[0]&0xffff==PUBLIC_FIELD) {
+		if ((record[0]&0xffff)==PUBLIC_FIELD) {
 			num+=1<<0;
 			check_obj_space(1);
 			g_object[g_objpos++]=record[1];
@@ -87,7 +87,7 @@ char* construct_class_structure(int class){
 	// Private fields
 	cmpdata_reset();
 	while(record=cmpdata_find(CMPDATA_FIELD)){
-		if (record[0]&0xffff==PRIVATE_FIELD) {
+		if ((record[0]&0xffff)==PRIVATE_FIELD) {
 			num+=1<<8;
 			check_obj_space(1);
 			g_object[g_objpos++]=record[1];
@@ -96,7 +96,7 @@ char* construct_class_structure(int class){
 	// Public methods
 	cmpdata_reset();
 	while(record=cmpdata_find(CMPDATA_FIELD)){
-		if (record[0]&0xffff==PUBLIC_METHOD) {
+		if ((record[0]&0xffff)==PUBLIC_METHOD) {
 			num+=1<<16;
 			check_obj_space(2);
 			g_object[g_objpos++]=record[1];
@@ -114,11 +114,13 @@ void delete_cmpdata_for_class(){
 	cmpdata_reset();
 	while(record=cmpdata_find(CMPDATA_FIELD)){
 		cmpdata_delete(record);
+		cmpdata_reset();
 	}	
 	// Delete longvar data
 	cmpdata_reset();
 	while(record=cmpdata_find(CMPDATA_USEVAR)){
 		cmpdata_delete(record);
+		cmpdata_reset();
 	}
 }
 
@@ -256,6 +258,42 @@ char* new_function(){
 
 }
 
+char* field_statement(){
+// TODO: This statement is only valid in class definition code.
+	char* err;
+	int i;
+	int data[1];
+	int is_private=0;
+	next_position();
+	if (nextCodeIs("PRIVATE ")) {
+		is_private=1;
+	} else if (nextCodeIs("PUBLIC ")) {
+		is_private=0;
+	}
+	do {
+		next_position();
+		i=check_var_name();
+		if (i<65536) return ERR_SYNTAX;
+		// Register varname
+		err=register_var_name(i);
+		if (err) return err;
+		if (g_source[g_srcpos]=='#' || g_source[g_srcpos]=='$') g_srcpos++;
+		// Register field
+		data[0]=i;
+		if (is_private) {
+			err=cmpdata_insert(CMPDATA_FIELD,PRIVATE_FIELD,(int*)&data[0],1);
+		} else {
+			err=cmpdata_insert(CMPDATA_FIELD,PUBLIC_FIELD,(int*)&data[0],1);
+		}
+		next_position();
+		if (g_source[g_srcpos]==',') {
+			g_srcpos++;
+		} else {
+			break;
+		}
+	} while(1);
+	return 0;
+}
 
 /*
 	TODO:

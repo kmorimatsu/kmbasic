@@ -1633,6 +1633,7 @@ static const void* statement_list[]={
 	"USEVAR ",usevar_statement,
 	"PLAYWAVE ",playwave_statement,
 	"USECLASS ",useclass_statement,
+	"FIELD ",field_statement,
 	// List of additional statements follows
 	ADDITIONAL_STATEMENTS
 };

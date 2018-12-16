@@ -99,6 +99,7 @@ void cmpdata_delete(int* record){
 	for(data=record-1;g_cmpdata<=data;data--){
 	     data[delnum]=data[0];
 	}
+	g_cmpdata+=delnum;
 	// Reset
 	cmpdata_reset();
 }
