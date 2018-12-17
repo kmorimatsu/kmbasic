@@ -40,7 +40,7 @@ void post_run(void){
 	// Stop peripherals
 	lib_i2c(0);
 	lib_serial(0,0,0);
-	lib_spi(0,0,0);
+	lib_spi(0,0,0,0);
 }
 
 
@@ -220,7 +220,7 @@ int lib_system(int a0, int a1 ,int v0, int a3, int g_gcolor, int g_prev_x, int g
 		case EXTRA_SERIALIN:
 			return lib_serialin(v0);
 		case EXTRA_SPI:
-			lib_spi(g_libparams[1],g_libparams[2],v0);
+			lib_spi(g_libparams[1],g_libparams[2],g_libparams[3],v0);
 			return v0;
 		case EXTRA_SPIWRITE:
 			lib_spiwrite(v0,g_libparams);

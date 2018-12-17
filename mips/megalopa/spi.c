@@ -48,7 +48,7 @@ unsigned int readWord() {
 	Library functions follow
 */
 
-void lib_spi(int baud, int bitmode, int csdata){
+void lib_spi(int baud, int bitmode, int clkmode, int csdata){
 	/*
 		Fsck=Fpb/(2 x (SPIxBRG+1))
 		SPIxBRG=Fpb/Fsck/2 - 1
@@ -141,12 +141,12 @@ void lib_spi(int baud, int bitmode, int csdata){
 	}
 	// Input data sampled at end of data output time
 	SPI1CONbits.SMP=1;
-	// Serial output data changes on transition from Idle clock state to active clock state
-	SPI1CONbits.CKE=0;
+	// CKE=0(default): Serial output data changes on transition from Idle clock state to active clock state
+	SPI1CONbits.CKE=(clkmode&1) ? 1:0;
 	// Not slave mode
 	SPI1CONbits.SSEN=0;
-	// Idle state for clock is a high level; active state is a low level.
-	SPI1CONbits.CKP=1;
+	// CKP=1(default): Idle state for clock is a high level; active state is a low level.
+	SPI1CONbits.CKP=(clkmode&2) ? 1:0;
 	// Master mode
 	SPI1CONbits.MSTEN=1;
 	// SDI pin is controlled by the SPI module
@@ -276,7 +276,7 @@ char* spi_statement(){
 	err=get_value();
 	if (err) return err;
 	check_obj_space(2);
-	g_object[g_objpos++]=0x27BDFFF8; // addiu       sp,sp,-8
+	g_object[g_objpos++]=0x27BDFFF4; // addiu       sp,sp,-12
 	g_object[g_objpos++]=0xAFA20004; // sw          v0,4(sp)
 	// Get 2nd parameter
 	// Either 8/16/31 bit word length. 8 is the default.
@@ -291,6 +291,18 @@ char* spi_statement(){
 	check_obj_space(1);
 	g_object[g_objpos++]=0xAFA20008; // sw          v0,8(sp)
 	// Get 3rd parameter
+	// Either 0,1,2,3, 2 is the default.
+	if (g_source[g_srcpos]==',') {
+		g_srcpos++;
+		err=get_value();
+		if (err) return err;
+	} else {
+		check_obj_space(1);
+		g_object[g_objpos++]=0x34020002; //ori         v0,zero,2
+	}
+	check_obj_space(1);
+	g_object[g_objpos++]=0xAFA20012; // sw          v0,12(sp)
+	// Get 4th parameter
 	// Port for CS. PORTD9 (0x39) is the default.
 	if (g_source[g_srcpos]==',') {
 		g_srcpos++;
@@ -303,7 +315,7 @@ char* spi_statement(){
 	// Insert calling system code
 	call_lib_code(LIB_SYSTEM | EXTRA_SPI);
 	check_obj_space(1);
-	g_object[g_objpos++]=0x27BD0008; // addiu       sp,sp,8
+	g_object[g_objpos++]=0x27BD000C; // addiu       sp,sp,12
 	return 0;
 }
 
