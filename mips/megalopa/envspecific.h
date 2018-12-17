@@ -46,7 +46,8 @@ void err_peri_not_init(void);
 	"SPI "         ,spi_statement,\
 	"SPIWRITE "    ,spiwrite_statement,\
 	"SPIWRITEDATA ",spiwritedata_statement,\
-	"SPIREADDATA " ,spireaddata_statement,
+	"SPIREADDATA " ,spireaddata_statement,\
+	"SPISWAPDATA " ,spiswapdata_statement,
 
 #define ADDITIONAL_INT_FUNCTIONS \
 	"IN("  ,    in_function,\
@@ -104,5 +105,6 @@ enum extra{
 	EXTRA_SPIREAD      =EXTRA_STEP*22,
 	EXTRA_SPIWRITEDATA =EXTRA_STEP*23,
 	EXTRA_SPIREADDATA  =EXTRA_STEP*24,
+	EXTRA_SPISWAPDATA  =EXTRA_STEP*25,
 	// MAX 63
 };

@@ -70,3 +70,4 @@ char* spiwrite_statement();
 char* spiread_function();
 char* spiwritedata_statement();
 char* spireaddata_statement();
+char* spiswapdata_statement();

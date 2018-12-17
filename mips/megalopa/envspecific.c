@@ -233,6 +233,9 @@ int lib_system(int a0, int a1 ,int v0, int a3, int g_gcolor, int g_prev_x, int g
 		case EXTRA_SPIREADDATA:
 			lib_spireaddata(v0,g_libparams+2,g_libparams[2],(unsigned int*)g_libparams[1]);
 			return v0;
+		case EXTRA_SPISWAPDATA:
+			lib_spiswapdata(v0,g_libparams+2,g_libparams[2],(unsigned int*)g_libparams[1]);
+			return v0;
 		case EXTRA_I2C:
 			lib_i2c(v0);
 			return v0;

@@ -38,8 +38,10 @@ void idle(){
 		SPI1BUF;\
 	} while(0)	
 
-unsigned int readWord() {
-	SPI1BUF = g_wordmask;
+#define readWord() writeReadWord(g_wordmask)
+
+unsigned int writeReadWord(unsigned int word) {
+	SPI1BUF = word&g_wordmask;
 	while (SPI1STATbits.SPIBUSY);
 	return SPI1BUF&g_wordmask;
 }
@@ -264,6 +266,39 @@ void lib_spireaddata(int num1, int* data1, int num2, unsigned int* data2){
 	disable_cs();
 }
 
+void lib_spiswapdata(int num1, int* data1, int num2, unsigned int* data2){
+	int i;
+	// Check if initiated
+	if (!SPI1CONbits.ON) err_peri_not_init();
+	// Start signal
+	idle();
+	enable_cs();
+	// Send words from parameters
+	for(i=1;i<=num1;i++){
+		writeWord(data1[i]);
+	}
+	// Read words and put them into dimension
+	if (g_wordmask>>16) {
+		// 32 bit mode
+		for(i=0;i<num2;i++){
+			((unsigned int*)data2)[i]=writeReadWord(((unsigned int*)data2)[i]);
+		}
+	} else if (g_wordmask>>8) {
+		// 16 bit mode
+		for(i=0;i<num2;i++){
+			((unsigned short*)data2)[i]=writeReadWord(((unsigned short*)data2)[i]);
+		}
+	} else {
+		// 8 bit mode
+		for(i=0;i<num2;i++){
+			((unsigned char*)data2)[i]=writeReadWord(((unsigned char*)data2)[i]);
+		}
+	}
+	// End signal
+	idle();
+	disable_cs();
+}
+
 
 /*
 	Statements and function follow
@@ -375,4 +410,7 @@ char* spiwritedata_statement(){
 }
 char* spireaddata_statement(){
 	return spiwritedata_readdata(LIB_SYSTEM | EXTRA_SPIREADDATA);
+}
+char* spiswapdata_statement(){
+	return spiwritedata_readdata(LIB_SYSTEM | EXTRA_SPISWAPDATA);
 }
