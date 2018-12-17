@@ -246,6 +246,8 @@ void err_no_block(void);
 void err_invalid_param(void);
 void err_file(void);
 void err_wave(void);
+void err_not_obj(void);
+void err_not_field(int fieldname, int classname);
 char* resolve_label(int s6);
 
 void set_sound(unsigned long* data, int flagsLR);
@@ -324,6 +326,8 @@ void delete_cmpdata_for_class();
 
 char* new_function();
 char* field_statement();
+char* integer_obj_field();
+unsigned long long lib_obj_field(int* object, int fieldname);
 
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])
@@ -350,6 +354,8 @@ char* field_statement();
 #define ERR_WAVE (char*)(g_err_str[21])
 #define ERR_COMPILE_CLASS (char*)(g_err_str[22])
 #define ERR_NO_CLASS (char*)(g_err_str[23])
+#define ERR_NOT_OBJ (char*)(g_err_str[24])
+#define ERR_NOT_FIELD (char*)(g_err_str[25])
 
 /* comple data type numbers */
 #define CMPDATA_RESERVED 0
@@ -411,3 +417,6 @@ char* field_statement();
 // Divide by 36 (valid for 32 bits)
 #define div36_32(x) div32(x,0xe38e38e4,37)
 #define rem36_32(x) (x-36*div36_32(x))
+
+// Check if within RAM
+#define withinRAM(x) ((&RAM[0])<=((char*)(x)) && ((char*)(x))<(&RAM[RAMSIZE]))

@@ -228,7 +228,9 @@ static const char initext[]=
 static const char bastext[]=
 "useclass class1\n"
 "a=new(class1)\n"
-"print hex$(a)\n"
+"a.test=1234\n"
+"a.test2=5678\n"
+"print hex$(a),a.test,a.test2,a.test3\n"
 "\n"
 "\n"
 "\n"
@@ -253,9 +255,9 @@ int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
 	asm volatile("sw $t0,0($v0)");
 	asm volatile("jalr $ra,$t0");
-	asm volatile("nop");
-	asm volatile("nop");
-	asm volatile("nop");
+	asm volatile("lui $a1,0x1234");
+	asm volatile("ori $a1,$a1,0x5678");
+	asm volatile("sw    $v1,4($sp)");
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");

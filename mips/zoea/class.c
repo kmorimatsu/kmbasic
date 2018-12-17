@@ -296,6 +296,53 @@ char* field_statement(){
 }
 
 /*
+	char* integer_obj_field();
+	Implementation of access to field of object.
+	This feature is recursive. When an object is applied to the field of another object, 
+	following expression is possible (for example):
+		obj1.field1.field2
+	
+*/
+char* integer_obj_field(){
+	// $v0 contains the address of object.
+	int i;
+	char* err;
+	do {
+		i=check_var_name();
+		if (i<65536) return ERR_SYNTAX;
+		check_obj_space(2);
+		g_object[g_objpos++]=0x3C050000|((i>>16)&0x0000FFFF); // lui   a1,xxxx
+		g_object[g_objpos++]=0x34A50000|(i&0x0000FFFF);       // ori a1,a1,xxxx
+		// First and second arguments are address of object and field name, respectively.
+		call_quicklib_code(lib_obj_field,ASM_ADDU_A0_V0_ZERO);
+		// Check if "." follows
+		next_position();
+		if (g_source[g_srcpos]=='.') {
+			// "." found. $v0 is adress of an object. See the field.
+			g_srcpos++;
+			continue;
+		}
+	} while(0);
+	return 0;
+}
+
+unsigned long long lib_obj_field(int* object, int fieldname){
+	int* class;
+	int i,numfield;
+	// Check if this is an object (if within the RAM).
+	if (!withinRAM(object)) err_not_obj();
+	class=(int*)object[0];
+	if (!withinRAM(class)) err_not_obj();
+	// Obtain # of public field
+	numfield=class[1]&0xff;
+	for(i=0;i<numfield;i++){
+		if (class[2+i]==fieldname) break;
+	}
+	if (i==numfield) err_not_field(fieldname,class[0]);
+	// Got address of field value. Return value as $v0 and address as $v1.
+	return (((unsigned long long)(&object[1+i]))<<32) | (unsigned long long)object[1+i];
+}
+/*
 	TODO:
 	1. Improve gosub statement and args() function for args(0) being # of arguments.
 

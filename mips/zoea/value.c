@@ -150,6 +150,12 @@ char* get_simple_value(void){
 			// Simple value
 			check_obj_space(1);
 			g_object[g_objpos++]=0x8FC20000|(i*4); // lw v0,xx(s8)
+			// Check if this is an object
+			if (g_source[g_srcpos]=='.') {
+				// This is an object. See the filed of it.
+				g_srcpos++;
+				return integer_obj_field();
+			}
 		}
 	}
 	// No error 

@@ -32,6 +32,8 @@ const char* g_err_str[]={
 	"WAVE format error",
 	"ERR_COMPILE_CLASS",
 	"Class not found",
+	"Not an object",
+	" is not public field",
 };
 
 char* resolve_label(int s6){
@@ -170,3 +172,15 @@ void err_wave(void){
 	end_exec();	
 }
 
+void err_not_obj(void){
+	printstr(ERR_NOT_OBJ);
+	end_exec();	
+}
+
+void err_not_field(int fieldname, int classname){
+	printstr(resolve_label(classname));
+	printchar('.');
+	printstr(resolve_label(fieldname));
+	printstr(ERR_NOT_FIELD);
+	end_exec();	
+}

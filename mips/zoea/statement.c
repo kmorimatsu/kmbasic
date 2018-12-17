@@ -680,6 +680,28 @@ char* let_statement(){
 		g_object[g_objpos++]=0x27BD0004;              // addiu sp,sp,4
 		g_object[g_objpos++]=0xAC620000;              // sw    v0,0(v1)
 		return 0;
+	} else if (b2=='.') {
+		// Field of object
+		g_srcpos++;
+		check_obj_space(1);
+		g_object[g_objpos++]=0x8FC20000|(i*4);        // lw    v0,xx(s8)
+		err=integer_obj_field();
+		if (err) return err;
+		// $v1 is address to store value. Save it in stack.
+		check_obj_space(1);
+		g_object[g_objpos++]=0x27BDFFFC;              // addiu sp,sp,-4
+		g_object[g_objpos++]=0xAFA30004;              // sw    v1,4(sp)
+		// Get value
+		next_position();
+		if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
+		g_srcpos++;
+		err=get_value();
+		if (err) return err;
+		// Store in field of object
+		check_obj_space(3);
+		g_object[g_objpos++]=0x8FA30004;              // lw    v1,4(sp)
+		g_object[g_objpos++]=0x27BD0004;              // addiu sp,sp,4
+		g_object[g_objpos++]=0xAC620000;              // sw    v0,0(v1)
 	} else {
 		// Integer A-Z
 		next_position();
