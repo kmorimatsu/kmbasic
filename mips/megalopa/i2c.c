@@ -66,6 +66,10 @@ unsigned char readByte(char ack) {
 */
 
 void lib_i2c(int freq){
+	if (freq==0) {
+		I2C1CON = 0;
+		return;
+	}
 	/*
 		Tpgd=104e-9, PBclk=95454533
 		I2CxBRG=((1/(2 x Fsck) - Tpgd) x PBclk) -2
@@ -89,12 +93,16 @@ void lib_i2c(int freq){
 }
 
 int lib_i2cerror(){
+	// Check if initiated
+	if (!I2C1CONbits.ON) err_peri_not_init();
 	return (int)g_ack;
 }
 
 void lib_i2cwrite(int num, int* data){
 	int ack;
 	int i;
+	// Check if initiated
+	if (!I2C1CONbits.ON) err_peri_not_init();
 	// Start signal
 	idle();
 	start();
@@ -114,6 +122,8 @@ void lib_i2cwrite(int num, int* data){
 void lib_i2cwritedata(int num1, int* data1, int num2, unsigned char* data2){
 	int ack;
 	int i;
+	// Check if initiated
+	if (!I2C1CONbits.ON) err_peri_not_init();
 	// Start signal
 	idle();
 	start();
@@ -143,6 +153,8 @@ unsigned int lib_i2cread(int num, int* data){
 	int ack;
 	int i;
 	unsigned int ret=0xffffffff; // Retuen -1 as error
+	// Check if initiated
+	if (!I2C1CONbits.ON) err_peri_not_init();
 	// Start signal
 	idle();
 	start();
@@ -173,6 +185,8 @@ unsigned int lib_i2cread(int num, int* data){
 void lib_i2creaddata(int num1, int* data1, int num2, unsigned char* data2){
 	int ack;
 	int i;
+	// Check if initiated
+	if (!I2C1CONbits.ON) err_peri_not_init();
 	// Start signal
 	idle();
 	start();

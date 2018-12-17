@@ -285,7 +285,10 @@ int main(void){
 	ANSELE = 0x0000; // 全てデジタル
 	ANSELG = 0x0000; // 全てデジタル
 	CNPUDSET=KEYSTART | KEYFIRE | KEYUP | KEYDOWN | KEYLEFT | KEYRIGHT;// プルアップ設定
+	CNPUFSET=0x0004; // PORTF2 (SDI1) プルアップ
 	ODCF = 0x0003;	//RF0,RF1はオープンドレイン
+	ODCG = 0x000c;//RG2,RG3はオープンドレイン
+	LATGSET = 0x000c;
 
 	// 周辺機能ピン割り当て
 	SDI2R = 1; //RPG7にSDI2を割り当て

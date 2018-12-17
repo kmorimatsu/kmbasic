@@ -74,6 +74,11 @@ void lib_spi(int baud, int bitmode, int csdata){
 			LATG = 0xBF886630
 	*/
 	volatile unsigned int* trisxclr;
+	if (baud==0) {
+		if (SPI1CONbits.ON) disable_cs();
+		SPI1CONbits.ON=0;
+		return;
+	}
 	// Baud rate
 	int brg=47727/baud-1;
 	if (brg<0) brg=0;          // Max 47.7 MHz
@@ -82,7 +87,6 @@ void lib_spi(int baud, int bitmode, int csdata){
 	SPI1CONbits.ON=0;
 	// CS setting
 	if (0x10<=csdata && csdata<0x70) {
-// TODO: avoid batting (output to input pin)
 		// Set cs global valiables
 		g_csaddress=(unsigned int*)(0xBF886030| ((csdata&0xF0)<<4));
 		g_csbit=1<<(csdata&0x0F);
@@ -161,6 +165,8 @@ void lib_spi(int baud, int bitmode, int csdata){
 
 void lib_spiwrite(int num, int* data){
 	int i;
+	// Check if initiated
+	if (!SPI1CONbits.ON) err_peri_not_init();
 	// Start signal
 	idle();
 	enable_cs();
@@ -175,6 +181,8 @@ void lib_spiwrite(int num, int* data){
 
 void lib_spiwritedata(int num1, int* data1, int num2, unsigned int* data2){
 	int i;
+	// Check if initiated
+	if (!SPI1CONbits.ON) err_peri_not_init();
 	// Start signal
 	idle();
 	enable_cs();
@@ -206,6 +214,8 @@ void lib_spiwritedata(int num1, int* data1, int num2, unsigned int* data2){
 
 unsigned int lib_spiread(int num, int* data){
 	unsigned int i;
+	// Check if initiated
+	if (!SPI1CONbits.ON) err_peri_not_init();
 	// Start signal
 	idle();
 	enable_cs();
@@ -223,6 +233,8 @@ unsigned int lib_spiread(int num, int* data){
 
 void lib_spireaddata(int num1, int* data1, int num2, unsigned int* data2){
 	int i;
+	// Check if initiated
+	if (!SPI1CONbits.ON) err_peri_not_init();
 	// Start signal
 	idle();
 	enable_cs();

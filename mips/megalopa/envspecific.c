@@ -37,19 +37,12 @@ void post_run(void){
 		usegraphic(0);
 		g_use_graphic=0;
 	}
+	// Stop peripherals
+	lib_i2c(0);
+	lib_serial(0,0,0);
+	lib_spi(0,0,0);
 }
 
-
-
-/*
-	init_env();
-	Initialize envionment.
-*/
-
-void init_env(void){
-	// Reset PWM
-	lib_pwm(0,0,0);
-}
 
 /*
 	void scroll(int x, int y);
@@ -333,4 +326,20 @@ void videowidth(int width){
 
 void set_graphmode(unsigned char m){
 	if (m==0) set_videomode(VMODE_T30,0);
+}
+
+/*
+	Environ specific error handling routines follow
+*/
+
+void pre_end_addr(int s6);
+
+#define end_exec() \
+	asm volatile("addu $a0,$s6,$zero");\
+	asm volatile("j pre_end_addr")
+
+
+void err_peri_not_init(void){
+	printstr("peripheral not initiated.");
+	end_exec();
 }

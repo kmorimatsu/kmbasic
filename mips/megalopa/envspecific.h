@@ -15,9 +15,9 @@ void scroll(int x, int y);
 void usegraphic(int mode);
 void videowidth(int width);
 int lib_system(int a0, int a1 ,int v0, int a3, int g_gcolor, int g_prev_x, int g_prev_y);
-void init_env(void);
 void pre_run(void);
 void post_run(void);
+void err_peri_not_init(void);
 
 // 30 or 40 characters per line for Zoea
 #define printcomma() printstr("          "+rem10_32((unsigned int)(cursor-TVRAM)))
