@@ -144,7 +144,7 @@ void lib_spi(int baud, int bitmode, int clkmode, int csdata){
 	// Input data sampled at end of data output time
 	SPI1CONbits.SMP=1;
 	// CKE=0(default): Serial output data changes on transition from Idle clock state to active clock state
-	SPI1CONbits.CKE=(clkmode&1) ? 1:0;
+	SPI1CONbits.CKE=(clkmode&1) ? 0:1;
 	// Not slave mode
 	SPI1CONbits.SSEN=0;
 	// CKP=1(default): Idle state for clock is a high level; active state is a low level.
@@ -326,17 +326,17 @@ char* spi_statement(){
 	check_obj_space(1);
 	g_object[g_objpos++]=0xAFA20008; // sw          v0,8(sp)
 	// Get 3rd parameter
-	// Either 0,1,2,3, 2 is the default.
+	// Either 0,1,2,3, 3 is the default.
 	if (g_source[g_srcpos]==',') {
 		g_srcpos++;
 		err=get_value();
 		if (err) return err;
 	} else {
 		check_obj_space(1);
-		g_object[g_objpos++]=0x34020002; //ori         v0,zero,2
+		g_object[g_objpos++]=0x34020003; //ori         v0,zero,3
 	}
 	check_obj_space(1);
-	g_object[g_objpos++]=0xAFA20012; // sw          v0,12(sp)
+	g_object[g_objpos++]=0xAFA2000C; // sw          v0,12(sp)
 	// Get 4th parameter
 	// Port for CS. PORTD9 (0x39) is the default.
 	if (g_source[g_srcpos]==',') {
