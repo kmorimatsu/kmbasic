@@ -314,14 +314,39 @@ char* field_statement(){
 */
 char* obj_method(int method){
 	// $v0 contains the address of object.
-	// TODO: parameters preparation (to $s5) here. Current code doesn't accept parameter(s).
+	char* err;
+	int stack,opos;
+	// Parameters preparation (to $s5) here.
 	next_position();
+	opos=g_objpos;
+	stack=12;
+	g_object[g_objpos++]=0x27BD0000;             // addiu       sp,sp,-xx
+	// 4(sp) is for $v0 (method name)
+	g_object[g_objpos++]=0xAFA20004;             // sw          v0,4(sp)
+	if (g_source[g_srcpos]!=')') {
+		g_srcpos--;
+		do {
+			g_srcpos++;
+			stack+=4;
+			err=get_stringFloatOrValue();
+			if (err) return err;
+			check_obj_space(1);
+			g_object[g_objpos++]=0xAFA20000|stack;   // sw          v0,xx(sp)
+			next_position();
+		} while(g_source[g_srcpos]==',');
+	}
 	if (g_source[g_srcpos]!=')') return ERR_SYNTAX;
 	g_srcpos++;
+	// 8(sp) is for $s5, 12(sp) is for # of arguments
+	check_obj_space(4);
+	g_object[g_objpos++]=0xAFB50008;             // sw          s5,8(sp)
+	g_object[g_objpos++]=0x34020000|(stack/4-3); // ori         v0,zero,0x01
+	g_object[g_objpos++]=0xAFA2000C;             // sw          v0,12(sp)
+	g_object[g_objpos++]=0x27B50008;             // addiu       s5,sp,8
+	g_object[opos]|=((0-stack)&0xFFFF);          // addiu       sp,sp,-xx (See above)
 	// Determine address of method and store fields to local variables.
-	check_obj_space(5);
-	g_object[g_objpos++]=0x27BDFFFC;                           // addiu       sp,sp,-4
-	g_object[g_objpos++]=0xAFA20004;                           // sw          v0,4(sp)
+	check_obj_space(3);
+	g_object[g_objpos++]=0x8FA20004;                           // lw          v0,4(sp)
 	g_object[g_objpos++]=0x3C050000|((method>>16)&0x0000FFFF); // lui   a1,xxxx
 	g_object[g_objpos++]=0x34A50000|(method&0x0000FFFF);       // ori a1,a1,xxxx
 	call_quicklib_code(lib_pre_method,ASM_ADDU_A0_V0_ZERO);
@@ -333,15 +358,17 @@ char* obj_method(int method){
 	g_object[g_objpos++]=0x00000000;                           // nop         
 	                                                           // label1:
 	g_object[g_objpos++]=0x00400008;                           // jr          v0
-	g_object[g_objpos++]=0xAFBF0004;                           // sw          ra,4(sp)
-	                                                           // label2:
+	g_object[g_objpos++]=0xAFBF0004;                           // sw          ra,4(sp)	                                                           // label2:
 	// Restore fields from local variables.
-	check_obj_space(4);
+	check_obj_space(3);
 	g_object[g_objpos++]=0x8FA40004;                           // lw          a0,4(sp)
-	g_object[g_objpos++]=0x27BD0004;                           // addiu       sp,sp,4
 	g_object[g_objpos++]=0x3C050000|((method>>16)&0x0000FFFF); // lui   a1,xxxx
 	g_object[g_objpos++]=0x34A50000|(method&0x0000FFFF);       // ori a1,a1,xxxx
 	call_quicklib_code(lib_post_method,ASM_ADDU_A2_V0_ZERO);
+	// Remove stack
+	check_obj_space(2);
+	g_object[g_objpos++]=0x8FB50008;                           // lw          s5,8(sp)
+	g_object[g_objpos++]=0x27BD0000|stack;                     // addiu       sp,sp,xx	
 	return 0;
 }
 

@@ -231,7 +231,7 @@ static const char bastext[]=
 "a=new(class1)\n"
 "a.test=1234\n"
 "a.test2=5678\n"
-"print a.mtest()\n"
+"print a.mtest(123,456)\n"
 "print hex$(a),a.test,a.test2,a.test3\n"
 "\n"
 "\n"
@@ -244,7 +244,7 @@ static const char classtext[]=
 "FIELD test,test2\n"
 "FIELD PRIVATE test3,test4\n"
 "METHOD mtest\n"
-"PRINT \"METHOD\",\n"
+"PRINT ARGS(0),ARGS(1),ARGS(2)\n"
 "test2=7890\n"
 "return test+10000\n"
 "\n"
@@ -263,13 +263,7 @@ static const void* debugjumptable[]={
 
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
-	asm volatile("sw $t0,0($v0)");
-	asm volatile("jalr $ra,$t0");
-	asm volatile("lui $a1,0x1234");
-	asm volatile("ori $a1,$a1,0x5678");
-	asm volatile("sw    $v1,4($sp)");
-	asm volatile("addu $a1,$v0,$zero");
-	asm volatile("addu $a2,$v0,$zero");
+	asm volatile("addiu $s5,$sp,4");
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");
