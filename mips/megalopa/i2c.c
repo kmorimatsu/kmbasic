@@ -78,7 +78,7 @@ void lib_i2c(int freq){
 			=47727267 / Fsck - 0.000000104 x 95454533 - 2
 			=47727267 / Fsck - 9.93 -2
 	*/
-	int brg = 47727/freq - 10 - 2;
+	int brg = (47727 + freq/2)/freq - 10 - 2;
 	if (brg<2) brg=2;       // Max 3409 kHz
 	if (4095<brg) brg=4905; // Min 11.6 kHz
 

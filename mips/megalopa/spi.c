@@ -82,7 +82,7 @@ void lib_spi(int baud, int bitmode, int clkmode, int csdata){
 		return;
 	}
 	// Baud rate
-	int brg=47727/baud-1;
+	int brg=(47727 + baud/2)/baud-1;
 	if (brg<0) brg=0;          // Max 47.7 MHz
 	else if (511<brg) brg=511; // Min 93.2 kHz
 	// Disable SPI, first
@@ -326,14 +326,14 @@ char* spi_statement(){
 	check_obj_space(1);
 	g_object[g_objpos++]=0xAFA20008; // sw          v0,8(sp)
 	// Get 3rd parameter
-	// Either 0,1,2,3, 3 is the default.
+	// Either 0,1,2,3; 0 is the default.
 	if (g_source[g_srcpos]==',') {
 		g_srcpos++;
 		err=get_value();
 		if (err) return err;
 	} else {
 		check_obj_space(1);
-		g_object[g_objpos++]=0x34020003; //ori         v0,zero,3
+		g_object[g_objpos++]=0x34020000; //ori         v0,zero,0
 	}
 	check_obj_space(1);
 	g_object[g_objpos++]=0xAFA2000C; // sw          v0,12(sp)
