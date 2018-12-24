@@ -33,7 +33,7 @@ const char* g_err_str[]={
 	"ERR_COMPILE_CLASS",
 	"Class not found",
 	"Not an object",
-	" is not public field",
+	" is not public field/method",
 };
 
 char* resolve_label(int s6){
@@ -182,5 +182,10 @@ void err_not_field(int fieldname, int classname){
 	printchar('.');
 	printstr(resolve_label(fieldname));
 	printstr(ERR_NOT_FIELD);
+	end_exec();	
+}
+
+void err_str(char* str){
+	printstr(str);
 	end_exec();	
 }

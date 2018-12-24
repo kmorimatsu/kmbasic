@@ -226,10 +226,12 @@ static const char initext[]=
 
 
 static const char bastext[]=
+"CLS\n"
 "useclass class1\n"
 "a=new(class1)\n"
 "a.test=1234\n"
 "a.test2=5678\n"
+"print a.mtest()\n"
 "print hex$(a),a.test,a.test2,a.test3\n"
 "\n"
 "\n"
@@ -240,6 +242,14 @@ static const char bastext[]=
 static const char classtext[]=
 "REM\n"
 "FIELD test,test2\n"
+"FIELD PRIVATE test3,test4\n"
+"METHOD mtest\n"
+"PRINT \"METHOD\",\n"
+"test2=7890\n"
+"return test+10000\n"
+"\n"
+"\n"
+"\n"
 "\n";
 
 /*
@@ -258,7 +268,8 @@ int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile("lui $a1,0x1234");
 	asm volatile("ori $a1,$a1,0x5678");
 	asm volatile("sw    $v1,4($sp)");
-	asm volatile("nop");
+	asm volatile("addu $a1,$v0,$zero");
+	asm volatile("addu $a2,$v0,$zero");
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");

@@ -1656,6 +1656,7 @@ static const void* statement_list[]={
 	"PLAYWAVE ",playwave_statement,
 	"USECLASS ",useclass_statement,
 	"FIELD ",field_statement,
+	"METHOD ",method_statement,
 	// List of additional statements follows
 	ADDITIONAL_STATEMENTS
 };

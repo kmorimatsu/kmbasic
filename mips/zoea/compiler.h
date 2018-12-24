@@ -248,6 +248,7 @@ void err_file(void);
 void err_wave(void);
 void err_not_obj(void);
 void err_not_field(int fieldname, int classname);
+void err_str(char* str);
 char* resolve_label(int s6);
 
 void set_sound(unsigned long* data, int flagsLR);
@@ -266,6 +267,7 @@ char* fget_statement();
 char* fput_statement();
 char* fputc_statement();
 char* fremove_statement();
+char* label_statement();
 
 char* function(void);
 char* str_function(void);
@@ -328,6 +330,9 @@ char* new_function();
 char* field_statement();
 char* integer_obj_field();
 unsigned long long lib_obj_field(int* object, int fieldname);
+int lib_pre_method(int* object, int methodname);
+int lib_post_method(int* object, int methodname, int v0);
+char* method_statement();
 
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])
@@ -400,6 +405,9 @@ unsigned long long lib_obj_field(int* object, int fieldname);
 
 #define ASM_NOP 0x00000000
 #define ASM_ADDU_A0_V0_ZERO 0x00402021
+#define ASM_ADDU_A1_V0_ZERO 0x00402821
+#define ASM_ADDU_A2_V0_ZERO 0x00403021
+#define ASM_ADDU_A3_V0_ZERO 0x00403821
 #define ASM_ORI_A0_ZERO_ 0x34040000
 
 // Division macro for unsigned long

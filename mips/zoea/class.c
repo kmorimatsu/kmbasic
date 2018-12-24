@@ -54,19 +54,23 @@ char* update_class_info(int class){
 
 /*
 	Class structure:
-		cstruct[0]: class name as integer
-		cstruct[1]: number of fields and methods:
-		              bit 0-7:   # of public fields
-		              bit 8-15:  # of private fields
-		              bit 16-23: # of public methods
-		              bit 24-31: reserved
-		cstruct[x]: public fields name
-		cstruct[y]: private fields name
-		cstruct[z], cstruct[z+1]: public methods name and pointer
+		cstruct[0]:   class name as integer
+		cstruct[1]:   number of fields and methods:
+		                bit 0-7:   # of public fields
+		                bit 8-15:  # of private fields
+		                bit 16-23: # of public methods
+		                bit 24-31: reserved
+		cstruct[x]:   public field name
+		cstruct[x+1]: public field var number
+		cstruct[y]:   private field name
+		cstruct[y+1]: private field var number
+		cstruct[z]:   public method name
+		cstruct[z+1]: public method pointer
 */
 
 char* construct_class_structure(int class){
 	int* record;
+	int i;
 	int num=0;
 	// Register current address to global var
 	g_class_structure=&g_object[g_objpos];
@@ -80,8 +84,9 @@ char* construct_class_structure(int class){
 	while(record=cmpdata_find(CMPDATA_FIELD)){
 		if ((record[0]&0xffff)==PUBLIC_FIELD) {
 			num+=1<<0;
-			check_obj_space(1);
-			g_object[g_objpos++]=record[1];
+			check_obj_space(2);
+			g_object[g_objpos++]=record[1]; // Field name
+			g_objpos++;                     // Var number (see below)
 		}
 	}
 	// Private fields
@@ -89,8 +94,9 @@ char* construct_class_structure(int class){
 	while(record=cmpdata_find(CMPDATA_FIELD)){
 		if ((record[0]&0xffff)==PRIVATE_FIELD) {
 			num+=1<<8;
-			check_obj_space(1);
-			g_object[g_objpos++]=record[1];
+			check_obj_space(2);
+			g_object[g_objpos++]=record[1]; // Field name
+			g_objpos++;                     // Var number (see below)
 		}
 	}
 	// Public methods
@@ -99,12 +105,19 @@ char* construct_class_structure(int class){
 		if ((record[0]&0xffff)==PUBLIC_METHOD) {
 			num+=1<<16;
 			check_obj_space(2);
-			g_object[g_objpos++]=record[1];
-			g_object[g_objpos++]=record[2];
+			g_object[g_objpos++]=record[1]; // Method name
+			g_object[g_objpos++]=record[2]; // pointer
 		}
 	}
 	// Update number info
 	g_class_structure[1]=num;
+	// Update var numbers of fields
+	num=((num>>8)&0xff)+(num&0xff);
+	for(i=1;i<=num;i++){
+		if ((
+			g_class_structure[i*2+1]=search_var_name(g_class_structure[i*2])+ALLOC_LNV_BLOCK
+			)<ALLOC_LNV_BLOCK) return ERR_UNKNOWN;
+	}
 	return 0;
 }
 
@@ -296,6 +309,43 @@ char* field_statement(){
 }
 
 /*
+	char* obj_method(int method);
+	Implementation of access to method of object.
+*/
+char* obj_method(int method){
+	// $v0 contains the address of object.
+	// TODO: parameters preparation (to $s5) here. Current code doesn't accept parameter(s).
+	next_position();
+	if (g_source[g_srcpos]!=')') return ERR_SYNTAX;
+	g_srcpos++;
+	// Determine address of method and store fields to local variables.
+	check_obj_space(5);
+	g_object[g_objpos++]=0x27BDFFFC;                           // addiu       sp,sp,-4
+	g_object[g_objpos++]=0xAFA20004;                           // sw          v0,4(sp)
+	g_object[g_objpos++]=0x3C050000|((method>>16)&0x0000FFFF); // lui   a1,xxxx
+	g_object[g_objpos++]=0x34A50000|(method&0x0000FFFF);       // ori a1,a1,xxxx
+	call_quicklib_code(lib_pre_method,ASM_ADDU_A0_V0_ZERO);
+	// Call method address here. Same routine for GOSUB statement with integer value is used.
+	check_obj_space(6);
+	g_object[g_objpos++]=0x04130003;                           // bgezall     zero,label1
+	g_object[g_objpos++]=0x27BDFFFC;                           // addiu       sp,sp,-4
+	g_object[g_objpos++]=0x10000003;                           // beq         zero,zero,label2
+	g_object[g_objpos++]=0x00000000;                           // nop         
+	                                                           // label1:
+	g_object[g_objpos++]=0x00400008;                           // jr          v0
+	g_object[g_objpos++]=0xAFBF0004;                           // sw          ra,4(sp)
+	                                                           // label2:
+	// Restore fields from local variables.
+	check_obj_space(4);
+	g_object[g_objpos++]=0x8FA40004;                           // lw          a0,4(sp)
+	g_object[g_objpos++]=0x27BD0004;                           // addiu       sp,sp,4
+	g_object[g_objpos++]=0x3C050000|((method>>16)&0x0000FFFF); // lui   a1,xxxx
+	g_object[g_objpos++]=0x34A50000|(method&0x0000FFFF);       // ori a1,a1,xxxx
+	call_quicklib_code(lib_post_method,ASM_ADDU_A2_V0_ZERO);
+	return 0;
+}
+
+/*
 	char* integer_obj_field();
 	Implementation of access to field of object.
 	This feature is recursive. When an object is applied to the field of another object, 
@@ -308,15 +358,19 @@ char* integer_obj_field(){
 	int i;
 	char* err;
 	do {
-		i=check_var_name();
+		i=check_var_name(); // TODO: consider accepting reserbed var names for field name
 		if (i<65536) return ERR_SYNTAX;
+		if (g_source[g_srcpos]=='(') {
+			// This is a method
+			g_srcpos++;
+			return obj_method(i);
+		}
 		check_obj_space(2);
 		g_object[g_objpos++]=0x3C050000|((i>>16)&0x0000FFFF); // lui   a1,xxxx
 		g_object[g_objpos++]=0x34A50000|(i&0x0000FFFF);       // ori a1,a1,xxxx
 		// First and second arguments are address of object and field name, respectively.
 		call_quicklib_code(lib_obj_field,ASM_ADDU_A0_V0_ZERO);
 		// Check if "." follows
-		next_position();
 		if (g_source[g_srcpos]=='.') {
 			// "." found. $v0 is adress of an object. See the field.
 			g_srcpos++;
@@ -336,12 +390,94 @@ unsigned long long lib_obj_field(int* object, int fieldname){
 	// Obtain # of public field
 	numfield=class[1]&0xff;
 	for(i=0;i<numfield;i++){
-		if (class[2+i]==fieldname) break;
+		if (class[2+i*2]==fieldname) break;
 	}
 	if (i==numfield) err_not_field(fieldname,class[0]);
-	// Got address of field value. Return value as $v0 and address as $v1.
-	return (((unsigned long long)(&object[1+i]))<<32) | (unsigned long long)object[1+i];
+	// Got address of field. Return value as $v0 and address as $v1.
+	return (((unsigned long long)(unsigned long)(&object[1+i]))<<32) | (unsigned long long)object[1+i];
 }
+
+/*
+	Library for calling method statement
+*/
+
+int lib_pre_method(int* object, int methodname){
+	int i,num,nums;
+	int* class;
+	// Check if this is an object (if within the RAM).
+	if (!withinRAM(object)) err_not_obj();
+	class=(int*)object[0];
+	if (!withinRAM(class)) err_not_obj();
+	// Save object field values in local variables in class
+	nums=class[1];
+	num=nums&0xff;
+	for(i=0;i<num;i++){
+		// Public fields
+		class+=2;
+		g_var_mem[class[1]]=object[i+1];
+	}
+	num+=(nums>>8)&0xff;
+	for(i=i;i<num;i++){
+		// Private fields
+		class+=2;
+		g_var_mem[class[1]]=object[i+1];
+	}
+	// Seek method
+	num+=(nums>>16)&0xff;
+	for(i=i;i<num;i++){
+		class+=2;
+		if (class[0]==methodname) break;
+	}
+	if (i==num) {
+		// Method not found
+		class=(int*)object[0];
+		err_not_field(methodname,class[0]);
+	}
+	// Method found. return it.
+	return class[1];
+}
+
+int lib_post_method(int* object, int methodname, int v0){
+	// Note that existence of the method was checked in above function before reaching this function.
+	int i,num,nums;
+	int* class;
+	// Restore local variables to object field values
+	class=(int*)object[0];
+	nums=class[1];
+	num=nums&0xff;
+	for(i=0;i<num;i++){
+		// Public fields
+		class+=2;
+		object[i+1]=g_var_mem[class[1]];
+	}
+	num+=(nums>>8)&0xff;
+	for(i=i;i<num;i++){
+		// Private fields
+		class+=2;
+		object[i+1]=g_var_mem[class[1]];
+	}
+	// all done
+	return v0;
+}
+
+/*
+	Method statement
+*/
+
+char* method_statement(){
+// TODO: This statement is only valid in class definition code.
+	char* err;
+	int data[2];
+	int opos=g_objpos;
+	// Insert label for setting $s6
+	err=label_statement();
+	if (err) return err;
+	// Register cmpdata
+	data[0]=g_label;
+	data[1]=(int)(&g_object[opos]);
+	return cmpdata_insert(CMPDATA_FIELD,PUBLIC_METHOD,(int*)&data[0],2);
+}
+
 /*
 	TODO:
 	1. Improve gosub statement and args() function for args(0) being # of arguments.
