@@ -368,18 +368,15 @@ char* gosub_statement_sub(){
 char* gosub_statement(){
 	char* err;
 	int opos,spos,stack;
+	// Skip label first (see below)
 	opos=g_objpos;
 	spos=g_srcpos;
 	err=gosub_statement_sub();
 	if (err) return err;
 	next_position();
-	// If there is no 2nd argument, return.
-	if (g_source[g_srcpos]!=',') return 0;
-
-	// There is (at least) 2nd argument.
 	// Rewind object and construct argument-creating routine.
 	g_objpos=opos;
-	stack=4;
+	stack=8;
 	g_object[g_objpos++]=0x27BD0000;           // addiu       sp,sp,-xx
 	do {
 		g_srcpos++;
@@ -390,10 +387,13 @@ char* gosub_statement(){
 		g_object[g_objpos++]=0xAFA20000|stack; // sw          v0,xx(sp)
 		next_position();
 	} while(g_source[g_srcpos]==',');
-	check_obj_space(2);
-	g_object[g_objpos++]=0xAFB50004;           // sw          s5,4(sp)
-	g_object[g_objpos++]=0x03A0A821;           // addu        s5,sp,zero
-	g_object[opos]|=((0-stack)&0xFFFF);        // addiu       sp,sp,-xx (See above)
+	// 4(sp) is for $s5, 8(sp) is for # of parameters
+	check_obj_space(5);
+	g_object[g_objpos++]=0xAFB50004;             // sw          s5,4(sp)
+	g_object[g_objpos++]=0x34020000|(stack/4-2); // ori         v0,zero,xx
+	g_object[g_objpos++]=0xAFA20008;             // sw          v0,8(sp)
+	g_object[g_objpos++]=0x27B50004;             // addiu       s5,sp,4
+	g_object[opos]|=((0-stack)&0xFFFF);          // addiu       sp,sp,-xx (See above)
 	// Rewind source and construct GOSUB routine again.
 	opos=spos;
 	spos=g_srcpos;
