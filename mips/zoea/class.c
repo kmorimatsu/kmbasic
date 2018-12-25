@@ -35,6 +35,11 @@ static int* g_class_structure;
 #define PRIVATE_FIELD 1
 #define PUBLIC_METHOD 2
 
+/*
+	Local prototyping
+*/
+char* obj_method(int method);
+
 char* update_class_info(int class){
 	int* record;
 	int data[2];
@@ -137,42 +142,17 @@ void delete_cmpdata_for_class(){
 	}
 }
 
-void construct_class_list(){
-	int* record;
-	int pclass;
-	int num;
-	// Initialize
-	cmpdata_reset();
-	num=0;
-	g_classlist=&g_object[g_objpos];
-	// List up classes
-	while(record=cmpdata_find(CMPDATA_CLASS)){
-		num++;
-		pclass=record[2];
-		// Delete CMPDATA, first
-		cmpdata_delete(record);
-		// There must be area because a CMPDATA was deleted above
-		g_object[g_objpos++]=pclass;
-	}
-	if (num) {
-		// Show the number of classes used.
-		printstr(" Using ");
-		printnum(num);
-		printstr(" classes. ");
-	} else {
-		// Disable class list
-		g_classlist=0;
-	}
-}
-
 void* search_method(int* classdata,int method){
 	int pos,i;
 	int nums=classdata[1];
-	pos=1;
-	pos+=nums&0xff;      // exclude public field
-	pos+=(nums>>8)&0xff; // exclude private field
-	for(i=2*((nums>>16)&0xff-1);i>=0;i=i-2){ // Start loop at the last of method
-		if (classdata[pos+i]==method) return (void*)classdata[pos+i+1];
+
+	classdata+=2;                  // exclude first 2 words
+	classdata+=2*(nums&0xff);      // exclude public field
+	classdata+=2*((nums>>8)&0xff); // exclude private field
+	nums=(nums>>16)&0xff;          // number of methods
+	for(i=0;i<nums;i++){
+		if (classdata[i]==method) return (void*)classdata[i+1];
+		classdata+=2;
 	}
 	return 0; // not found
 }
@@ -196,7 +176,9 @@ char* new_function(){
 	if (err) return err;
 	if (!g_label) return ERR_SYNTAX;
 	class=g_label;
+	next_position();
 	// Get class data from cmpdata
+	// TODO: modify here. cmpdata is not available when running
 	cmpdata_reset();
 	while(data=cmpdata_find(CMPDATA_CLASS)){
 		if (data[1]==class) break;
@@ -204,71 +186,35 @@ char* new_function(){
 	if (!data) return ERR_NO_CLASS;
 	classdata=(int*)data[2];
 	size=object_size(classdata);
+	// Create object
+	call_quicklib_code(lib_calloc_memory,ASM_ORI_A0_ZERO_|(size+1));
+	// First word of object is pointer to classdata
+	check_obj_space(3);
+	g_object[g_objpos++]=0x3C080000|(((unsigned int)classdata)>>16);        // lui         t0,xxxx
+	g_object[g_objpos++]=0x35080000|(((unsigned int)classdata)&0x0000FFFF); // ori         t0,t0,xxxx
+	g_object[g_objpos++]=0xAC480000; // sw          t0,0(v0)
 	// Check if INIT method exists
 	init_method=search_method(classdata,LABEL_INIT);
 	if (!init_method) {
-		// INIT method does not exist
-		// Create object
-		call_quicklib_code(lib_calloc_memory,ASM_ORI_A0_ZERO_|(size+1));
-		// First word of object is pointer to classdata
-		check_obj_space(3);
-		g_object[g_objpos++]=0x3C080000|(((unsigned int)classdata)>>16);        // lui         t0,0x1234
-		g_object[g_objpos++]=0x35080000|(((unsigned int)classdata)&0x0000FFFF); // ori         t0,t0,0x5678
-		g_object[g_objpos++]=0xAC480000; // sw          t0,0(v0)
 		// All done
+		// Note that $v0 is address of object here.
 		return 0;
 	}
-	// INIT method exists
-	// Construct stacks for parameters
-	stack=0;
-	opos=g_objpos;
-	check_obj_space(1);
-	g_object[g_objpos++]=0x27BD0000;               // addiu       sp,sp,-xx
-	// Check if there is/are parameter(s)
-	next_position();
-	if (g_source[g_srcpos]==',') {
-		// Parameter(s) exist(s)
-		stack=+4;
-		while(g_source[g_srcpos]==','){
-			g_srcpos++;
-			stack+=4;
-			err=get_stringFloatOrValue();
-			if (err) return err;
-			check_obj_space(1);
-			g_object[g_objpos++]=0xAFA20000|stack; // sw          v0,xx(sp)
-			next_position();
-		}
-		check_obj_space(2);
-		g_object[g_objpos++]=0xAFB50004;           // sw          s5,4(sp)
-		g_object[g_objpos++]=0x03A0A821;           // addu        s5,sp,zero
-	}
-	stack+=4; // For $v0 (see below)
-	g_object[opos]|=((0-stack)&0xFFFF);            // addiu       sp,sp,-xx (See above)
-	// Create object
-	// Note that $v0 will contain the address of object
-	call_quicklib_code(lib_calloc_memory,ASM_ORI_A0_ZERO_|size);
-	check_obj_space(1);
-	g_object[g_objpos++]=0xAFA20000;               // sw          v0,0(sp)
-	// Call INIT method
-	check_obj_space(6);
-	g_object[g_objpos++]=0x04130001;               // bgezall     zero,label1
-	g_object[g_objpos++]=0x27BDFFFC;               // addiu       sp,sp,-4
-	                                               //label1:
-	g_object[g_objpos++]=0x27FF000C;               // addiu       ra,ra,12
-	g_object[g_objpos++]=0x08000000|
-		((((int)init_method)>>2)&0x03ffffff);      // j           init_method
-	g_object[g_objpos++]=0xAFBF0004;               // sw          ra,4(sp)
-	// Reload #v0
-	g_object[g_objpos++]=0x8FA20000|stack;         // lw          v0,xx(sp)
-	// Remove stack
+	// INIT method exists. Note that $v0 is address of object here.
+	if (g_source[g_srcpos]==',') g_srcpos++;
+	else if (g_source[g_srcpos]!=')') return ERR_SYNTAX;
 	check_obj_space(2);
-	if (4<stack) {
-		g_object[g_objpos++]=0x8FB50008;           // lw          s5,4(sp)
-	}
-	g_object[g_objpos++]=0x27BD0000|stack;         // addiu       sp,sp,xx
-	// All done. $v0 will be
+	g_object[g_objpos++]=0x27BDFFFC; // addiu       sp,sp,-4
+	g_object[g_objpos++]=0xAFA20004; // sw          v0,4(sp)
+	err=obj_method(LABEL_INIT);
+	if (err) return err;
+	g_srcpos--; // Leave ')' character for detecting end of "new" function
+	check_obj_space(2);
+	g_object[g_objpos++]=0x8FA20004; //lw          v0,4(sp)
+	g_object[g_objpos++]=0x27BD0004; //addiu       sp,sp,4
+	// All done
+	// Note that $v0 is address of object here.
 	return 0;
-
 }
 
 char* field_statement(){
@@ -340,7 +286,7 @@ char* obj_method(int method){
 	// 8(sp) is for $s5, 12(sp) is for # of arguments
 	check_obj_space(4);
 	g_object[g_objpos++]=0xAFB50008;             // sw          s5,8(sp)
-	g_object[g_objpos++]=0x34020000|(stack/4-3); // ori         v0,zero,0x01
+	g_object[g_objpos++]=0x34020000|(stack/4-3); // ori         v0,zero,xx
 	g_object[g_objpos++]=0xAFA2000C;             // sw          v0,12(sp)
 	g_object[g_objpos++]=0x27B50008;             // addiu       s5,sp,8
 	g_object[opos]|=((0-stack)&0xFFFF);          // addiu       sp,sp,-xx (See above)

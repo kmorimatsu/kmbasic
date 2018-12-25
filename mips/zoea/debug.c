@@ -231,9 +231,13 @@ static const char bastext[]=
 "a=new(class1)\n"
 "a.test=1234\n"
 "a.test2=5678\n"
+"print gosub(LABEL1,789)\n"
 "print a.mtest(123,456)\n"
 "print hex$(a),a.test,a.test2,a.test3\n"
-"\n"
+"end \n"
+"label LABEL1\n"
+"print ARGS(0),ARGS(1),\n"
+"return 100\n"
 "\n"
 "\n"
 "\n";
@@ -247,9 +251,9 @@ static const char classtext[]=
 "PRINT ARGS(0),ARGS(1),ARGS(2)\n"
 "test2=7890\n"
 "return test+10000\n"
-"\n"
-"\n"
-"\n"
+"METHOD INIT\n"
+"PRINT \"INIT\"\n"
+"return\n"
 "\n";
 
 /*
