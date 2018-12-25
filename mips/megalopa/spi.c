@@ -361,7 +361,17 @@ char* spiwrite_statement(){
 	return i2cwrite_read(LIB_SYSTEM | EXTRA_SPIWRITE);
 }
 char* spiread_function(){
-	return i2cwrite_read(LIB_SYSTEM | EXTRA_SPIREAD);
+	next_position();
+	if (g_source[g_srcpos]!=')') {
+		// There is/are parameter(s).
+		return i2cwrite_read(LIB_SYSTEM | EXTRA_SPIREAD);
+	}
+	// No parameter. Set $v0=0 and call library
+	check_obj_space(1);
+	g_object[g_objpos++]=0x34020000; //ori         v0,zero,0
+	// Call library
+	call_lib_code(LIB_SYSTEM | EXTRA_SPIREAD);
+	return 0;	
 }
 
 char* spiwritedata_readdata(enum libs lib){
