@@ -233,12 +233,12 @@ static const char bastext[]=
 "a.test2=5678\n"
 "print gosub(LABEL1,789)\n"
 "print a.mtest(123,456)\n"
+"delete a\n"
 "print hex$(a),a.test,a.test2,a.test3\n"
 "end \n"
 "label LABEL1\n"
 "print ARGS(0),ARGS(1),\n"
 "return 100\n"
-"\n"
 "\n"
 "\n";
 
@@ -254,6 +254,7 @@ static const char classtext[]=
 "METHOD INIT\n"
 "PRINT \"INIT\"\n"
 "return\n"
+"\n"
 "\n";
 
 /*
@@ -268,8 +269,8 @@ static const void* debugjumptable[]={
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
 	asm volatile("addiu $s5,$sp,4");
-	asm volatile("nop");
-	asm volatile("nop");
+	asm volatile("sw $zero,4($s8)");
+	asm volatile("lw $a0,4($s8)");
 	asm volatile("nop");
 	asm volatile("nop");
 	return a2+a3;

@@ -1663,6 +1663,7 @@ static const void* statement_list[]={
 	"USECLASS ",useclass_statement,
 	"FIELD ",field_statement,
 	"METHOD ",method_statement,
+	"DELETE ",delete_statement,
 	// List of additional statements follows
 	ADDITIONAL_STATEMENTS
 };

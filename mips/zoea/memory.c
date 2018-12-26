@@ -204,3 +204,7 @@ void* lib_calloc_memory(int size){
 	// Return address
 	return ret;
 }
+
+void lib_delete(int* object){
+	free_temp_str((char*)object);
+}

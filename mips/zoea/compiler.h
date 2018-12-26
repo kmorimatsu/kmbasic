@@ -285,6 +285,7 @@ void move_from_perm_block(int var_num);
 int get_permanent_var_num(void);
 int get_varnum_from_address(void* address);
 void* lib_calloc_memory(int size);
+void lib_delete(int* object);
 
 char* link(void);
 char* get_label(void);
@@ -334,6 +335,7 @@ unsigned long long lib_obj_field(int* object, int fieldname);
 int lib_pre_method(int* object, int methodname);
 int lib_post_method(int* object, int methodname, int v0);
 char* method_statement();
+char* delete_statement();
 
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])
@@ -412,6 +414,7 @@ char* method_statement();
 #define ASM_ADDU_A2_V0_ZERO 0x00403021
 #define ASM_ADDU_A3_V0_ZERO 0x00403821
 #define ASM_ORI_A0_ZERO_ 0x34040000
+#define ASM_LW_A0_XXXX_S8 0x8FC40000
 
 // Division macro for unsigned long
 // Valid for 31 bits for all cases and 32 bits for some cases

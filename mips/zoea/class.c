@@ -457,7 +457,23 @@ char* method_statement(){
 }
 
 /*
-	TODO:
-	1. Improve gosub statement and args() function for args(0) being # of arguments.
-
+	Delete statement
 */
+
+char* delete_statement(){
+	int i;
+	char* err;
+	next_position();
+	g_srcpos--;
+	do{
+		g_srcpos++;
+		i=get_var_number();
+		if (i<0) return ERR_SYNTAX;
+		call_quicklib_code(lib_delete,ASM_LW_A0_XXXX_S8|(i*4));
+		                                              // lw a0,xxxx(s8)
+		check_obj_space(1);
+		g_object[g_objpos++]=0xAFC00000|(i*4);        // sw zero,xxx(s8)
+	} while (g_source[g_srcpos]==',');
+	return 0;
+}
+
