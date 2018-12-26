@@ -22,6 +22,7 @@ static const int reserved_var_names[]={
 	0x00024a8f, //ATAN
 	0x002f7c1e, //ATAN2
 	0x0047c31c, //BREAK
+	0x00035869, /*CALL*/
 	0x00575afe, //CDATA
 	0x00036c3d, //CEIL
 	0x000111af, //CHR
@@ -34,6 +35,7 @@ static const int reserved_var_names[]={
 	0x00616415, //CREAD
 	0x0de593fb, //CURSOR
 	0x00040fbe, //DATA
+	0x0fe19c42, /*DELETE*/
 	0x00011644, //DEC
 	0x000116de, //DIM
 	0x000100a8, //DO

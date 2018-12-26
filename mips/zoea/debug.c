@@ -233,7 +233,7 @@ static const char bastext[]=
 "a.test2=5678\n"
 "print gosub(LABEL1,789)\n"
 "print a.mtest(123,456)\n"
-"delete a\n"
+"call a.mtest(321,654)\n"
 "print hex$(a),a.test,a.test2,a.test3\n"
 "end \n"
 "label LABEL1\n"

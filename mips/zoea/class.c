@@ -473,7 +473,16 @@ char* delete_statement(){
 		                                              // lw a0,xxxx(s8)
 		check_obj_space(1);
 		g_object[g_objpos++]=0xAFC00000|(i*4);        // sw zero,xxx(s8)
+		next_position();
 	} while (g_source[g_srcpos]==',');
 	return 0;
 }
 
+/*
+	Call statement
+*/
+
+char* call_statement(){
+	// Just get an integer value. That is it.
+	return get_value();
+}

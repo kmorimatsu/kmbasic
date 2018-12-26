@@ -336,6 +336,7 @@ int lib_pre_method(int* object, int methodname);
 int lib_post_method(int* object, int methodname, int v0);
 char* method_statement();
 char* delete_statement();
+char* call_statement();
 
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])

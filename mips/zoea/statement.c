@@ -1664,6 +1664,7 @@ static const void* statement_list[]={
 	"FIELD ",field_statement,
 	"METHOD ",method_statement,
 	"DELETE ",delete_statement,
+	"CALL ",call_statement,
 	// List of additional statements follows
 	ADDITIONAL_STATEMENTS
 };
