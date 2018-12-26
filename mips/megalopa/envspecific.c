@@ -10,7 +10,6 @@
 #include "compiler.h"
 #include "lib_video_megalopa.h"
 #include "ps2keyboard.h"
-#include "io.h"
 
 /*
 	int readbuttons();
@@ -38,19 +37,12 @@ void post_run(void){
 		usegraphic(0);
 		g_use_graphic=0;
 	}
+	// Stop peripherals
+	lib_i2c(0);
+	lib_serial(0,0,0);
+	lib_spi(0,0,0,0);
 }
 
-
-
-/*
-	init_env();
-	Initialize envionment.
-*/
-
-void init_env(void){
-	// Reset PWM
-	lib_pwm(0,0,0);
-}
 
 /*
 	void scroll(int x, int y);
@@ -228,10 +220,38 @@ int lib_system(int a0, int a1 ,int v0, int a3, int g_gcolor, int g_prev_x, int g
 		case EXTRA_SERIALIN:
 			return lib_serialin(v0);
 		case EXTRA_SPI:
-		case EXTRA_SPIOUT:
-		case EXTRA_SPIIN:
-			// TODO: Implement IO functions
+			lib_spi(g_libparams[1],g_libparams[2],g_libparams[3],v0);
 			return v0;
+		case EXTRA_SPIWRITE:
+			lib_spiwrite(v0,g_libparams);
+			return v0;
+		case EXTRA_SPIREAD:
+			return lib_spiread(v0,g_libparams);
+		case EXTRA_SPIWRITEDATA:
+			lib_spiwritedata(v0,g_libparams+2,g_libparams[2],(unsigned int*)g_libparams[1]);
+			return v0;
+		case EXTRA_SPIREADDATA:
+			lib_spireaddata(v0,g_libparams+2,g_libparams[2],(unsigned int*)g_libparams[1]);
+			return v0;
+		case EXTRA_SPISWAPDATA:
+			lib_spiswapdata(v0,g_libparams+2,g_libparams[2],(unsigned int*)g_libparams[1]);
+			return v0;
+		case EXTRA_I2C:
+			lib_i2c(v0);
+			return v0;
+		case EXTRA_I2CWRITE:
+			lib_i2cwrite(v0,g_libparams);
+			return v0;
+		case EXTRA_I2CREAD:
+			return lib_i2cread(v0,g_libparams);
+		case EXTRA_I2CWRITEDATA:
+			lib_i2cwritedata(v0,g_libparams+2,g_libparams[2],(unsigned char*)g_libparams[1]);
+			return v0;
+		case EXTRA_I2CREADDATA:
+			lib_i2creaddata(v0,g_libparams+2,g_libparams[2],(unsigned char*)g_libparams[1]);
+			return v0;
+		case EXTRA_I2CERROR:
+			return lib_i2cerror();
 		default:
 			err_unknown();
 			return v0;
@@ -309,4 +329,20 @@ void videowidth(int width){
 
 void set_graphmode(unsigned char m){
 	if (m==0) set_videomode(VMODE_T30,0);
+}
+
+/*
+	Environ specific error handling routines follow
+*/
+
+void pre_end_addr(int s6);
+
+#define end_exec() \
+	asm volatile("addu $a0,$s6,$zero");\
+	asm volatile("j pre_end_addr")
+
+
+void err_peri_not_init(void){
+	printstr("peripheral not initiated.");
+	end_exec();
 }

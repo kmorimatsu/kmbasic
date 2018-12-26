@@ -323,7 +323,7 @@ void lib_out(int pos, int val){
 		}
 		// Enable output
 		TRISBCLR=1<<pos;
-		// Disable pulldown
+		// Disable pullup
 		CNPUBCLR=1<<pos;
 	} else if (16<=pos && pos<=18) {
 		// PORTE5-7, open drain
@@ -348,7 +348,7 @@ void lib_out8h(int val){
 	LATB=(LATB&0x00FF)|((val&0xff)<<8);
 	// Enable output
 	TRISBCLR=0xFF00;
-	// Disable pulldown
+	// Disable pullup
 	CNPUBCLR=0xFF00;
 }
 
@@ -357,7 +357,7 @@ void lib_out8l(int val){
 	LATB=(LATB&0xFF00)|(val&0xff);
 	// Enable output
 	TRISBCLR=0x00FF;
-	// Disable pulldown
+	// Disable pullup
 	CNPUBCLR=0x00FF;
 }
 
@@ -366,7 +366,7 @@ int lib_out16(int val){
 	LATB=(val&0xFFFF);
 	// Enable output
 	TRISBCLR=0xFFFF;
-	// Disable pulldown
+	// Disable pullup
 	CNPUBCLR=0xFFFF;
 }
 
@@ -374,7 +374,7 @@ int lib_in(int pos){
 	// pos must be between 0 and 15 or 16 and 18
 	if (0<=pos && pos<=15) {
 		// PORTB0-15
-		// Enable pulldown
+		// Enable pullup
 		CNPUBSET=1<<pos;
 		// Enable input
 		TRISBSET=1<<pos;
@@ -384,7 +384,7 @@ int lib_in(int pos){
 	} else if (16<=pos && pos<=18) {
 		// PORTE5-7
 		pos=pos-16+5;
-		// Enable pulldown
+		// Enable pullup
 		CNPUESET=1<<pos;
 		// Enable input
 		TRISESET=1<<pos;
@@ -397,7 +397,7 @@ int lib_in(int pos){
 }
 
 int lib_in8h(){
-	// Enable pulldown
+	// Enable pullup
 	CNPUBSET=0xFF00;
 	// Enable input
 	TRISBSET=0xFF00;
@@ -407,7 +407,7 @@ int lib_in8h(){
 }
 
 int lib_in8l(){
-	// Enable pulldown
+	// Enable pullup
 	CNPUBSET=0x00FF;
 	// Enable input
 	TRISBSET=0x00FF;
@@ -417,7 +417,7 @@ int lib_in8l(){
 }
 
 int lib_in16(){
-	// Enable pulldown
+	// Enable pullup
 	CNPUBSET=0xFFFF;
 	// Enable input
 	TRISBSET=0xFFFF;
@@ -463,7 +463,7 @@ int lib_analog(int pos){
 	// pos must be between 0 and 15 or 16 and 18
 	if (0<=pos && pos<=15) {
 		// RB0-RB15: AN0-AN15
-		// Disable pulldown
+		// Disable pullup
 		CNPUBCLR=1<<pos;
 		// Enable input
 		TRISBSET=1<<pos;
@@ -474,7 +474,7 @@ int lib_analog(int pos){
 	} else if (16<=pos && pos<=18) {
 		// RE5,6,7:AN22,23,27
 		pos=pos-16+5;
-		// Disable pulldown
+		// Disable pullup
 		CNPUECLR=1<<pos;
 		// Enable input
 		TRISESET=1<<pos;

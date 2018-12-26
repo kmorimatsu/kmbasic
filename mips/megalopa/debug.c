@@ -220,8 +220,17 @@ static const char initext[]=
 
 
 static const char bastext[]=
-"CLS\n"
-"print NOT(0);IN(0)\n"
+"I2C 100\n"
+"DIM D(5)\n"
+"T$=\"Hello MachiKania!\"\n"
+"I2CREADDATA 0x50,D,18,0x00,0x00\n"
+"PRINT I2CERROR()\n"
+"PRINT D$\n"
+"I2CWRITEDATA 0x50,T,18,0x00,0x00\n"
+"PRINT I2CERROR()\n"
+"WAIT 60\n"
+"I2CREADDATA 0x50,D,18,0x00,0x00\n"
+"\n"
 "\n";
 
 /*
