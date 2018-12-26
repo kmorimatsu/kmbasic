@@ -5,7 +5,7 @@
    kmorimatsu@users.sourceforge.jp
 */
 
-#define PERSISTENT_RAM_SIZE (1024*53)
+#define PERSISTENT_RAM_SIZE (1024*52)
 
 int readbuttons();
 void scroll(int x, int y);
