@@ -367,6 +367,7 @@ char* call_statement();
 #define ERR_NOT_FIELD (char*)(g_err_str[25])
 #define ERR_INVALID_NON_CLASS (char*)(g_err_str[26])
 #define ERR_INVALID_CLASS (char*)(g_err_str[27])
+#define ERR_NO_INIT (char*)(g_err_str[28])
 
 /* comple data type numbers */
 #define CMPDATA_RESERVED 0

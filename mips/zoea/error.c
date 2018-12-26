@@ -36,6 +36,7 @@ const char* g_err_str[]={
 	" is not public field/method",
 	"Valid only in class file",
 	"Invalid in class file",
+	"INIT method does not exist",
 };
 
 char* resolve_label(int s6){

@@ -117,6 +117,7 @@ var namearray=[
 	'POW',
 	'PRINT',
 	'PSET',
+	'PUBLIC',
 	'PUTBMP',
 	'READ',
 	'REM',

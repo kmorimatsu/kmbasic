@@ -200,6 +200,8 @@ char* new_function(){
 	if (!init_method) {
 		// All done
 		// Note that $v0 is address of object here.
+		// There should not be parameter(s).
+		if (g_source[g_srcpos]==',') return ERR_NO_INIT;
 		return 0;
 	}
 	// INIT method exists. Note that $v0 is address of object here.

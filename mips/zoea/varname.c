@@ -94,6 +94,7 @@ static const int reserved_var_names[]={
 	0x00015480, //POW
 	0x01aea739, //PRINT
 	0x000cf3d5, //PSET
+	0x3cb45fa4, /*PUBLIC*/
 	0x3cc0fe21, //PUTBMP
 	0x000e18d5, //READ
 	0x00015d2e, //REM
