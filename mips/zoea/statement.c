@@ -128,6 +128,8 @@ char* cdata_statement(){
 	char* cpy;
 	int shift=0;
 	int i=0;
+	// This statement is not valid in class file.
+	if (g_compiling_class) return ERR_INVALID_CLASS;
 	beginpos=g_objpos;
 	check_obj_space(2);
 	g_object[g_objpos++]=0x04110000; // bgezal      zero,xxxx
@@ -190,6 +192,8 @@ char* data_statement(){
 	// are the sign of data region
 	int i,prevpos;
 	char* err;
+	// This statement is not valid in class file.
+	if (g_compiling_class) return ERR_INVALID_CLASS;
 	while(1){
 		prevpos=g_objpos;
 		check_obj_space(2);
@@ -312,6 +316,8 @@ char* label_statement(){
 
 char* restore_statement(){
 	char* err;
+	// This statement is not valid in class file.
+	if (g_compiling_class) return ERR_INVALID_CLASS;
 	err=get_label();
 	if (err) return err;
 	if (g_label) {

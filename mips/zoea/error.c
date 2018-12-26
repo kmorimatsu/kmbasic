@@ -34,6 +34,8 @@ const char* g_err_str[]={
 	"Class not found",
 	"Not an object",
 	" is not public field/method",
+	"Valid only in class file",
+	"Invalid in class file",
 };
 
 char* resolve_label(int s6){

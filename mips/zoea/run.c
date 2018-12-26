@@ -82,7 +82,7 @@ int runbasic(char *appname,int test){
 	printstr("Compiling...");
 
 	// Compile the file
-	i=compile_and_link_file(buff,appname);
+	i=compile_and_link_main_file(buff,appname);
 	if (i) return i;
 
 	// All done

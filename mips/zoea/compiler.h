@@ -214,7 +214,7 @@ extern unsigned short* g_graphic_area;
 extern int* g_libparams;
 extern int g_long_name_var_num;
 extern int g_class;
-extern int* g_classlist;
+extern char g_compiling_class;
 extern int g_temp;
 
 /* Prototypes */
@@ -231,6 +231,7 @@ void close_file();
 void read_file(int blocklen);
 char* compile_file();
 int compile_and_link_file(char* buff,char* appname);
+int compile_and_link_main_file(char* buff,char* appname);
 int compile_and_link_class(char* buff,int class);
 
 void err_break(void);
@@ -361,6 +362,8 @@ char* method_statement();
 #define ERR_NO_CLASS (char*)(g_err_str[23])
 #define ERR_NOT_OBJ (char*)(g_err_str[24])
 #define ERR_NOT_FIELD (char*)(g_err_str[25])
+#define ERR_INVALID_NON_CLASS (char*)(g_err_str[26])
+#define ERR_INVALID_CLASS (char*)(g_err_str[27])
 
 /* comple data type numbers */
 #define CMPDATA_RESERVED 0

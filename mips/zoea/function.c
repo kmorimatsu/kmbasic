@@ -23,6 +23,8 @@ char* music_function(){
 }
 
 char* read_function(){
+	// This function is not valid in class file.
+	if (g_compiling_class) return ERR_INVALID_CLASS;
 	call_lib_code(LIB_READ);
 	return 0;
 }

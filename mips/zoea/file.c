@@ -91,7 +91,11 @@ char* compile_file(){
 		if (err) return err;
 	}
 	// Add "DATA 0" and "END" statements.
-	g_source="DATA 0:END\n";
+	if (g_compiling_class) {
+		g_source="END\n";
+	} else {
+		g_source="DATA 0:END\n";
+	}
 	g_srcpos=0;
 	err=compile_line();
 	if (err) return err;
@@ -178,8 +182,10 @@ int compile_and_link_class(char* buff,int class){
 		classfile[i++]='S';
 		classfile[i]=0;
 		// Compile it
+		g_compiling_class=1;
 		i=compile_and_link_file(buff,&classfile[0]);
 		if (i) break;
+		g_compiling_class=0;
 		// Construct class structure
 		err=construct_class_structure(class);
 		if (err) break;
@@ -202,4 +208,30 @@ int compile_and_link_class(char* buff,int class){
 	printchar('\n');
 	if (err) printstr(err);
 	return -2;
+}
+
+int compile_and_link_main_file(char* buff,char* appname){
+	int i;
+	g_compiling_class=0;
+	i=compile_and_link_file(buff,appname);
+	if (i) return i;
+	return 0;
+	/*
+		After compiling class code, g_object is set to the beginning of next code.
+		Therefore, after the all, g_object is set toe the beginnig of main code,
+		and class code(s) is/are excluded. This will affect following features when running:
+			READ/DATA/RESTORE function/statements
+		The linker also works withing the g_object dimension. Therefore, the label only works withing the file,
+		but not in the other file. This feature allows using the same label name in different files without
+		causing error/misjumping
+
+		After compiling class code, following cmpdata are destroyed (see delete_cmpdata_for_class() function):
+			CMPDATA_FIELD  : object field and method information
+			CMPDATA_USEVAR : long var name information
+		but following cmpdata remains:
+			CMPDATA_CLASS  : class name and address of class structure
+		This feature allows compiler to use class information (name and structure) for "NEW" function,
+		to use the same long var name in different files (note that g_long_name_var_num is not reseted after
+		compiling each class code).
+	*/
 }

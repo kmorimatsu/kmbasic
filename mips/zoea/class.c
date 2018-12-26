@@ -178,7 +178,9 @@ char* new_function(){
 	class=g_label;
 	next_position();
 	// Get class data from cmpdata
-	// TODO: modify here. cmpdata is not available when running
+	// Note that the address of class structure can be resolved
+	// by using cmpdata when compiling NEW function but not running. 
+	// Therefore, class table is not requred when running.
 	cmpdata_reset();
 	while(data=cmpdata_find(CMPDATA_CLASS)){
 		if (data[1]==class) break;
@@ -218,11 +220,13 @@ char* new_function(){
 }
 
 char* field_statement(){
-// TODO: This statement is only valid in class definition code.
 	char* err;
 	int i;
 	int data[1];
 	int is_private=0;
+	// This statement is valid only in class file.
+	if (!g_compiling_class) return ERR_INVALID_NON_CLASS;
+	// Check which private or public
 	next_position();
 	if (nextCodeIs("PRIVATE ")) {
 		is_private=1;
@@ -438,10 +442,11 @@ int lib_post_method(int* object, int methodname, int v0){
 */
 
 char* method_statement(){
-// TODO: This statement is only valid in class definition code.
 	char* err;
 	int data[2];
 	int opos=g_objpos;
+	// This statement is valid only in class file.
+	if (!g_compiling_class) return ERR_INVALID_NON_CLASS;
 	// Insert label for setting $s6
 	err=label_statement();
 	if (err) return err;
