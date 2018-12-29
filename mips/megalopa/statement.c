@@ -5,6 +5,10 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include "api.h"
 #include "compiler.h"
 
@@ -128,6 +132,8 @@ char* cdata_statement(){
 	char* cpy;
 	int shift=0;
 	int i=0;
+	// This statement is not valid in class file.
+	if (g_compiling_class) return ERR_INVALID_CLASS;
 	beginpos=g_objpos;
 	check_obj_space(2);
 	g_object[g_objpos++]=0x04110000; // bgezal      zero,xxxx
@@ -190,6 +196,8 @@ char* data_statement(){
 	// are the sign of data region
 	int i,prevpos;
 	char* err;
+	// This statement is not valid in class file.
+	if (g_compiling_class) return ERR_INVALID_CLASS;
 	while(1){
 		prevpos=g_objpos;
 		check_obj_space(2);
@@ -312,6 +320,8 @@ char* label_statement(){
 
 char* restore_statement(){
 	char* err;
+	// This statement is not valid in class file.
+	if (g_compiling_class) return ERR_INVALID_CLASS;
 	err=get_label();
 	if (err) return err;
 	if (g_label) {
@@ -368,18 +378,15 @@ char* gosub_statement_sub(){
 char* gosub_statement(){
 	char* err;
 	int opos,spos,stack;
+	// Skip label first (see below)
 	opos=g_objpos;
 	spos=g_srcpos;
 	err=gosub_statement_sub();
 	if (err) return err;
 	next_position();
-	// If there is no 2nd argument, return.
-	if (g_source[g_srcpos]!=',') return 0;
-
-	// There is (at least) 2nd argument.
 	// Rewind object and construct argument-creating routine.
 	g_objpos=opos;
-	stack=4;
+	stack=8;
 	g_object[g_objpos++]=0x27BD0000;           // addiu       sp,sp,-xx
 	do {
 		g_srcpos++;
@@ -390,10 +397,13 @@ char* gosub_statement(){
 		g_object[g_objpos++]=0xAFA20000|stack; // sw          v0,xx(sp)
 		next_position();
 	} while(g_source[g_srcpos]==',');
-	check_obj_space(2);
-	g_object[g_objpos++]=0xAFB50004;           // sw          s5,4(sp)
-	g_object[g_objpos++]=0x03A0A821;           // addu        s5,sp,zero
-	g_object[opos]|=((0-stack)&0xFFFF);        // addiu       sp,sp,-xx (See above)
+	// 4(sp) is for $s5, 8(sp) is for # of parameters
+	check_obj_space(5);
+	g_object[g_objpos++]=0xAFB50004;             // sw          s5,4(sp)
+	g_object[g_objpos++]=0x34020000|(stack/4-2); // ori         v0,zero,xx
+	g_object[g_objpos++]=0xAFA20008;             // sw          v0,8(sp)
+	g_object[g_objpos++]=0x27B50004;             // addiu       s5,sp,4
+	g_object[opos]|=((0-stack)&0xFFFF);          // addiu       sp,sp,-xx (See above)
 	// Rewind source and construct GOSUB routine again.
 	opos=spos;
 	spos=g_srcpos;
@@ -680,6 +690,28 @@ char* let_statement(){
 		g_object[g_objpos++]=0x27BD0004;              // addiu sp,sp,4
 		g_object[g_objpos++]=0xAC620000;              // sw    v0,0(v1)
 		return 0;
+	} else if (b2=='.') {
+		// Field of object
+		g_srcpos++;
+		check_obj_space(1);
+		g_object[g_objpos++]=0x8FC20000|(i*4);        // lw    v0,xx(s8)
+		err=integer_obj_field();
+		if (err) return err;
+		// $v1 is address to store value. Save it in stack.
+		check_obj_space(1);
+		g_object[g_objpos++]=0x27BDFFFC;              // addiu sp,sp,-4
+		g_object[g_objpos++]=0xAFA30004;              // sw    v1,4(sp)
+		// Get value
+		next_position();
+		if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
+		g_srcpos++;
+		err=get_value();
+		if (err) return err;
+		// Store in field of object
+		check_obj_space(3);
+		g_object[g_objpos++]=0x8FA30004;              // lw    v1,4(sp)
+		g_object[g_objpos++]=0x27BD0004;              // addiu sp,sp,4
+		g_object[g_objpos++]=0xAC620000;              // sw    v0,0(v1)
 	} else {
 		// Integer A-Z
 		next_position();
@@ -1478,6 +1510,42 @@ char* playwave_statement(){
 	return 0;
 }
 
+char* useclass_statement(){
+	char* err;
+	int i;
+	int* cmpdata;
+	do {
+		next_position();
+		i=check_var_name();
+		if (i<65536) return ERR_SYNTAX;
+		// Check if the class already exists
+		cmpdata_reset();
+		while(cmpdata=cmpdata_find(CMPDATA_CLASS)){
+			if (cmpdata[1]==i) {
+				// The class was already defined.
+				i=0;
+				break;
+			}
+		}
+		if (i) {
+			// Remove a objects before USECLASS statement
+			g_objpos=0;
+			// Insert a NOP assembly. This will be replaced by jump statement.
+			check_obj_space(1);
+			g_object[g_objpos++]=0x00000000; // nop
+			// Load new file to define class statement.
+			g_class=i;
+			return ERR_COMPILE_CLASS;
+		}
+		if (g_source[g_srcpos]==',') {
+			g_srcpos++;
+		} else {
+			break;
+		}
+	} while(1);
+	return 0;
+}
+
 #ifdef __DEBUG
 	char* debug_statement(){
 		call_lib_code(LIB_DEBUG);
@@ -1605,6 +1673,11 @@ static const void* statement_list[]={
 	"FREMOVE ",fremove_statement,
 	"USEVAR ",usevar_statement,
 	"PLAYWAVE ",playwave_statement,
+	"USECLASS ",useclass_statement,
+	"FIELD ",field_statement,
+	"METHOD ",method_statement,
+	"DELETE ",delete_statement,
+	"CALL ",call_statement,
 	// List of additional statements follows
 	ADDITIONAL_STATEMENTS
 };

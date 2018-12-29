@@ -5,6 +5,10 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include "compiler.h"
 
 /*
@@ -83,4 +87,23 @@ int* cmpdata_find(unsigned char type){
 int* cmpdata_findfirst(unsigned char type){
 	cmpdata_reset();
 	return cmpdata_find(type);
+}
+
+/*
+	Delete a record.
+*/
+void cmpdata_delete(int* record){
+	int delnum;
+	int* data;
+	// Ignore if invalid record.
+	if (record<g_cmpdata || g_cmpdata_end<record) return;
+	// Get number of word to delete.
+	delnum=(record[0]&0x00ff0000)>>16;
+	// Delete record by shifting data.
+	for(data=record-1;g_cmpdata<=data;data--){
+	     data[delnum]=data[0];
+	}
+	g_cmpdata+=delnum;
+	// Reset
+	cmpdata_reset();
 }

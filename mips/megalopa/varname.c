@@ -5,6 +5,10 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include "compiler.h"
 
 /*
@@ -22,6 +26,7 @@ static const int reserved_var_names[]={
 	0x00024a8f, //ATAN
 	0x002f7c1e, //ATAN2
 	0x0047c31c, //BREAK
+	0x00035869, /*CALL*/
 	0x00575afe, //CDATA
 	0x00036c3d, //CEIL
 	0x000111af, //CHR
@@ -34,6 +39,7 @@ static const int reserved_var_names[]={
 	0x00616415, //CREAD
 	0x0de593fb, //CURSOR
 	0x00040fbe, //DATA
+	0x0fe19c42, /*DELETE*/
 	0x00011644, //DEC
 	0x000116de, //DIM
 	0x000100a8, //DO
@@ -48,6 +54,7 @@ static const int reserved_var_names[]={
 	0x00058fcf, //FEOF
 	0x00059895, //FGET
 	0x00a67500, //FGETC
+	0x00a7e061, /*FIELD*/
 	0x0005a3a2, //FILE
 	0x177f0ca5, //FINPUT
 	0x0005b1df, //FLEN
@@ -81,6 +88,7 @@ static const int reserved_var_names[]={
 	0x000abca3, //MODF
 	0x016418d4, //MUSIC
 	0x000b4321, //NEXT
+	0x000148f8, //NEW
 	0x00014a5d, //NOT
 	0x000152c0, //PCG
 	0x000cacec, //PEEK
@@ -90,6 +98,7 @@ static const int reserved_var_names[]={
 	0x00015480, //POW
 	0x01aea739, //PRINT
 	0x000cf3d5, //PSET
+	0x3cb45fa4, /*PUBLIC*/
 	0x3cc0fe21, //PUTBMP
 	0x000e18d5, //READ
 	0x00015d2e, //REM

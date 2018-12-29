@@ -5,6 +5,10 @@
    http://hp.vector.co.jp/authors/VA016157/
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include "compiler.h"
 #include "main.h"
 
@@ -74,6 +78,11 @@ int* g_libparams;
 
 // Number of long name variables
 int g_long_name_var_num;
+
+// Class name being compiled
+int g_class;
+// Flag to compile class file
+char g_compiling_class;
 
 // General purpose integer used for asigning value with pointer
 int g_temp;

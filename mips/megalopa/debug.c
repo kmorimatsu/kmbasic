@@ -32,6 +32,7 @@ const unsigned char _debug_filename[] __attribute__((address(FILENAME_FLASH_ADDR
 
 static const char initext[];
 static const char bastext[];
+static const char classtext[];
 
 static char* readtext;
 static int filepos;
@@ -130,7 +131,12 @@ FSFILE* FSfopen(const char * fileName, const char *mode){
 		readtext=(char*)&initext[0];
 	} else if (fileName[i+1]=='B' && fileName[i+2]=='A' && fileName[i+3]=='S') {
 		// BAS file
-		readtext=(char*)&bastext[0];
+		if (fileName[i-6]=='C' && fileName[i-5]=='L' && fileName[i-4]=='A' &&
+			fileName[i-3]=='S' && fileName[i-2]=='S' && fileName[i-1]=='1') {
+			readtext=(char*)&classtext[0];
+		} else {
+			readtext=(char*)&bastext[0];
+		}
 		// Try debugDump.
 		if (debugDump()) return 0;
 	} else {
@@ -220,16 +226,34 @@ static const char initext[]=
 
 
 static const char bastext[]=
-"I2C 100\n"
-"DIM D(5)\n"
-"T$=\"Hello MachiKania!\"\n"
-"I2CREADDATA 0x50,D,18,0x00,0x00\n"
-"PRINT I2CERROR()\n"
-"PRINT D$\n"
-"I2CWRITEDATA 0x50,T,18,0x00,0x00\n"
-"PRINT I2CERROR()\n"
-"WAIT 60\n"
-"I2CREADDATA 0x50,D,18,0x00,0x00\n"
+"CLS\n"
+"useclass class1\n"
+"a=new(class1)\n"
+"a.test=1234\n"
+"a.test2=5678\n"
+"print gosub(LABEL1,789)\n"
+"print a.mtest(123,456)\n"
+"call a.mtest(321,654)\n"
+"print hex$(a),a.test,a.test2,a.test3\n"
+"end \n"
+"label LABEL1\n"
+"print ARGS(0),ARGS(1),\n"
+"return 100\n"
+"\n"
+"\n";
+
+
+static const char classtext[]=
+"REM\n"
+"FIELD test,test2\n"
+"FIELD PRIVATE test3,test4\n"
+"METHOD mtest\n"
+"PRINT ARGS(0),ARGS(1),ARGS(2)\n"
+"test2=7890\n"
+"return test+10000\n"
+"METHOD INIT\n"
+"PRINT \"INIT\"\n"
+"return\n"
 "\n"
 "\n";
 
@@ -237,10 +261,18 @@ static const char bastext[]=
     Test function for constructing assemblies from C codes.
 */
 
+static const void* debugjumptable[]={
+	FSfread,
+	FSfopen,
+};
+
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
-//	if (a0<0xa0008192) return 0xa0000000;
-	asm volatile("lw $sp,18($fp)");
-	asm volatile("addiu $sp,$sp,2044");
+	asm volatile(".set noreorder");
+	asm volatile("addiu $s5,$sp,4");
+	asm volatile("sw $zero,4($s8)");
+	asm volatile("lw $a0,4($s8)");
+	asm volatile("nop");
+	asm volatile("nop");
 	return a2+a3;
 }
 

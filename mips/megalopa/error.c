@@ -5,6 +5,10 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include "compiler.h"
 
 const char* g_err_str[]={
@@ -30,6 +34,13 @@ const char* g_err_str[]={
 	"File error",
 	"Invalid variable name",
 	"WAVE format error",
+	"ERR_COMPILE_CLASS",
+	"Class not found",
+	"Not an object",
+	" is not public field/method",
+	"Valid only in class file",
+	"Invalid in class file",
+	"INIT method does not exist",
 };
 
 char* resolve_label(int s6){
@@ -168,3 +179,20 @@ void err_wave(void){
 	end_exec();	
 }
 
+void err_not_obj(void){
+	printstr(ERR_NOT_OBJ);
+	end_exec();	
+}
+
+void err_not_field(int fieldname, int classname){
+	printstr(resolve_label(classname));
+	printchar('.');
+	printstr(resolve_label(fieldname));
+	printstr(ERR_NOT_FIELD);
+	end_exec();	
+}
+
+void err_str(char* str){
+	printstr(str);
+	end_exec();	
+}

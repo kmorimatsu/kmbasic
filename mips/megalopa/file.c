@@ -5,6 +5,10 @@
    http://hp.vector.co.jp/authors/VA016157/
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include <xc.h>
 #include "api.h"
 #include "compiler.h"
@@ -19,9 +23,12 @@ char* init_file(char* buff,char* appname){
 	if (!g_fhandle) {
 		return ERR_UNKNOWN;
 	}
+	// Initialize parameters
 	g_fbuff=buff;
 	g_line=0;
 	g_fileline=0;
+	g_source=buff;
+	g_srcpos=0;
 	return 0;
 }
 
@@ -88,7 +95,11 @@ char* compile_file(){
 		if (err) return err;
 	}
 	// Add "DATA 0" and "END" statements.
-	g_source="DATA 0:END\n";
+	if (g_compiling_class) {
+		g_source="END\n";
+	} else {
+		g_source="DATA 0:END\n";
+	}
 	g_srcpos=0;
 	err=compile_line();
 	if (err) return err;
@@ -97,3 +108,134 @@ char* compile_file(){
 	return 0;
 }
 
+int compile_and_link_file(char* buff,char* appname){
+	int i;
+	char* err;
+
+	while(1){
+		// Initialize SD card file system
+		err=init_file(buff,appname);
+		if (err) {
+			//setcursorcolor(COLOR_ERRORTEXT);
+			printstr("Can't Open ");
+			printstr(appname);
+			printchar('\n');
+			return -1;
+		}
+	
+		// Compile the file
+		err=compile_file();
+		close_file();
+
+		// If compiling a class file is required, do it.
+		if (err==ERR_COMPILE_CLASS) {
+			i=compile_and_link_class(buff, g_class);
+			if (i) return i;
+			// Continue compiling current file from the beginning.
+			continue;
+		}
+		break;
+	}
+
+	if (err) {
+		// Compile error
+		printstr(err);
+		printstr("\nAround: '");
+		for(i=0;i<5;i++){
+			printchar(g_source[g_srcpos-2+i]);
+		}
+		printstr("' in line ");
+		printdec(g_line);
+		printstr("\n");
+		for(i=g_srcpos;0x20<=g_source[i];i++);
+		g_source[i]=0x00;
+		for(i=g_srcpos;0x20<=g_source[i];i--);
+		printstr(g_source+i);
+		return g_fileline;
+	}
+
+	// Link
+	err=link();
+	if (err) {
+		// Link error
+		printstr(err);
+		printstr(resolve_label(g_label));
+		return -2;
+	}
+	
+	// All done
+	return 0;
+}
+
+int compile_and_link_class(char* buff,int class){
+	int i;
+	char* err;
+	char* classname;
+	char classfile[13];
+	int data[2];
+	while(1){
+		// Register the class to cmpdata
+		err=update_class_info(class);
+		if (err) break;
+		// Determine class file name
+		classname=resolve_label(class);
+		for(i=0;classfile[i]=classname[i];i++);
+		classfile[i++]='.';
+		classfile[i++]='B';
+		classfile[i++]='A';
+		classfile[i++]='S';
+		classfile[i]=0;
+		// Compile it
+		g_compiling_class=1;
+		i=compile_and_link_file(buff,&classfile[0]);
+		if (i) break;
+		g_compiling_class=0;
+		// Construct class structure
+		err=construct_class_structure(class);
+		if (err) break;
+		// Uppdate class information.
+		err=update_class_info(class);
+		if (err) break;
+		// Delete some cmpdata.
+		delete_cmpdata_for_class();
+		// Initial assembly is a jump statement to jump to the end of class file
+		g_object[0]=0x08000000 | ((((int)(&g_object[g_objpos]))&0x0FFFFFFF)>>2); // j xxxxxxxx
+		// In the next link, current region of object is ignored.
+		g_object+=g_objpos;
+		g_objpos=0;
+		// All done
+		return 0;
+	}
+	// Error occured
+	printstr("/nError in class: ");
+	printstr((char*)&classfile[0]);
+	printchar('\n');
+	if (err) printstr(err);
+	return -2;
+}
+
+int compile_and_link_main_file(char* buff,char* appname){
+	int i;
+	g_compiling_class=0;
+	i=compile_and_link_file(buff,appname);
+	if (i) return i;
+	return 0;
+	/*
+		After compiling class code, g_object is set to the beginning of next code.
+		Therefore, after the all, g_object is set toe the beginnig of main code,
+		and class code(s) is/are excluded. This will affect following features when running:
+			READ/DATA/RESTORE function/statements
+		The linker also works withing the g_object dimension. Therefore, the label only works withing the file,
+		but not in the other file. This feature allows using the same label name in different files without
+		causing error/misjumping
+
+		After compiling class code, following cmpdata are destroyed (see delete_cmpdata_for_class() function):
+			CMPDATA_FIELD  : object field and method information
+			CMPDATA_USEVAR : long var name information
+		but following cmpdata remains:
+			CMPDATA_CLASS  : class name and address of class structure
+		This feature allows compiler to use class information (name and structure) for "NEW" function,
+		to use the same long var name in different files (note that g_long_name_var_num is not reseted after
+		compiling each class code).
+	*/
+}

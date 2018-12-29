@@ -1,3 +1,14 @@
+/*
+   This file is provided under the LGPL license ver 2.1.
+   Written by Katsumi.
+   http://hp.vector.co.jp/authors/VA016157/
+   kmorimatsu@users.sourceforge.jp
+*/
+
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include "./compiler.h"
 #include "stdlib.h"
 

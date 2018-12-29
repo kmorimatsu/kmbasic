@@ -6,6 +6,10 @@
 */
 
 /*
+	This file is shared by Megalopa and Zoea
+*/
+
+/*
   Public functions:
     char* get_string(void);
 	char* simple_string(void);

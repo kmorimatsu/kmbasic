@@ -5,6 +5,10 @@
    http://hp.vector.co.jp/authors/VA016157/
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include <xc.h>
 #include "api.h"
 #include "compiler.h"
@@ -44,17 +48,16 @@ int runbasic(char *appname,int test){
 
 	// Set grobal pointer
 	g_gp=get_gp();
-	// Set source positions
+	// Set buffer positions
 	buff=(char*)&(RAM[RAMSIZE-512]);
-	g_source=(char*)(&buff[0]);
-	g_srcpos=0;
 	// Set object positions
 	g_object=(int*)(&RAM[0]);
 	g_objpos=0;
 	g_objmax=g_object+(RAMSIZE-512)/4; // Buffer area excluded.
 	// Clear object area
 	for(i=0;i<RAMSIZE/4;i++) g_object[i]=0x00000000;
-	// Initialize SD card file system
+
+	// Check file error
 	err=init_file(buff,appname);
 	if (err) {
 		setcursorcolor(COLOR_ERRORTEXT);
@@ -63,6 +66,7 @@ int runbasic(char *appname,int test){
 		printchar('\n');
 		return -1;
 	}
+	close_file();	
 
 	// Initialize parameters
 	g_pcg_font=0;
@@ -82,33 +86,8 @@ int runbasic(char *appname,int test){
 	printstr("Compiling...");
 
 	// Compile the file
-	err=compile_file();
-	close_file();
-	if (err) {
-		// Compile error
-		printstr(err);
-		printstr("\nAround: '");
-		for(i=0;i<5;i++){
-			printchar(g_source[g_srcpos-2+i]);
-		}
-		printstr("' in line ");
-		printdec(g_line);
-		printstr("\n");
-		for(i=g_srcpos;0x20<=g_source[i];i++);
-		g_source[i]=0x00;
-		for(i=g_srcpos;0x20<=g_source[i];i--);
-		printstr(g_source+i);
-		return g_fileline;
-	}
-
-	// Link
-	err=link();
-	if (err) {
-		// Link error
-		printstr(err);
-		printstr(resolve_label(g_label));
-		return -2;
-	}
+	i=compile_and_link_main_file(buff,appname);
+	if (i) return i;
 
 	// All done
 	printstr("done\n");

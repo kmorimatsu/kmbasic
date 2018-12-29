@@ -5,6 +5,10 @@
    http://hp.vector.co.jp/authors/VA016157/
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #ifdef __DEBUG
 
 // Pseudo reading config setting for debug mode

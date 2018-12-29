@@ -5,6 +5,10 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include "compiler.h"
 #include "api.h"
 
@@ -23,6 +27,8 @@ char* music_function(){
 }
 
 char* read_function(){
+	// This function is not valid in class file.
+	if (g_compiling_class) return ERR_INVALID_CLASS;
 	call_lib_code(LIB_READ);
 	return 0;
 }
@@ -562,6 +568,7 @@ static const void* int_func_list[]={
 	"FREMOVE(",fremove_statement,
 	"FEOF(",feof_function,
 	"PLAYWAVE(",playwave_function,
+	"NEW(",new_function,
 	// Additional functions follow
 	ADDITIONAL_INT_FUNCTIONS
 };

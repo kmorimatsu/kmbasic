@@ -5,6 +5,10 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 // Include envilonment specific configurations
 #include "envspecific.h"
 
@@ -24,7 +28,7 @@
 // Start # of permanent blocks
 #define ALLOC_PERM_BLOCK 229
 // Number of blocks that can be assigned for memory allocation (including all above)
-#define ALLOC_BLOCK_NUM 239
+#define ALLOC_BLOCK_NUM 329
 
 // Persistent RAM bytes used for object, heap and exception data
 #ifndef PERSISTENT_RAM_SIZE
@@ -213,6 +217,8 @@ extern char g_use_graphic;
 extern unsigned short* g_graphic_area;
 extern int* g_libparams;
 extern int g_long_name_var_num;
+extern int g_class;
+extern char g_compiling_class;
 extern int g_temp;
 
 /* Prototypes */
@@ -228,6 +234,9 @@ char* init_file(char* buff,char* appname);
 void close_file();
 void read_file(int blocklen);
 char* compile_file();
+int compile_and_link_file(char* buff,char* appname);
+int compile_and_link_main_file(char* buff,char* appname);
+int compile_and_link_class(char* buff,int class);
 
 void err_break(void);
 void err_music(char* str);
@@ -242,6 +251,9 @@ void err_no_block(void);
 void err_invalid_param(void);
 void err_file(void);
 void err_wave(void);
+void err_not_obj(void);
+void err_not_field(int fieldname, int classname);
+void err_str(char* str);
 char* resolve_label(int s6);
 
 void set_sound(unsigned long* data, int flagsLR);
@@ -260,6 +272,7 @@ char* fget_statement();
 char* fput_statement();
 char* fputc_statement();
 char* fremove_statement();
+char* label_statement();
 
 char* function(void);
 char* str_function(void);
@@ -274,6 +287,9 @@ void* calloc_memory(int size, int var_num);
 void move_to_perm_block(int var_num);
 void move_from_perm_block(int var_num);
 int get_permanent_var_num(void);
+int get_varnum_from_address(void* address);
+void* lib_calloc_memory(int size);
+void lib_delete(int* object);
 
 char* link(void);
 char* get_label(void);
@@ -305,12 +321,26 @@ char* cmpdata_insert(unsigned char type, short data16, int* data, unsigned char 
 void cmpdata_reset();
 int* cmpdata_find(unsigned char type);
 int* cmpdata_findfirst(unsigned char type);
+void cmpdata_delete(int* record);
 
 int check_var_name();
 int get_var_number();
 int search_var_name(int nameint);
 char* register_var_name(int nameint);
 
+char* update_class_info(int class);
+char* construct_class_structure(int class);
+void delete_cmpdata_for_class();
+
+char* new_function();
+char* field_statement();
+char* integer_obj_field();
+unsigned long long lib_obj_field(int* object, int fieldname);
+int lib_pre_method(int* object, int methodname);
+int lib_post_method(int* object, int methodname, int v0);
+char* method_statement();
+char* delete_statement();
+char* call_statement();
 
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])
@@ -335,12 +365,30 @@ char* register_var_name(int nameint);
 #define ERR_FILE (char*)(g_err_str[19])
 #define ERR_INVALID_VAR_NAME (char*)(g_err_str[20])
 #define ERR_WAVE (char*)(g_err_str[21])
+#define ERR_COMPILE_CLASS (char*)(g_err_str[22])
+#define ERR_NO_CLASS (char*)(g_err_str[23])
+#define ERR_NOT_OBJ (char*)(g_err_str[24])
+#define ERR_NOT_FIELD (char*)(g_err_str[25])
+#define ERR_INVALID_NON_CLASS (char*)(g_err_str[26])
+#define ERR_INVALID_CLASS (char*)(g_err_str[27])
+#define ERR_NO_INIT (char*)(g_err_str[28])
 
 /* comple data type numbers */
 #define CMPDATA_RESERVED 0
 #define CMPDATA_USEVAR   1
+#define CMPDATA_CLASS    2
+#define CMPDATA_FIELD    3
+
+/*
+	Hidden varname 31 bit values
+	Note that max number of 31 bit value is 0x61504BFF (for ZZZZZZ)
+*/
+#define HIDDEN_VAR_THIS_OBJECT 0x7FFF0000
 
 /* Macros */
+
+// Lables as 31 bit integer
+#define LABEL_INIT 0x0007df55
 
 // Skip blanc(s) in source code
 #define next_position() while(g_source[g_srcpos]==' ') {g_srcpos++;}
@@ -359,6 +407,27 @@ char* register_var_name(int nameint);
 	g_object[g_objpos++]=0x02E0F809;\
 	g_object[g_objpos++]=0x24070000|((x)&0x0000FFFF)
 
+// Insert code for calling quick library
+//3C081234   lui         t0,0x1234
+//35085678   ori         t0,t0,0x5678
+//0100F809   jalr        ra,t0
+//00000000   nop         
+#define call_quicklib_code(x,y) do {\
+		check_obj_space(4);\
+		g_object[g_objpos++]=0x3C080000|(((unsigned int)(x))>>16);\
+		g_object[g_objpos++]=0x35080000|(((unsigned int)(x))&0x0000FFFF);\
+		g_object[g_objpos++]=0x0100F809;\
+		g_object[g_objpos++]=(y);\
+	} while (0)	
+
+#define ASM_NOP 0x00000000
+#define ASM_ADDU_A0_V0_ZERO 0x00402021
+#define ASM_ADDU_A1_V0_ZERO 0x00402821
+#define ASM_ADDU_A2_V0_ZERO 0x00403021
+#define ASM_ADDU_A3_V0_ZERO 0x00403821
+#define ASM_ORI_A0_ZERO_ 0x34040000
+#define ASM_LW_A0_XXXX_S8 0x8FC40000
+
 // Division macro for unsigned long
 // Valid for 31 bits for all cases and 32 bits for some cases
 #define div32(x,y,z) ((((unsigned long long)((unsigned long)(x)))*((unsigned long long)((unsigned long)(y))))>>(z))
@@ -374,3 +443,6 @@ char* register_var_name(int nameint);
 // Divide by 36 (valid for 32 bits)
 #define div36_32(x) div32(x,0xe38e38e4,37)
 #define rem36_32(x) (x-36*div36_32(x))
+
+// Check if within RAM
+#define withinRAM(x) ((&RAM[0])<=((char*)(x)) && ((char*)(x))<(&RAM[RAMSIZE]))
