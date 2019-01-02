@@ -388,7 +388,7 @@ char* gosub_statement(){
 	g_objpos=opos;
 	stack=8;
 	g_object[g_objpos++]=0x27BD0000;           // addiu       sp,sp,-xx
-	do {
+	while(g_source[g_srcpos]==',') {
 		g_srcpos++;
 		stack+=4;
 		err=get_stringFloatOrValue();
@@ -396,7 +396,7 @@ char* gosub_statement(){
 		check_obj_space(1);
 		g_object[g_objpos++]=0xAFA20000|stack; // sw          v0,xx(sp)
 		next_position();
-	} while(g_source[g_srcpos]==',');
+	}
 	// 4(sp) is for $s5, 8(sp) is for # of parameters
 	check_obj_space(5);
 	g_object[g_objpos++]=0xAFB50004;             // sw          s5,4(sp)

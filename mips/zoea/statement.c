@@ -5,6 +5,10 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include "api.h"
 #include "compiler.h"
 
@@ -384,7 +388,7 @@ char* gosub_statement(){
 	g_objpos=opos;
 	stack=8;
 	g_object[g_objpos++]=0x27BD0000;           // addiu       sp,sp,-xx
-	do {
+	while(g_source[g_srcpos]==',') {
 		g_srcpos++;
 		stack+=4;
 		err=get_stringFloatOrValue();
@@ -392,7 +396,7 @@ char* gosub_statement(){
 		check_obj_space(1);
 		g_object[g_objpos++]=0xAFA20000|stack; // sw          v0,xx(sp)
 		next_position();
-	} while(g_source[g_srcpos]==',');
+	}
 	// 4(sp) is for $s5, 8(sp) is for # of parameters
 	check_obj_space(5);
 	g_object[g_objpos++]=0xAFB50004;             // sw          s5,4(sp)
@@ -1259,6 +1263,7 @@ char* graphic_statement(enum functions func){
 		v0: C/S$/BMP
 	*/
 	char* err;
+	int spos;
 	int paramnum;
 	switch(func){
 		case FUNC_PSET:// X1,Y1[,C]
@@ -1333,7 +1338,15 @@ char* graphic_statement(enum functions func){
 		// BMP
 		if (g_source[g_srcpos]!=',') return ERR_SYNTAX;
 		g_srcpos++;
+		spos=g_srcpos;
 		err=get_label();
+		if (g_label && !err) {
+			if (search_var_name(g_label)!=-1) {
+				// This is a long var name.
+				g_label=0;
+				g_srcpos=spos;
+			}
+		}
 		if (g_label && !err) {
 			// Label/number is constant.
 			// Linker will change following codes later.

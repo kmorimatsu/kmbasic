@@ -5,6 +5,10 @@
    http://hp.vector.co.jp/authors/VA016157/
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include "compiler.h"
 
 static int* g_class_structure;
@@ -151,7 +155,7 @@ void* search_method(int* classdata,int method){
 	classdata+=2*((nums>>8)&0xff); // exclude private field
 	nums=(nums>>16)&0xff;          // number of methods
 	for(i=0;i<nums;i++){
-		if (classdata[i]==method) return (void*)classdata[i+1];
+		if (classdata[0]==method) return (void*)classdata[1];
 		classdata+=2;
 	}
 	return 0; // not found
