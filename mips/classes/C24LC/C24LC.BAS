@@ -1,7 +1,8 @@
+REM C24LC.BAS ver 0.11
 REM Class C24LC for MachiKania Type M 
-REM using I2C 8 pin EEPROM 24LC512
-REM Multiple objects could be created
-REM due to multiple chips possible
+REM using I2C 8-pin EEPROM 24LC512
+REM Multiple objects can be created
+REM for multiple (up to 8) chips
 REM Page size is 128 bytes
 
 FIELD PUBLIC ADDR
@@ -16,7 +17,7 @@ METHOD INIT
   REM Resolve address
   if args(0)<1 then
     ADDR7=0x50
-  elseif 0<=args(1) and args(1)<7 then
+  elseif 0<=args(1) and args(1)<=7 then
     ADDR7=0x50+args(1)
   else
     print "Invalid 24LC512 address ";
@@ -37,7 +38,7 @@ METHOD INIT
   I2CWRITE ADDR7
   if I2CERROR() then
     print "24LC512 is not connected ";
-    print "at address, ";ADDR
+    print "at address, ";args(1)
     end
   endif
   REM Initiate buffer
@@ -103,8 +104,6 @@ METHOD RD8
 LABEL RDMAIN
   REM First parameter is address
   if 1<=args(0) then ADDR=args(1)
-  POKE BUFF+2,ADDR>>8
-  POKE BUFF+3,ADDR
   BUFF(0)=0
   I2CREADDATA ADDR7,BUFF,NUM,ADDR>>8,ADDR
   REM Increment address
@@ -134,7 +133,7 @@ METHOD RDDATA
 
 REM RDSTR: Read string
 METHOD RDSTR
-  VAR T
+  var T
   dim T(31)
   REM 1st parameter is address
   if 1<=args(0) then ADDR=args(1)

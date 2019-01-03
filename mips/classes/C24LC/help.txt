@@ -1,6 +1,6 @@
 ＜クラス名およびバージョン＞
 C24LC
-ver 0.1
+ver 0.11
 
 ＜ファイル名＞
 C24LC.BAS
@@ -55,8 +55,8 @@ WRDATA(x,y[,z])
 
 USECLASS C24LC
 E=NEW(C24LC)
-T=E.RDSTR():T$=T$+""
+T=E.RDSTR():T$=T$
 PRINT T$
 CALL E.WRSTR("Hello objective MachiKania!",0)
-T=E.RDSTR(0):T$=T$+""
+T=E.RDSTR(0):T$=T$
 PRINT T$
