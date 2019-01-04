@@ -1,4 +1,4 @@
-REM P32REG.BAS ver 0.1
+REM P32REG.BAS ver 0.2
 REM Class P32REG for MachiKania Type Z/M 
 REM Prepare P32MX.S file containing
 REM registor address information
@@ -41,6 +41,15 @@ METHOD REGADR
   if RET then return RET
   print "Not initialized for ";RNAME$
   end
+
+METHOD RDREG
+  RET=gosub(REGADR,args(1))
+  return RET(0)
+
+METHOD WRREG
+  RET=gosub(REGADR,args(1))
+  RET(0)=args(2)
+  return
 
 LABEL FO
   REM Buffer contains 128 + 512 bytes
