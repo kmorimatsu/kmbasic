@@ -228,12 +228,15 @@ static const char initext[]=
 static const char bastext[]=
 "CLS\n"
 "dim a(0)\n"
-"poke a,0x12\n"
-"print hex$(a(0))\n"
-"poke16 a+2,0x1234\n"
-"print hex$(a(0))\n"
-"poke32 a,0x12345678\n"
-"print hex$(a(0))\n"
+"a(0)=0x89ABCDEF\n"
+"print hex$(peek(a)),\n"
+"print hex$(peek16(a)),\n"
+"print hex$(peek32(a)),\n"
+"\n"
+"\n"
+"\n"
+"\n"
+"\n"
 "\n";
 
 
@@ -262,14 +265,9 @@ static const void* debugjumptable[]={
 
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
-	asm volatile("addiu $s5,$sp,4");
-	asm volatile("sw $zero,4($s8)");
-	asm volatile("lw $a0,4($s8)");
-	asm volatile("addiu $v0,$s8,4");
-	asm volatile("sh $v0,0($v1)");
-	asm volatile("sw $v0,0($v1)");
-	((unsigned short*)a0)[0]=(unsigned short)a1;
-	asm volatile("nop");
+	asm volatile("lbu $v0,0($v0)");
+	asm volatile("lhu $v0,0($v0)");
+	asm volatile("lw $v0,0($v0)");
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");
