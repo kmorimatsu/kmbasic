@@ -237,7 +237,7 @@ char* clear_statement(){
 	return 0;
 }
 
-char* poke_statement(){
+char* poke_statement_sub(int bits){
 	char* err;
 	err=get_value();
 	if (err) return err;
@@ -251,7 +251,18 @@ char* poke_statement(){
 	check_obj_space(3);
 	g_object[g_objpos++]=0x8FA30004; // lw          v1,4(sp)
 	g_object[g_objpos++]=0x27BD0004; // addiu       sp,sp,4
-	g_object[g_objpos++]=0xA0620000; // sb          v0,0(v1)
+	switch(bits){
+		case 32:
+			g_object[g_objpos++]=0xAC620000; // sw          v0,0(v1)
+			break;
+		case 16:
+			g_object[g_objpos++]=0xA4620000; // sh          v0,0(v1)
+			break;
+		case 8:
+		default:
+			g_object[g_objpos++]=0xA0620000; // sb          v0,0(v1)
+			break;
+	}
 	return 0;
 }
 
@@ -1555,6 +1566,18 @@ char* useclass_statement(){
 
 // Aliases follow
 
+char* poke_statement(){
+	return poke_statement_sub(8);
+}
+
+char* poke16_statement(){
+	return poke_statement_sub(16);
+}
+
+char* poke32_statement(){
+	return poke_statement_sub(32);
+}
+
 char* palette_statement(){
 	return param4_statement(LIB_PALETTE);
 }
@@ -1637,6 +1660,8 @@ static const void* statement_list[]={
 	"GOSUB ",gosub_statement,
 	"RETURN",return_statement,
 	"POKE ",poke_statement,
+	"POKE16 ",poke16_statement,
+	"POKE32 ",poke32_statement,
 	"FOR ",for_statement,
 	"NEXT",next_statement,
 	"LET ",let_statement,

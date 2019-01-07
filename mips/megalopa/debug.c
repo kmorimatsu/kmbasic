@@ -227,19 +227,13 @@ static const char initext[]=
 
 static const char bastext[]=
 "CLS\n"
-"useclass class1\n"
-"a=new(class1)\n"
-"a.test=1234\n"
-"a.test2=5678\n"
-"print gosub(LABEL1,789)\n"
-"print a.mtest(123,456)\n"
-"call a.mtest(321,654)\n"
-"print hex$(a),a.test,a.test2,a.test3\n"
-"end \n"
-"label LABEL1\n"
-"print ARGS(0),ARGS(1),\n"
-"return 100\n"
-"\n"
+"dim a(0)\n"
+"poke a,0x12\n"
+"print hex$(a(0))\n"
+"poke16 a+2,0x1234\n"
+"print hex$(a(0))\n"
+"poke32 a,0x12345678\n"
+"print hex$(a(0))\n"
 "\n";
 
 
@@ -271,6 +265,14 @@ int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile("addiu $s5,$sp,4");
 	asm volatile("sw $zero,4($s8)");
 	asm volatile("lw $a0,4($s8)");
+	asm volatile("addiu $v0,$s8,4");
+	asm volatile("sh $v0,0($v1)");
+	asm volatile("sw $v0,0($v1)");
+	((unsigned short*)a0)[0]=(unsigned short)a1;
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");
 	return a2+a3;
