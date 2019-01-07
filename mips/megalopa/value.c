@@ -77,6 +77,13 @@ char* get_simple_value(void){
 		check_obj_space(1);
 		g_object[g_objpos++]=0x00021023; // subu v0,zero,v0
 		g_intconst=-g_intconst;
+	} else if (b1=='&') {
+		// '&' operator
+		g_srcpos++;
+		i=get_var_number();
+		if (i<0) return ERR_SYNTAX;
+		check_obj_space(1);
+		g_object[g_objpos++]=0x27C20000|(i*4); // addiu       v0,s8,xxxx
 	} else {
 		// Main routine of getting value here
 		if (b1=='+') g_srcpos++; // Ignore unary '+' operator
