@@ -68,6 +68,13 @@ char* get_simple_float(void){
 				// Must be a function.
 				return float_function();
 			}
+			if (g_source[g_srcpos]=='.') {
+				// This is an object field or method to return string
+				check_obj_space(1);
+				g_object[g_objpos++]=0x8FC20000|(i*4); // lw v0,xx(s8)
+				g_srcpos++;
+				return float_obj_field();
+			}
 			if (g_source[g_srcpos]!='#') return ERR_SYNTAX;
 			g_srcpos++;
 			if (g_source[g_srcpos]=='(') {

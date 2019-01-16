@@ -227,12 +227,16 @@ static const char initext[]=
 
 static const char bastext[]=
 "CLS\n"
-"dim a(0)\n"
-"a(0)=0x89ABCDEF\n"
-"print hex$(peek(a)),\n"
-"print hex$(peek16(a)),\n"
-"print hex$(peek32(a)),\n"
+"print 12 345.6,12 345 678,hex$(0x0ABC 123),hex$(0x0123 CDEF)\n"
+"end\n"
+"REM \x80\n"
 "\n"
+"\n"
+"USECLASS CLASS1\n"
+"a=new(CLASS1)\n"
+"print a.TEST$,a.TEST2$(),\n"
+"a.TEST$=\"ABC\"\n"
+"print a.TEST$,\n"
 "\n"
 "\n"
 "\n"
@@ -242,15 +246,17 @@ static const char bastext[]=
 
 static const char classtext[]=
 "REM\n"
-"FIELD test,test2\n"
-"FIELD PRIVATE test3,test4\n"
-"METHOD mtest\n"
-"PRINT ARGS(0),ARGS(1),ARGS(2)\n"
-"test2=7890\n"
-"return test+10000\n"
+"FIELD TEST$,TEST3\n"
 "METHOD INIT\n"
-"PRINT \"INIT\"\n"
+"TEST$=\"MachiKania\"\n"
+"TEST3#=1.2345\n"
 "return\n"
+"METHOD TEST2\n"
+"return \"Objective\"\n"
+"METHOD TEST4\n"
+"return PI#\n"
+"\n"
+"\n"
 "\n"
 "\n";
 
@@ -265,9 +271,7 @@ static const void* debugjumptable[]={
 
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
-	asm volatile("lbu $v0,0($v0)");
-	asm volatile("lhu $v0,0($v0)");
-	asm volatile("lw $v0,0($v0)");
+	asm volatile("lw    $a0,0($v1)");
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");

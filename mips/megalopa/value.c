@@ -103,7 +103,7 @@ char* get_simple_value(void){
 				} else if ('A'<=b1 && b1<='F') {
 					i*=16;
 					i+=b1-'A'+0x0A;
-				} else {
+				} else if (b1!=' ') { // Skip ' '
 					break;
 				}
 				g_srcpos++;
@@ -127,7 +127,7 @@ char* get_simple_value(void){
 				if ('0'<=b1 && b1<='9') {
 					i*=10;
 					i+=b1-'0';
-				} else {
+				} else if (b1!=' ') { // Skip ' '
 					break;
 				}
 				g_srcpos++;

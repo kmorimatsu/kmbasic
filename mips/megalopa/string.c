@@ -92,6 +92,13 @@ char* simple_string(void){
 			g_temp_area_used=1;
 			return 0;
 		}
+		if (g_source[g_srcpos]=='.') {
+			// This is an object field or method to return string
+			check_obj_space(1);
+			g_object[g_objpos++]=0x8FC20000|(i*4); // lw v0,xx(s8)
+			g_srcpos++;
+			return string_obj_field();
+		}
 		if (g_source[g_srcpos]!='$') return ERR_SYNTAX;
 		g_srcpos++;
 		// String variable

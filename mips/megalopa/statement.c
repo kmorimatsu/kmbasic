@@ -18,7 +18,7 @@ char* rem_statement(){
 		// Delete $s6-setting command if exists.
 		if ((g_object[g_objpos-1]&0xffff0000)==0x34160000) g_objpos--;
 	}
-	while(0x20<=g_source[g_srcpos]){
+	while(0xE0 & g_source[g_srcpos]){
 		g_srcpos++;
 	}
 	return 0;
@@ -641,7 +641,7 @@ char* let_dim_sub(int i){
 char* let_statement(){
 	char* err;
 	char b2,b3;
-	int i;
+	int i,spos,opos;
 	next_position();
 	i=get_var_number();
 	if (i<0) return ERR_SYNTAX;
@@ -706,23 +706,61 @@ char* let_statement(){
 		g_srcpos++;
 		check_obj_space(1);
 		g_object[g_objpos++]=0x8FC20000|(i*4);        // lw    v0,xx(s8)
-		err=integer_obj_field();
-		if (err) return err;
+		spos=g_srcpos;
+		opos=g_objpos;
+		// Try string field, first
+		err=string_obj_field();
+		if (err) {
+			// Integer or float field
+			g_srcpos=spos;
+			g_objpos=opos;
+			err=integer_obj_field();
+			if (err) return err;
+			b3=g_source[g_srcpos];
+			if (b3=='#') g_srcpos++;
+		} else {
+			// String field
+			b3='$';
+		}
+		if (g_source[g_srcpos-1]==')') {
+			// This is a CALL statement
+			return 0;
+		}
 		// $v1 is address to store value. Save it in stack.
 		check_obj_space(1);
 		g_object[g_objpos++]=0x27BDFFFC;              // addiu sp,sp,-4
 		g_object[g_objpos++]=0xAFA30004;              // sw    v1,4(sp)
-		// Get value
-		next_position();
-		if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
-		g_srcpos++;
-		err=get_value();
+		if (b3=='$') {
+			// String field
+			// Get value
+			next_position();
+			if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
+			g_srcpos++;
+			err=get_string();
+		} else if (b3=='#') {
+			// Float field
+			// Get value
+			next_position();
+			if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
+			g_srcpos++;
+			err=get_float();
+		} else {
+				// Integer field
+				// Get value
+				next_position();
+				if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
+				g_srcpos++;
+				err=get_value();
+		}
 		if (err) return err;
 		// Store in field of object
-		check_obj_space(3);
+		check_obj_space(4);
 		g_object[g_objpos++]=0x8FA30004;              // lw    v1,4(sp)
 		g_object[g_objpos++]=0x27BD0004;              // addiu sp,sp,4
+		g_object[g_objpos++]=0x8C640000;              // lw    a0,0(v1)
 		g_object[g_objpos++]=0xAC620000;              // sw    v0,0(v1)
+		// Handle permanent block for string field
+		if (b3=='$') call_quicklib_code(lib_let_str_field,ASM_ADDU_A1_V0_ZERO);
 	} else {
 		// Integer A-Z
 		next_position();
