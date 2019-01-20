@@ -563,3 +563,70 @@ char* call_statement(){
 	// Just get an integer value. That is it.
 	return get_value();
 }
+
+/*
+	Let object.field statement
+*/
+
+char* let_object_field(){
+	char* err;
+	char b3;
+	int spos,opos;
+	// $v0 contains the pointer to object
+	spos=g_srcpos;
+	opos=g_objpos;
+	// Try string field, first
+	err=string_obj_field();
+	if (err) {
+		// Integer or float field
+		g_srcpos=spos;
+		g_objpos=opos;
+		err=integer_obj_field();
+		if (err) return err;
+		b3=g_source[g_srcpos];
+		if (b3=='#') g_srcpos++;
+	} else {
+		// String field
+		b3='$';
+	}
+	if (g_source[g_srcpos-1]==')') {
+		// This is a CALL statement
+		return 0;
+	}
+	// $v1 is address to store value. Save it in stack.
+	check_obj_space(1);
+	g_object[g_objpos++]=0x27BDFFFC;              // addiu sp,sp,-4
+	g_object[g_objpos++]=0xAFA30004;              // sw    v1,4(sp)
+	if (b3=='$') {
+		// String field
+		// Get value
+		next_position();
+		if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
+		g_srcpos++;
+		err=get_string();
+	} else if (b3=='#') {
+		// Float field
+		// Get value
+		next_position();
+		if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
+		g_srcpos++;
+		err=get_float();
+	} else {
+			// Integer field
+			// Get value
+			next_position();
+			if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
+			g_srcpos++;
+			err=get_value();
+	}
+	if (err) return err;
+	// Store in field of object
+	check_obj_space(4);
+	g_object[g_objpos++]=0x8FA30004;              // lw    v1,4(sp)
+	g_object[g_objpos++]=0x27BD0004;              // addiu sp,sp,4
+	g_object[g_objpos++]=0x8C640000;              // lw    a0,0(v1)
+	g_object[g_objpos++]=0xAC620000;              // sw    v0,0(v1)
+	// Handle permanent block for string field
+	if (b3=='$') call_quicklib_code(lib_let_str_field,ASM_ADDU_A1_V0_ZERO);
+	return 0;
+}

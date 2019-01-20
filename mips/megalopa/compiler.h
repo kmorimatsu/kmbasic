@@ -346,6 +346,7 @@ char* method_statement();
 char* delete_statement();
 char* call_statement();
 void lib_let_str_field(char* str, char* prev_str);
+char* let_object_field();
 
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])

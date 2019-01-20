@@ -74,6 +74,14 @@ char* get_simple_float(void){
 				g_object[g_objpos++]=0x8FC20000|(i*4); // lw v0,xx(s8)
 				g_srcpos++;
 				return float_obj_field();
+			} else if (g_source[g_srcpos]=='(') {
+				// An array element contains pointer to an object.
+				g_srcpos++;
+				err=get_dim_value(i);
+				if (err) return err;
+				if (g_source[g_srcpos]!='.') return ERR_SYNTAX;
+				g_srcpos++;
+				return float_obj_field();
 			}
 			if (g_source[g_srcpos]!='#') return ERR_SYNTAX;
 			g_srcpos++;
