@@ -144,3 +144,4 @@ METHOD RDSTR
   NUM=NUM+1
   ADDR=(ADDR+NUM) and 0xffff
   return T$
+
