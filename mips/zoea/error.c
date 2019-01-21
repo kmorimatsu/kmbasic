@@ -5,6 +5,10 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include "compiler.h"
 
 const char* g_err_str[]={
@@ -183,7 +187,7 @@ void err_not_obj(void){
 void err_not_field(int fieldname, int classname){
 	printstr(resolve_label(classname));
 	printchar('.');
-	printstr(resolve_label(fieldname));
+	printstr(resolve_label(fieldname & 0x7FFFFFFF));
 	printstr(ERR_NOT_FIELD);
 	end_exec();	
 }

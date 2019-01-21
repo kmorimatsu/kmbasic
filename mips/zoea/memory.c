@@ -5,6 +5,10 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include "compiler.h"
 
 /*
@@ -13,11 +17,9 @@
 	                  This number also includes temporary area used for string construction etc.
 	                  Temporary area is cleared every line of BASIC code in alloc_memory().
 	ALLOC_BLOCK_NUM:  # of blocks that can be used for memory allocation.
-	                  This # also includes the ones for ALLOC_VAR_NUM.
+	                  This # includes the ones for ALLOC_VAR_NUM, ALLOC_PCG_BLOCK etc, ALLOC_LNV_BLOCK,
+	                  ALLOC_PERM_BLOCK.
 	                  After ALLOC_VAR_NUM area, dedicated memory area and permanent area follows.
-	                  Currently, only PCG is used for permanent pourpose.
-                      10 permanant blocks can be used.
-	                  Therefore, ALLOC_VAR_NUM+11 == ALLOC_BLOCK_NUM
 	ALLOC_PERM_BLOCK: Start # of permanent blocks.
                       The blocks after this number is permanently stored.
                       Therefore, it must be released when it's not used any more.
@@ -140,6 +142,20 @@ void free_temp_str(char* str){
 	}
 }
 
+void free_perm_str(char* str){
+	int i,pointer;
+	if (!str) return;
+	pointer=(int)str-(int)g_heap_mem;
+	pointer>>=2;
+	// Search permanent block and delete a block if found.
+	for(i=ALLOC_PERM_BLOCK;i<ALLOC_BLOCK_NUM;i++){
+		if (g_var_pointer[i]==pointer) {
+			g_var_size[i]=0;
+			break;
+		}
+	}
+}
+
 void move_to_perm_block(int var_num){
 	int i;
 	// Find available permanent block
@@ -157,7 +173,7 @@ void move_to_perm_block(int var_num){
 	g_var_mem[var_num]=0;
 }
 
-void move_from_perm_block(int var_num){
+int move_from_perm_block_if_exists(int var_num){
 	int i,pointer;
 	pointer=(int)g_var_mem[var_num]-(int)g_heap_mem;
 	pointer>>=2;
@@ -165,13 +181,19 @@ void move_from_perm_block(int var_num){
 	for (i=ALLOC_PERM_BLOCK;i<ALLOC_BLOCK_NUM;i++){
 		if (0<g_var_size[i] && g_var_pointer[i]==pointer) break;
 	}
-	if (ALLOC_BLOCK_NUM<=i) err_unknown(); // Not found
+	if (ALLOC_BLOCK_NUM<=i) return 0; // Not found
 	// Stored block found.
 	// Replace pointer
 	g_var_size[var_num]=g_var_size[i];
 	g_var_pointer[var_num]=g_var_pointer[i];
 	// Clear block
 	g_var_size[i]=0;
+	return 1;
+}
+
+void move_from_perm_block(int var_num){
+	if (move_from_perm_block_if_exists(var_num)) return; // Found
+	err_unknown(); // Not found
 }
 
 int get_permanent_var_num(){

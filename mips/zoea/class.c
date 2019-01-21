@@ -124,7 +124,7 @@ char* construct_class_structure(int class){
 	num=((num>>8)&0xff)+(num&0xff);
 	for(i=1;i<=num;i++){
 		if ((
-			g_class_structure[i*2+1]=search_var_name(g_class_structure[i*2])+ALLOC_LNV_BLOCK
+			g_class_structure[i*2+1]=search_var_name(0x7FFFFFFF & g_class_structure[i*2])+ALLOC_LNV_BLOCK
 			)<ALLOC_LNV_BLOCK) return ERR_UNKNOWN;
 	}
 	return 0;
@@ -246,7 +246,18 @@ char* field_statement(){
 		// Register varname
 		err=register_var_name(i);
 		if (err) return err;
-		if (g_source[g_srcpos]=='#' || g_source[g_srcpos]=='$') g_srcpos++;
+		if (g_source[g_srcpos]=='#') {
+			g_srcpos++;
+		} else if (g_source[g_srcpos]=='$') {
+			// String field. Raise 31st bit.
+			g_srcpos++;
+			i|=0x80000000;
+		} else if (g_source[g_srcpos]=='(' && g_source[g_srcpos+1]==')' && is_private) {
+			// Dimension field (private only). Raise 31st bit.
+			g_srcpos++;
+			g_srcpos++;
+			i|=0x80000000;
+		}
 		// Register field
 		data[0]=i;
 		if (is_private) {
@@ -330,23 +341,40 @@ char* obj_method(int method){
 
 /*
 	char* integer_obj_field();
+	char* string_obj_field();
+	char* float_obj_field();
 	Implementation of access to field of object.
 	This feature is recursive. When an object is applied to the field of another object, 
 	following expression is possible (for example):
 		obj1.field1.field2
 	
 */
-char* integer_obj_field(){
+
+#define OBJ_FIELD_INTEGER 0
+#define OBJ_FIELD_STRING  '$'
+#define OBJ_FIELD_FLOAT   '#'
+
+char* _obj_field(char mode){
 	// $v0 contains the address of object.
 	int i;
 	char* err;
 	do {
 		i=check_var_name(); // TODO: consider accepting reserbed var names for field name
 		if (i<65536) return ERR_SYNTAX;
-		if (g_source[g_srcpos]=='(') {
+		if (g_source[g_srcpos]=='(' && mode==OBJ_FIELD_INTEGER) {
 			// This is a method
 			g_srcpos++;
 			return obj_method(i);
+		} else if (g_source[g_srcpos+1]=='(') {
+			if (g_source[g_srcpos]==mode) {
+				// This is a string/float method
+				g_srcpos++;
+				g_srcpos++;
+				return obj_method(i);
+			}
+		} else if (g_source[g_srcpos]==mode && mode==OBJ_FIELD_STRING) {
+			// This is a string field. Raise 31st bit.
+			i|=0x80000000;
 		}
 		check_obj_space(2);
 		g_object[g_objpos++]=0x3C050000|((i>>16)&0x0000FFFF); // lui   a1,xxxx
@@ -360,10 +388,27 @@ char* integer_obj_field(){
 			continue;
 		}
 	} while(0);
-	return 0;
+	// All done. Check variable type
+	if (mode==OBJ_FIELD_INTEGER) return 0;
+	else if (g_source[g_srcpos]==mode) {
+		g_srcpos++;
+		return 0;
+	} else return ERR_SYNTAX;
 }
 
-unsigned long long lib_obj_field(int* object, int fieldname){
+char* integer_obj_field(){
+	return _obj_field(OBJ_FIELD_INTEGER);
+}
+
+char* string_obj_field(){
+	return _obj_field(OBJ_FIELD_STRING);
+}
+
+char* float_obj_field(){
+	return _obj_field(OBJ_FIELD_FLOAT);
+}
+
+int lib_obj_field(int* object, int fieldname){
 	int* class;
 	int i,numfield;
 	// Check if this is an object (if within the RAM).
@@ -377,7 +422,21 @@ unsigned long long lib_obj_field(int* object, int fieldname){
 	}
 	if (i==numfield) err_not_field(fieldname,class[0]);
 	// Got address of field. Return value as $v0 and address as $v1.
-	return (((unsigned long long)(unsigned long)(&object[1+i]))<<32) | (unsigned long long)object[1+i];
+	g_temp=(int)(&object[1+i]);
+	asm volatile("la $v1,%0"::"i"(&g_temp));
+	asm volatile("lw $v1,0($v1)");
+	return object[1+i];
+}
+
+/*
+	Library for letting string field 
+*/
+
+void lib_let_str_field(char* prev_str, char* new_str){
+	int var_num=get_permanent_var_num();
+	free_perm_str(prev_str);
+	lib_let_str(new_str,var_num);
+	return;
 }
 
 /*
@@ -398,12 +457,16 @@ int lib_pre_method(int* object, int methodname){
 		// Public fields
 		class+=2;
 		g_var_mem[class[1]]=object[i+1];
+		// When string, move from permanent block
+		if (0x80000000&class[0]) move_from_perm_block_if_exists(class[1]);
 	}
 	num+=(nums>>8)&0xff;
 	for(i=i;i<num;i++){
 		// Private fields
 		class+=2;
 		g_var_mem[class[1]]=object[i+1];
+		// When string/dimension, move from permanent block
+		if (0x80000000&class[0]) move_from_perm_block_if_exists(class[1]);
 	}
 	// Seek method
 	num+=(nums>>16)&0xff;
@@ -432,12 +495,20 @@ int lib_post_method(int* object, int methodname, int v0){
 		// Public fields
 		class+=2;
 		object[i+1]=g_var_mem[class[1]];
+		// When string, move to permanent block
+		if (0x80000000&class[0]) {
+			if (g_var_size[class[1]]) move_to_perm_block(class[1]);
+		}
 	}
 	num+=(nums>>8)&0xff;
 	for(i=i;i<num;i++){
 		// Private fields
 		class+=2;
 		object[i+1]=g_var_mem[class[1]];
+		// When string/dimension, move to permanent block
+		if (0x80000000&class[0]) {
+			if (g_var_size[class[1]]) move_to_perm_block(class[1]);
+		}
 	}
 	// all done
 	return v0;
@@ -491,4 +562,71 @@ char* delete_statement(){
 char* call_statement(){
 	// Just get an integer value. That is it.
 	return get_value();
+}
+
+/*
+	Let object.field statement
+*/
+
+char* let_object_field(){
+	char* err;
+	char b3;
+	int spos,opos;
+	// $v0 contains the pointer to object
+	spos=g_srcpos;
+	opos=g_objpos;
+	// Try string field, first
+	err=string_obj_field();
+	if (err) {
+		// Integer or float field
+		g_srcpos=spos;
+		g_objpos=opos;
+		err=integer_obj_field();
+		if (err) return err;
+		b3=g_source[g_srcpos];
+		if (b3=='#') g_srcpos++;
+	} else {
+		// String field
+		b3='$';
+	}
+	if (g_source[g_srcpos-1]==')') {
+		// This is a CALL statement
+		return 0;
+	}
+	// $v1 is address to store value. Save it in stack.
+	check_obj_space(1);
+	g_object[g_objpos++]=0x27BDFFFC;              // addiu sp,sp,-4
+	g_object[g_objpos++]=0xAFA30004;              // sw    v1,4(sp)
+	if (b3=='$') {
+		// String field
+		// Get value
+		next_position();
+		if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
+		g_srcpos++;
+		err=get_string();
+	} else if (b3=='#') {
+		// Float field
+		// Get value
+		next_position();
+		if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
+		g_srcpos++;
+		err=get_float();
+	} else {
+			// Integer field
+			// Get value
+			next_position();
+			if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
+			g_srcpos++;
+			err=get_value();
+	}
+	if (err) return err;
+	// Store in field of object
+	check_obj_space(4);
+	g_object[g_objpos++]=0x8FA30004;              // lw    v1,4(sp)
+	g_object[g_objpos++]=0x27BD0004;              // addiu sp,sp,4
+	g_object[g_objpos++]=0x8C640000;              // lw    a0,0(v1)
+	g_object[g_objpos++]=0xAC620000;              // sw    v0,0(v1)
+	// Handle permanent block for string field
+	if (b3=='$') call_quicklib_code(lib_let_str_field,ASM_ADDU_A1_V0_ZERO);
+	return 0;
 }

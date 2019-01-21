@@ -18,7 +18,7 @@ char* rem_statement(){
 		// Delete $s6-setting command if exists.
 		if ((g_object[g_objpos-1]&0xffff0000)==0x34160000) g_objpos--;
 	}
-	while(0x20<=g_source[g_srcpos]){
+	while(0xE0 & g_source[g_srcpos]){
 		g_srcpos++;
 	}
 	return 0;
@@ -237,7 +237,7 @@ char* clear_statement(){
 	return 0;
 }
 
-char* poke_statement(){
+char* poke_statement_sub(int bits){
 	char* err;
 	err=get_value();
 	if (err) return err;
@@ -251,7 +251,18 @@ char* poke_statement(){
 	check_obj_space(3);
 	g_object[g_objpos++]=0x8FA30004; // lw          v1,4(sp)
 	g_object[g_objpos++]=0x27BD0004; // addiu       sp,sp,4
-	g_object[g_objpos++]=0xA0620000; // sb          v0,0(v1)
+	switch(bits){
+		case 32:
+			g_object[g_objpos++]=0xAC620000; // sw          v0,0(v1)
+			break;
+		case 16:
+			g_object[g_objpos++]=0xA4620000; // sh          v0,0(v1)
+			break;
+		case 8:
+		default:
+			g_object[g_objpos++]=0xA0620000; // sb          v0,0(v1)
+			break;
+	}
 	return 0;
 }
 
@@ -630,7 +641,7 @@ char* let_dim_sub(int i){
 char* let_statement(){
 	char* err;
 	char b2,b3;
-	int i;
+	int i,spos,opos;
 	next_position();
 	i=get_var_number();
 	if (i<0) return ERR_SYNTAX;
@@ -680,6 +691,16 @@ char* let_statement(){
 		check_obj_space(1);
 		g_object[g_objpos++]=0x27BDFFFC;              // addiu sp,sp,-4
 		let_dim_sub(i);
+		if (g_source[g_srcpos]=='.') {
+			// This is an object. Determine the filed of this object.
+			// 4(sp) contains the address of dimension value
+			// The dimension value is the pointer to object
+			g_srcpos++;
+			check_obj_space(3);
+			g_object[g_objpos++]=0x8FA20004;          // lw    v0,4(sp)
+			g_object[g_objpos++]=0x8C420000;          // lw    v0,0(v0)			g_object[g_objpos++]=0x27BD0004;          // addiu sp,sp,4
+			return let_object_field();
+		}
 		next_position();
 		if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
 		g_srcpos++;
@@ -695,23 +716,7 @@ char* let_statement(){
 		g_srcpos++;
 		check_obj_space(1);
 		g_object[g_objpos++]=0x8FC20000|(i*4);        // lw    v0,xx(s8)
-		err=integer_obj_field();
-		if (err) return err;
-		// $v1 is address to store value. Save it in stack.
-		check_obj_space(1);
-		g_object[g_objpos++]=0x27BDFFFC;              // addiu sp,sp,-4
-		g_object[g_objpos++]=0xAFA30004;              // sw    v1,4(sp)
-		// Get value
-		next_position();
-		if (g_source[g_srcpos]!='=') return ERR_SYNTAX;
-		g_srcpos++;
-		err=get_value();
-		if (err) return err;
-		// Store in field of object
-		check_obj_space(3);
-		g_object[g_objpos++]=0x8FA30004;              // lw    v1,4(sp)
-		g_object[g_objpos++]=0x27BD0004;              // addiu sp,sp,4
-		g_object[g_objpos++]=0xAC620000;              // sw    v0,0(v1)
+		return let_object_field();
 	} else {
 		// Integer A-Z
 		next_position();
@@ -1555,6 +1560,18 @@ char* useclass_statement(){
 
 // Aliases follow
 
+char* poke_statement(){
+	return poke_statement_sub(8);
+}
+
+char* poke16_statement(){
+	return poke_statement_sub(16);
+}
+
+char* poke32_statement(){
+	return poke_statement_sub(32);
+}
+
 char* palette_statement(){
 	return param4_statement(LIB_PALETTE);
 }
@@ -1637,6 +1654,8 @@ static const void* statement_list[]={
 	"GOSUB ",gosub_statement,
 	"RETURN",return_statement,
 	"POKE ",poke_statement,
+	"POKE16 ",poke16_statement,
+	"POKE32 ",poke32_statement,
 	"FOR ",for_statement,
 	"NEXT",next_statement,
 	"LET ",let_statement,

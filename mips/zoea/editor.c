@@ -4,6 +4,10 @@
    http://www.ze.em-net.ne.jp/~kenken/index.html
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include <xc.h>
 #include "api.h"
 #include "editor.h"

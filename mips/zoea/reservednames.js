@@ -111,9 +111,13 @@ var namearray=[
 	'NOT',
 	'PCG',
 	'PEEK',
+	'PEEK16',
+	'PEEK32',
 	'PI',
 	'POINT',
 	'POKE',
+	'POKE16',
+	'POKE32',
 	'POW',
 	'PRINT',
 	'PSET',
@@ -156,8 +160,7 @@ var namearray=[
 	'PWM',
 	'SERIAL',
 	'SPI',
-	'SPIOUT',
-	'SPIIN',
+	'I2C',
 ];
 var result='';
 for(key in namearray){

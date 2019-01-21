@@ -6,6 +6,10 @@
 */
 
 /*
+	This file is shared by Megalopa and Zoea
+*/
+
+/*
   Public function is only get_value().
 */
 
@@ -73,6 +77,13 @@ char* get_simple_value(void){
 		check_obj_space(1);
 		g_object[g_objpos++]=0x00021023; // subu v0,zero,v0
 		g_intconst=-g_intconst;
+	} else if (b1=='&') {
+		// '&' operator
+		g_srcpos++;
+		i=get_var_number();
+		if (i<0) return ERR_SYNTAX;
+		check_obj_space(1);
+		g_object[g_objpos++]=0x27C20000|(i*4); // addiu       v0,s8,xxxx
 	} else {
 		// Main routine of getting value here
 		if (b1=='+') g_srcpos++; // Ignore unary '+' operator
@@ -92,7 +103,7 @@ char* get_simple_value(void){
 				} else if ('A'<=b1 && b1<='F') {
 					i*=16;
 					i+=b1-'A'+0x0A;
-				} else {
+				} else if (b1!=' ') { // Skip ' '
 					break;
 				}
 				g_srcpos++;
@@ -116,7 +127,7 @@ char* get_simple_value(void){
 				if ('0'<=b1 && b1<='9') {
 					i*=10;
 					i+=b1-'0';
-				} else {
+				} else if (b1!=' ') { // Skip ' '
 					break;
 				}
 				g_srcpos++;
@@ -145,11 +156,13 @@ char* get_simple_value(void){
 			if (g_source[g_srcpos]=='(') {
 				// Dimension
 				g_srcpos++;
-				return get_dim_value(i);
+				err=get_dim_value(i);
+				if (err) return err;
+			} else {
+				// Simple value
+				check_obj_space(1);
+				g_object[g_objpos++]=0x8FC20000|(i*4); // lw v0,xx(s8)
 			}
-			// Simple value
-			check_obj_space(1);
-			g_object[g_objpos++]=0x8FC20000|(i*4); // lw v0,xx(s8)
 			// Check if this is an object
 			if (g_source[g_srcpos]=='.') {
 				// This is an object. See the filed of it.

@@ -69,6 +69,7 @@ file_041=.
 file_042=.
 file_043=.
 file_044=.
+file_045=.
 [GENERATED_FILES]
 file_000=no
 file_001=no
@@ -115,6 +116,7 @@ file_041=no
 file_042=no
 file_043=no
 file_044=no
+file_045=no
 [OTHER_FILES]
 file_000=no
 file_001=no
@@ -161,6 +163,7 @@ file_041=no
 file_042=yes
 file_043=yes
 file_044=yes
+file_045=yes
 [FILE_INFO]
 file_000=compiler.c
 file_001=debug.c
@@ -207,6 +210,7 @@ file_041=app_p32MX370F512H.ld
 file_042=help.txt
 file_043=reservednames.js
 file_044=class.txt
+file_045=sharedfiles.js
 [SUITE_INFO]
 suite_guid={62D235D8-2DB2-49CD-AF24-5489A6015337}
 suite_state=

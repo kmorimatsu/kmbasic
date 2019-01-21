@@ -1,3 +1,14 @@
+/*
+   This file is provided under the LGPL license ver 2.1.
+   Written by Katsumi.
+   http://hp.vector.co.jp/authors/VA016157/
+   kmorimatsu@users.sourceforge.jp
+*/
+
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include "./compiler.h"
 #include "stdlib.h"
 
@@ -56,6 +67,21 @@ char* get_simple_float(void){
 			if (i<0) {
 				// Must be a function.
 				return float_function();
+			}
+			if (g_source[g_srcpos]=='.') {
+				// This is an object field or method to return string
+				check_obj_space(1);
+				g_object[g_objpos++]=0x8FC20000|(i*4); // lw v0,xx(s8)
+				g_srcpos++;
+				return float_obj_field();
+			} else if (g_source[g_srcpos]=='(') {
+				// An array element contains pointer to an object.
+				g_srcpos++;
+				err=get_dim_value(i);
+				if (err) return err;
+				if (g_source[g_srcpos]!='.') return ERR_SYNTAX;
+				g_srcpos++;
+				return float_obj_field();
 			}
 			if (g_source[g_srcpos]!='#') return ERR_SYNTAX;
 			g_srcpos++;

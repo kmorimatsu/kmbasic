@@ -227,33 +227,35 @@ static const char initext[]=
 
 static const char bastext[]=
 "CLS\n"
-"useclass class1\n"
-"a=new(class1)\n"
-"a.test=1234\n"
-"a.test2=5678\n"
-"print gosub(LABEL1,789)\n"
-"print a.mtest(123,456)\n"
-"call a.mtest(321,654)\n"
-"print hex$(a),a.test,a.test2,a.test3\n"
-"end \n"
-"label LABEL1\n"
-"print ARGS(0),ARGS(1),\n"
-"return 100\n"
+"USECLASS CLASS1\n"
+"dim b(2)\n"
+"b(0)=new(CLASS1)\n"
+"a=b(0)\n"
+"b(0).T1=123\n"
+"b(0).T2$=hex$(0xabc)\n"
+"b(0).T3#=456.789\n"
+"print b(0).T1,b(0).T2$,b(0).T3#,\n"
+"print b(0).T4(),b(0).T5$(),b(0).T6#(),\n"
+"print a.T1,a.T2$,a.T3#,\n"
+"\n"
+"\n"
+"\n"
 "\n"
 "\n";
 
 
 static const char classtext[]=
 "REM\n"
-"FIELD test,test2\n"
-"FIELD PRIVATE test3,test4\n"
-"METHOD mtest\n"
-"PRINT ARGS(0),ARGS(1),ARGS(2)\n"
-"test2=7890\n"
-"return test+10000\n"
+"FIELD T1,T2$,T3#\n"
 "METHOD INIT\n"
-"PRINT \"INIT\"\n"
 "return\n"
+"METHOD T4\n"
+"return 567\n"
+"METHOD T5\n"
+"return hex$(0xBCD)\n"
+"METHOD T6\n"
+"return 789.123\n"
+"\n"
 "\n"
 "\n";
 
@@ -268,9 +270,10 @@ static const void* debugjumptable[]={
 
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
-	asm volatile("addiu $s5,$sp,4");
-	asm volatile("sw $zero,4($s8)");
-	asm volatile("lw $a0,4($s8)");
+	asm volatile("lw    $a0,0($v1)");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");
 	return a2+a3;

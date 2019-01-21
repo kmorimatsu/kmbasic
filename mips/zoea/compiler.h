@@ -5,6 +5,10 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 // Include envilonment specific configurations
 #include "envspecific.h"
 
@@ -278,10 +282,12 @@ void call_library(void);
 void reset_dataread();
 
 void free_temp_str(char* str);
+void free_perm_str(char* str);
 void* alloc_memory(int size, int var_num);
 void* calloc_memory(int size, int var_num);
 void move_to_perm_block(int var_num);
 void move_from_perm_block(int var_num);
+int move_from_perm_block_if_exists(int var_num);
 int get_permanent_var_num(void);
 int get_varnum_from_address(void* address);
 void* lib_calloc_memory(int size);
@@ -331,12 +337,16 @@ void delete_cmpdata_for_class();
 char* new_function();
 char* field_statement();
 char* integer_obj_field();
-unsigned long long lib_obj_field(int* object, int fieldname);
+char* string_obj_field();
+char* float_obj_field();
+int lib_obj_field(int* object, int fieldname);
 int lib_pre_method(int* object, int methodname);
 int lib_post_method(int* object, int methodname, int v0);
 char* method_statement();
 char* delete_statement();
 char* call_statement();
+void lib_let_str_field(char* str, char* prev_str);
+char* let_object_field();
 
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])
@@ -374,6 +384,12 @@ char* call_statement();
 #define CMPDATA_USEVAR   1
 #define CMPDATA_CLASS    2
 #define CMPDATA_FIELD    3
+
+/*
+	Hidden varname 31 bit values
+	Note that max number of 31 bit value is 0x61504BFF (for ZZZZZZ)
+*/
+#define HIDDEN_VAR_THIS_OBJECT 0x7FFF0000
 
 /* Macros */
 

@@ -6,6 +6,10 @@
 */
 
 /*
+	This file is shared by Megalopa and Zoea
+*/
+
+/*
 	Usage of MIPS32 registors
 	$zero:   always zero
 	$at:     not used

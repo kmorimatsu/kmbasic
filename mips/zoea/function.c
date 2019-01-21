@@ -5,6 +5,10 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+/*
+	This file is shared by Megalopa and Zoea
+*/
+
 #include "compiler.h"
 #include "api.h"
 
@@ -94,12 +98,23 @@ char* val_function(){
 	return 0;	
 }
 
-char* peek_function(){
+char* peek_function_sub(int bits){
 	char* err;
 	err=get_value();
 	if (err) return err;
 	check_obj_space(1);
-	g_object[g_objpos++]=0x90420000; // lbu         v0,0(v0)
+	switch(bits){
+		case 32:
+			g_object[g_objpos++]=0x8C420000; // lw          v0,0(v0)
+			break;
+		case 16:
+			g_object[g_objpos++]=0x94420000; // lhu         v0,0(v0)
+			break;
+		case 8:
+		default:
+			g_object[g_objpos++]=0x90420000; // lbu         v0,0(v0)
+			break;
+	}
 	return 0;
 }
 
@@ -524,6 +539,18 @@ char* str_function(void){
 
 // Aliases follow
 
+char* peek_function(){
+	return peek_function_sub(8);
+}
+
+char* peek16_function(){
+	return peek_function_sub(16);
+}
+
+char* peek32_function(){
+	return peek_function_sub(32);
+}
+
 char* gcolor_function(){
 	return graphic_statement(FUNC_GCOLOR);
 }
@@ -543,6 +570,8 @@ static const void* int_func_list[]={
 	"GOSUB(",gosub_function,
 	"STRNCMP(",strncmp_function,
 	"PEEK(",peek_function,
+	"PEEK16(",peek16_function,
+	"PEEK32(",peek32_function,
 	"LEN(",len_function,
 	"ASC(",asc_function,
 	"SGN(",sgn_function,
