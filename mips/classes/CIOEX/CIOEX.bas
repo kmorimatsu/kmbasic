@@ -1,4 +1,4 @@
-REM CIOEX.BAS ver 0.1
+REM CIOEX.BAS ver 0.11
 REM Class CIOEX for MachiKania Type M 
 REM using I/O expander MCP23017
 
@@ -41,9 +41,9 @@ REM TRISA x,y: Set bit value
 METHOD TRISA
   if args(0)=0 then return TRISAV
   if args(1)=1 then
-    SET8 &TRISAV,0x00,args(1)
+    gosub SET8,&TRISAV,0x00,args(1)
   else
-    SETBIT &TRISAV,0x00,args(1),args(2)
+    gosub SETBIT,&TRISAV,0x00,args(1),args(2)
   endif
   return
 
@@ -53,9 +53,9 @@ REM TRISB x,y: Set bit value
 METHOD TRISB
   if args(0)=0 then return TRISBV
   if args(1)=1 then
-    SET8 &TRISBV,0x01,args(1)
+    gosub SET8,&TRISBV,0x01,args(1)
   else
-    SETBIT &TRISBV,0x01,args(1),args(2)
+    gosub SETBIT,&TRISBV,0x01,args(1),args(2)
   endif
   return
 
@@ -65,9 +65,9 @@ REM LATA x,y: Set bit value
 METHOD LATA
   if args(0)=0 then return LATAV
   if args(1)=1 then
-    SET8 &LATAV,0x14,args(1)
+    gosub SET8,&LATAV,0x14,args(1)
   else
-    SETBIT &LATAV,0x14,args(1),args(2)
+    gosub SETBIT,&LATAV,0x14,args(1),args(2)
   endif
   return
 
@@ -77,9 +77,9 @@ REM LATB x,y: Set bit value
 METHOD LATB
   if args(0)=0 then return LATBV
   if args(1)=1 then
-    SET8 &LATBV,0x15,args(1)
+    gosub SET8,&LATBV,0x15,args(1)
   else
-    SETBIT &LATBV,0x15,args(1),args(2)
+    gosub SETBIT,&LATBV,0x15,args(1),args(2)
   endif
   return
 
@@ -89,9 +89,9 @@ REM CNPUA x,y: Set bit value
 METHOD CNPUA
   if args(0)=0 then return CNPUAV
   if args(1)=1 then
-    SET8 &CNPUAV,0x0C,args(1)
+    gosub SET8,&CNPUAV,0x0C,args(1)
   else
-    SETBIT &CNPUAV,0x0C,args(1),args(2)
+    gosub SETBIT,&CNPUAV,0x0C,args(1),args(2)
   endif
   return
 
@@ -101,9 +101,9 @@ REM CNPUB x,y: Set bit value
 METHOD CNPUB
   if args(0)=0 then return CNPUBV
   if args(1)=1 then
-    SET8 &CNPUBV,0x0D,args(1)
+    gosub SET8,&CNPUBV,0x0D,args(1)
   else
-    SETBIT &CNPUBV,0x0D,args(1),args(2)
+    gosub SETBIT,&CNPUBV,0x0D,args(1),args(2)
   endif
   return
 

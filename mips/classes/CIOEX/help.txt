@@ -1,6 +1,6 @@
 ＜クラス名およびバージョン＞
 CIOEX
-ver 0.1
+ver 0.11
 
 ＜ファイル名＞
 CIOEX.BAS
