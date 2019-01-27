@@ -134,7 +134,11 @@ char* get_simple_value(void){
 			}
 			// The next character should not be '.' or 'E'.
 			// Or, it must be recognized as a float value.
-			if (b1=='.' || b1=='E') return ERR_SYNTAX;
+			if (b1=='.') return ERR_SYNTAX;
+			if (b1=='E') {
+				b2=g_source[g_srcpos+1];
+				if (b2==' ' || '0'<=b2 && b2<='9') return ERR_SYNTAX;
+			}
 			g_intconst=i;
 			if (i&0xFFFF0000) {
 				// 32 bit

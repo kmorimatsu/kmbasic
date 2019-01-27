@@ -175,6 +175,7 @@ int compile_and_link_class(char* buff,int class){
 	int data[2];
 	while(1){
 		// Register the class to cmpdata
+		// g_class_structure=0; // TODO: here for recurrsive object
 		err=update_class_info(class);
 		if (err) break;
 		// Determine class file name

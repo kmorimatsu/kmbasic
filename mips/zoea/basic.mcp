@@ -198,7 +198,7 @@ file_038=help.txt
 file_039=MACHIKAN.INI
 file_040=reservednames.js
 file_041=class.txt
-file_042=C:\Users\kmorimatsu\Documents\At Home\PIC\PIC32\PIC32MX370F512H\megalopa\sharedfiles.js
+file_042=sharedfiles.js
 [SUITE_INFO]
 suite_guid={62D235D8-2DB2-49CD-AF24-5489A6015337}
 suite_state=
