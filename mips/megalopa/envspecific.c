@@ -107,7 +107,7 @@ void allocate_graphic_area(int mode){
 			return;
 		} else {
 			// Clear previous area here
-			free_temp_str((char*)g_graphic_area);
+			free_non_temp_str((char*)g_graphic_area);
 			g_graphic_area=0;
 		}
 	}

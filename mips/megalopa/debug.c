@@ -226,37 +226,22 @@ static const char initext[]=
 
 
 static const char bastext[]=
-"CLS\n"
 "USECLASS CLASS1\n"
-"dim b(2)\n"
-"b(0)=new(CLASS1)\n"
-"a=b(0)\n"
-"b(0).T1=123\n"
-"b(0).T2$=hex$(0xabc)\n"
-"b(0).T3#=456.789\n"
-"print b(0).T1,b(0).T2$,b(0).T3#,\n"
-"print b(0).T4(),b(0).T5$(),b(0).T6#(),\n"
-"print a.T1,a.T2$,a.T3#,\n"
-"\n"
-"\n"
-"\n"
-"\n"
+"for i=1 to 150\n"
+"  CLS\n"
+"  print i\n"
+"  a=new(CLASS1)\n"
+"  delete a\n"
+"next\n"
+"REM print TEST\n"
 "\n";
 
 
 static const char classtext[]=
 "REM\n"
-"FIELD T1,T2$,T3#\n"
-"METHOD INIT\n"
-"return\n"
-"METHOD T4\n"
-"return 567\n"
-"METHOD T5\n"
-"return hex$(0xBCD)\n"
-"METHOD T6\n"
-"return 789.123\n"
-"\n"
-"\n"
+"STATIC TEST,TEST2\n"
+"METHOD TEST3\n"
+"return TEST+TEST2\n"
 "\n";
 
 /*

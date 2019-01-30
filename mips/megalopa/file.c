@@ -187,7 +187,7 @@ int compile_and_link_class(char* buff,int class){
 		classfile[i++]='S';
 		classfile[i]=0;
 		// Compile it
-		g_compiling_class=1;
+		g_compiling_class=class;
 		i=compile_and_link_file(buff,&classfile[0]);
 		if (i) break;
 		g_compiling_class=0;

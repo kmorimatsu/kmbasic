@@ -134,10 +134,28 @@ void free_temp_str(char* str){
 	if (!str) return;
 	pointer=(int)str-(int)g_heap_mem;
 	pointer>>=2;
-	for(i=0;i<ALLOC_BLOCK_NUM;i++){
+	for(i=26;i<ALLOC_VAR_NUM;i++){
 		if (g_var_pointer[i]==pointer) {
 			g_var_size[i]=0;
-			break;
+		}
+	}
+}
+
+void free_non_temp_str(char* str){
+	int i,pointer;
+	if (!str) return;
+	pointer=(int)str-(int)g_heap_mem;
+	pointer>>=2;
+	for(i=0;i<26;i++){
+		if (g_var_pointer[i]==pointer) {
+			g_var_size[i]=0;
+			return;
+		}
+	}
+	for(i=ALLOC_VAR_NUM;i<ALLOC_BLOCK_NUM;i++){
+		if (g_var_pointer[i]==pointer) {
+			g_var_size[i]=0;
+			return;
 		}
 	}
 }
@@ -215,18 +233,18 @@ int get_varnum_from_address(void* address){
 }
 
 void* lib_calloc_memory(int size){
-	int var_num;
-	void* ret;
-	// Allocate memory
-	ret=calloc_memory(size,-1);
-	var_num=get_varnum_from_address(ret);
-	if (var_num<0) err_no_mem();
-	// Move to permanent area
-	move_to_perm_block(var_num);
-	// Return address
-	return ret;
+	int i;
+	// Find available permanent block
+	for (i=ALLOC_PERM_BLOCK;i<ALLOC_BLOCK_NUM;i++){
+		if (g_var_size[i]==0) break;
+	}
+	if (ALLOC_BLOCK_NUM<=i) err_no_block(); // Not found
+	// Allocate memory and return address
+	return calloc_memory(size,i);
 }
 
 void lib_delete(int* object){
-	free_temp_str((char*)object);
+	int i;
+	// Remove region that fit to object
+	free_non_temp_str((char*)object);
 }

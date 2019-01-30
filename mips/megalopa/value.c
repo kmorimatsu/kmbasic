@@ -103,7 +103,10 @@ char* get_simple_value(void){
 				} else if ('A'<=b1 && b1<='F') {
 					i*=16;
 					i+=b1-'A'+0x0A;
-				} else if (b1!=' ') { // Skip ' '
+				} else if (b1==' ') { // Skip ' '
+					// Avoid "ELSE" statement etc
+					if ('F'<g_source[g_srcpos+2]) break;
+				} else {
 					break;
 				}
 				g_srcpos++;

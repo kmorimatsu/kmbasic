@@ -35,6 +35,16 @@ static int* g_class_structure;
 		record[2]: pointer to method
 */
 
+/*
+	CMPDATA_STATIC structure
+		type:      CMPDATA_STATIC (4)
+		len:       3
+		data16:    variable number; add ALLOC_LNV_BLOCK when using
+		record[1]: class name as integer
+		record[2]: variable name as integer
+*/
+
+
 #define PUBLIC_FIELD 0
 #define PRIVATE_FIELD 1
 #define PUBLIC_METHOD 2
@@ -288,7 +298,7 @@ char* obj_method(int method){
 	opos=g_objpos;
 	stack=12;
 	g_object[g_objpos++]=0x27BD0000;             // addiu       sp,sp,-xx
-	// 4(sp) is for $v0 (method name)
+	// 4(sp) is for $v0 (pointer to object)
 	g_object[g_objpos++]=0xAFA20004;             // sw          v0,4(sp)
 	if (g_source[g_srcpos]!=')') {
 		g_srcpos--;
@@ -562,6 +572,54 @@ char* delete_statement(){
 char* call_statement(){
 	// Just get an integer value. That is it.
 	return get_value();
+}
+
+/*
+	Static statement
+*/
+
+char* static_statement(){
+	char* err;
+	int data[2];
+	int i;
+	int is_private=0;
+	// This statement is valid only in class file.
+	if (!g_compiling_class) return ERR_INVALID_NON_CLASS;
+	// Check which private or public
+	next_position();
+	if (nextCodeIs("PRIVATE ")) {
+		is_private=1;
+	} else if (nextCodeIs("PUBLIC ")) {
+		is_private=0;
+	}
+	do {
+		next_position();
+		i=check_var_name();
+		if (i<65536) return ERR_SYNTAX;
+		// Register varname
+		err=register_var_name(i);
+		if (err) return err;
+		if (g_source[g_srcpos]=='#' || g_source[g_srcpos]=='$') {
+			g_srcpos++;
+		}
+		// Register public static field
+		if (!is_private) {
+			data[0]=g_compiling_class; // class name as integer
+			data[1]=i;                 // static var name as integer
+			i=search_var_name(i);      // var number of this static field
+			if (i<0) return ERR_UNKNOWN;
+			err=cmpdata_insert(CMPDATA_STATIC,i,(int*)&data[0],2);
+			if (err) return err;
+		}
+		next_position();
+		if (g_source[g_srcpos]==',') {
+			g_srcpos++;
+		} else {
+			break;
+		}
+	} while(1);
+	return 0;
+	
 }
 
 /*

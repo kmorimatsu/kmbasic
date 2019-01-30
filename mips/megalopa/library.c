@@ -409,7 +409,7 @@ void lib_usepcg(int mode){
 		case 2:
 			// Reset PCG and use it
 			if (g_pcg_font) {
-				free_temp_str(g_pcg_font);
+				free_non_temp_str(g_pcg_font);
 				g_pcg_font=0;
 			}
 			// Continue to case 1:

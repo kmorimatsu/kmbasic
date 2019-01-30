@@ -1697,6 +1697,7 @@ static const void* statement_list[]={
 	"METHOD ",method_statement,
 	"DELETE ",delete_statement,
 	"CALL ",call_statement,
+	"STATIC ",static_statement,
 	// List of additional statements follows
 	ADDITIONAL_STATEMENTS
 };

@@ -57,13 +57,13 @@ void lib_serial(int baud, int parity, int bsize){
 		IEC1bits.U1TXIE=0;
 		IEC1bits.U1RXIE=0;
 		// Free buffer area
-		if (g_serial_buff) free_temp_str((char*)g_serial_buff);
+		if (g_serial_buff) free_non_temp_str((char*)g_serial_buff);
 		g_serial_buff=0;
 	} else {
 		// Prepare buffer for SERIALIN
 		if (bsize==0) bsize=baud/400; // Area corresponds to ~1/40 sec (> 1/60 sec)
 		g_serial_buff_size=bsize;
-		if (g_serial_buff) free_temp_str((char*)g_serial_buff);
+		if (g_serial_buff) free_non_temp_str((char*)g_serial_buff);
 		g_serial_buff=(short*)alloc_memory((bsize+1)/2,get_permanent_var_num());
 		g_serial_buff_read_pos=g_serial_buff_write_pos=0;
 		// Initialize I/O ports
