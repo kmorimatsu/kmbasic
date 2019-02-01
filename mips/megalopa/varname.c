@@ -193,9 +193,10 @@ int check_var_name(){
 */
 
 int get_var_number(){
-	int i,j;
+	int i,j,spos;
 	int* record;
 	// This must be a short or long var name.
+	spos=g_srcpos;
 	i=check_var_name();
 	if (i<0) return -1;
 	// If it is a short name, immediately return.
@@ -217,7 +218,8 @@ int get_var_number(){
 			break;
 		}	
 		if (j) {
-			// Not found
+			// Not found. Maybe a static method
+			g_srcpos=spos;
 			return -1;
 		}
 	} else {

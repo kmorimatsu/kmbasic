@@ -136,7 +136,9 @@ void free_temp_str(char* str){
 	pointer>>=2;
 	for(i=26;i<ALLOC_VAR_NUM;i++){
 		if (g_var_pointer[i]==pointer) {
-			g_var_size[i]=0;
+			if (g_var_size[i] && g_var_mem[i]==(int)str) {
+				g_var_size[i]=0;
+			}
 		}
 	}
 }
@@ -148,14 +150,18 @@ void free_non_temp_str(char* str){
 	pointer>>=2;
 	for(i=0;i<26;i++){
 		if (g_var_pointer[i]==pointer) {
-			g_var_size[i]=0;
-			return;
+			if (g_var_size[i] && g_var_mem[i]==(int)str) {
+				g_var_size[i]=0;
+				g_var_mem[i]=0;
+			}
 		}
 	}
 	for(i=ALLOC_VAR_NUM;i<ALLOC_BLOCK_NUM;i++){
-		if (g_var_pointer[i]==pointer) {
-			g_var_size[i]=0;
-			return;
+		if (g_var_pointer[i]==pointer && g_var_size[i]) {
+			if (g_var_size[i] && g_var_mem[i]==(int)str) {
+				g_var_size[i]=0;
+				g_var_mem[i]=0;
+			}
 		}
 	}
 }
@@ -168,8 +174,10 @@ void free_perm_str(char* str){
 	// Search permanent block and delete a block if found.
 	for(i=ALLOC_PERM_BLOCK;i<ALLOC_BLOCK_NUM;i++){
 		if (g_var_pointer[i]==pointer) {
-			g_var_size[i]=0;
-			break;
+			if (g_var_size[i] && g_var_mem[i]==(int)str) {
+				g_var_size[i]=0;
+				break;
+			}
 		}
 	}
 }
@@ -244,7 +252,6 @@ void* lib_calloc_memory(int size){
 }
 
 void lib_delete(int* object){
-	int i;
 	// Remove region that fit to object
 	free_non_temp_str((char*)object);
 }

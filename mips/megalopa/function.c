@@ -492,7 +492,9 @@ char* float_function(void){
 	} else if (nextCodeIs("PI#")) {
 		return float_constant(3.141593);
 	} else {
-		return ERR_SYNTAX;
+		// Check if static method of a class
+		err=static_method('#');
+		//return ERR_SYNTAX;
 	}
 	if (err) return err;
 	if (g_source[g_srcpos]!=')') return ERR_SYNTAX;
@@ -529,7 +531,9 @@ char* str_function(void){
 		f=str_func_list[i+1];
 		err=f();
 	} else {
-		return ERR_SYNTAX;
+		// Check if static method of a class
+		err=static_method('$');
+		//return ERR_SYNTAX;
 	}
 	if (err) return err;
 	if (g_source[g_srcpos]!=')') return ERR_SYNTAX;
@@ -611,7 +615,9 @@ char* function(void){
 		f=int_func_list[i+1];
 		err=f();
 	} else {
-		return ERR_SYNTAX;
+		// Check if static method of a class
+		err=static_method(0);
+		//return ERR_SYNTAX;
 	}
 	if (err) return err;
 	if (g_source[g_srcpos]!=')') return ERR_SYNTAX;

@@ -227,13 +227,28 @@ static const char initext[]=
 
 static const char bastext[]=
 "USECLASS CLASS1\n"
+"CLS\n"
+"CLASS1::TEST=123\n"
+"CLASS1::TEST2=456\n"
+"print CLASS1::TEST3(),\n"
+"print CLASS1::TEST4#(),\n"
+"print CLASS1::TEST5$(),\n"
+"\n"
+"\n"
+"\n"
+"\n"
+"end\n"
 "for i=1 to 150\n"
-"  CLS\n"
-"  print i\n"
 "  a=new(CLASS1)\n"
 "  delete a\n"
+"  cursor 0,0\n"
+"  print i,\n"
 "next\n"
-"REM print TEST\n"
+"\n"
+"\n"
+"\n"
+"\n"
+"\n"
 "\n";
 
 
@@ -242,6 +257,16 @@ static const char classtext[]=
 "STATIC TEST,TEST2\n"
 "METHOD TEST3\n"
 "return TEST+TEST2\n"
+"METHOD TEST4\n"
+"return 3.14\n"
+"METHOD TEST5\n"
+"return hex$(0xabc)\n"
+"\n"
+"\n"
+"\n"
+"\n"
+"\n"
+"\n"
 "\n";
 
 /*

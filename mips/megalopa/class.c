@@ -296,6 +296,11 @@ char* obj_method(int method){
 	// Parameters preparation (to $s5) here.
 	next_position();
 	opos=g_objpos;
+
+	// Begin parameter(s) construction routine
+	// Note that this comment must be copied
+	// when inserting simiar routine to source
+
 	stack=12;
 	g_object[g_objpos++]=0x27BD0000;             // addiu       sp,sp,-xx
 	// 4(sp) is for $v0 (pointer to object)
@@ -321,6 +326,11 @@ char* obj_method(int method){
 	g_object[g_objpos++]=0xAFA2000C;             // sw          v0,12(sp)
 	g_object[g_objpos++]=0x27B50008;             // addiu       s5,sp,8
 	g_object[opos]|=((0-stack)&0xFFFF);          // addiu       sp,sp,-xx (See above)
+
+	// End parameter(s) construction routine
+	// Note that this comment must be copied
+	// when inserting simiar routine to source
+
 	// Determine address of method and store fields to local variables.
 	check_obj_space(3);
 	g_object[g_objpos++]=0x8FA20004;                           // lw          v0,4(sp)
@@ -548,18 +558,14 @@ char* method_statement(){
 */
 
 char* delete_statement(){
-	int i;
 	char* err;
 	next_position();
 	g_srcpos--;
 	do{
 		g_srcpos++;
-		i=get_var_number();
-		if (i<0) return ERR_SYNTAX;
-		call_quicklib_code(lib_delete,ASM_LW_A0_XXXX_S8|(i*4));
-		                                              // lw a0,xxxx(s8)
-		check_obj_space(1);
-		g_object[g_objpos++]=0xAFC00000|(i*4);        // sw zero,xxx(s8)
+		err=get_value();
+		if (err) return err;
+		call_quicklib_code(lib_delete,ASM_ADDU_A0_V0_ZERO);
 		next_position();
 	} while (g_source[g_srcpos]==',');
 	return 0;
@@ -620,6 +626,96 @@ char* static_statement(){
 	} while(1);
 	return 0;
 	
+}
+
+/*
+	Static method
+		Type is either 0, '$', or '#', 
+		for integer, string, or float
+*/
+
+char* static_method(char type){
+	char* err;
+	int* data;
+	int i,opos,method,stack;
+	next_position();
+	// Check class name
+	i=check_var_name();
+	if (i<65536) return ERR_SYNTAX;
+	// Check if the class exists
+	cmpdata_reset();
+	while(data=cmpdata_find(CMPDATA_CLASS)){
+		if (data[1]==i) {
+			// The class was already defined.
+			i=0;
+			break;
+		}
+	}
+	// Check '::'
+	if (g_source[g_srcpos]!=':') return ERR_SYNTAX;
+	g_srcpos++;
+	if (g_source[g_srcpos]!=':') return ERR_SYNTAX;
+	g_srcpos++;
+	if (i) return ERR_NO_CLASS;
+	data=(int*)data[2];
+	// Check method
+	i=check_var_name();
+	if (i<65536) return ERR_SYNTAX;
+	method=(int)search_method(data,i);
+	if (!method) return ERR_NOT_FIELD;
+	// Check type and '('
+	if (type) {// Either 0, '$', or '#'
+		if (g_source[g_srcpos]!=type) return ERR_SYNTAX;
+		g_srcpos++;
+
+	}
+	if (g_source[g_srcpos]!='(') return ERR_SYNTAX;
+	g_srcpos++;
+
+	// Begin parameter(s) construction routine
+	// Note that this comment must be copied
+	// when inserting simiar routine to source
+
+	stack=8;
+	opos=g_objpos;
+	g_object[g_objpos++]=0x27BD0000;           // addiu       sp,sp,-xx
+	while(g_source[g_srcpos]==',') {
+		g_srcpos++;
+		stack+=4;
+		err=get_stringFloatOrValue();
+		if (err) return err;
+		check_obj_space(1);
+		g_object[g_objpos++]=0xAFA20000|stack; // sw          v0,xx(sp)
+		next_position();
+	}
+	// 4(sp) is for $s5, 8(sp) is for # of parameters
+	check_obj_space(5);
+	g_object[g_objpos++]=0xAFB50004;             // sw          s5,4(sp)
+	g_object[g_objpos++]=0x34020000|(stack/4-2); // ori         v0,zero,xx
+	g_object[g_objpos++]=0xAFA20008;             // sw          v0,8(sp)
+	g_object[g_objpos++]=0x27B50004;             // addiu       s5,sp,4
+	g_object[opos]|=((0-stack)&0xFFFF);          // addiu       sp,sp,-xx (See above)
+
+	// End parameter(s) construction routine
+	// Note that this comment must be copied
+	// when inserting simiar routine to source
+
+	// Calling subroutine, which is static method of class
+	check_obj_space(6);
+	g_object[g_objpos++]=0x04130003;                            // bgezall     zero,label1
+	g_object[g_objpos++]=0x27BDFFFC;                            // addiu       sp,sp,-4
+	g_object[g_objpos++]=0x10000003;                            // beq         zero,zero,label2
+	g_object[g_objpos++]=0x00000000;                            // nop         
+	                                                            // label1:
+	g_object[g_objpos++]=0x08000000|((method&0x0FFFFFFF)>>2);   // j           xxxx
+	g_object[g_objpos++]=0xAFBF0004;                            // sw          ra,4(sp)
+		                                                            // label2:	
+	// Remove stack
+	check_obj_space(2);
+	g_object[g_objpos++]=0x8FB50004;           // lw          s5,4(sp)
+	g_object[g_objpos++]=0x27BD0000|stack;     // addiu       sp,sp,xx
+
+	return 0;
 }
 
 /*
