@@ -82,7 +82,7 @@ int g_long_name_var_num;
 // Class name being compiled
 int g_class;
 // Flag to compile class file
-char g_compiling_class;
+int g_compiling_class;
 
 // General purpose integer used for asigning value with pointer
 int g_temp;

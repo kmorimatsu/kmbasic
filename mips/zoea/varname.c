@@ -193,16 +193,41 @@ int check_var_name(){
 */
 
 int get_var_number(){
-	int i;
+	int i,j,spos;
+	int* record;
 	// This must be a short or long var name.
+	spos=g_srcpos;
 	i=check_var_name();
 	if (i<0) return -1;
 	// If it is a short name, immediately return.
 	if (i<26) return i;
-	// Search long var names registered by USEVAR statement.
-	// If found, returns the value that can be used as the index of $s8
-	i=search_var_name(i);
-	if (i<0) return -1;
+	// Check if CLASS::STATIC
+	if (g_source[g_srcpos]==':' && g_source[g_srcpos+1]==':') {
+		// This is CLASS::STATIC
+		g_srcpos++;
+		g_srcpos++;
+		j=check_var_name();
+		if (j<26) return -1;
+		cmpdata_reset();
+		while(record=cmpdata_find(CMPDATA_STATIC)){
+			if (record[1]!=i) continue;
+			if (record[2]!=j) continue;
+			// Found CLASS::STATIC
+			i=record[0]&0x0000FFFF;
+			j=0;
+			break;
+		}	
+		if (j) {
+			// Not found. Maybe a static method
+			g_srcpos=spos;
+			return -1;
+		}
+	} else {
+		// Search long var names registered by USEVAR statement.
+		// If found, returns the value that can be used as the index of $s8
+		i=search_var_name(i);
+		if (i<0) return -1;
+	}
 	// This var name is defined by USEVAR statement.
 	return i+ALLOC_LNV_BLOCK;
 	

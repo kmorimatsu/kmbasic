@@ -174,9 +174,8 @@ int compile_and_link_class(char* buff,int class){
 	char classfile[13];
 	int data[2];
 	while(1){
-		// Register the class to cmpdata
-		// g_class_structure=0; // TODO: here for recurrsive object
-		err=update_class_info(class);
+		// Begin compiling class
+		err=begin_compiling_class(class);
 		if (err) break;
 		// Determine class file name
 		classname=resolve_label(class);
@@ -187,18 +186,10 @@ int compile_and_link_class(char* buff,int class){
 		classfile[i++]='S';
 		classfile[i]=0;
 		// Compile it
-		g_compiling_class=1;
 		i=compile_and_link_file(buff,&classfile[0]);
 		if (i) break;
-		g_compiling_class=0;
-		// Construct class structure
-		err=construct_class_structure(class);
-		if (err) break;
-		// Uppdate class information.
-		err=update_class_info(class);
-		if (err) break;
-		// Delete some cmpdata.
-		delete_cmpdata_for_class();
+		// End compiling class
+		end_compiling_class(class);
 		// Initial assembly is a jump statement to jump to the end of class file
 		g_object[0]=0x08000000 | ((((int)(&g_object[g_objpos]))&0x0FFFFFFF)>>2); // j xxxxxxxx
 		// In the next link, current region of object is ignored.

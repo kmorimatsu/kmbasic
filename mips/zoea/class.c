@@ -35,6 +35,16 @@ static int* g_class_structure;
 		record[2]: pointer to method
 */
 
+/*
+	CMPDATA_STATIC structure
+		type:      CMPDATA_STATIC (4)
+		len:       3
+		data16:    variable number; add ALLOC_LNV_BLOCK when using
+		record[1]: class name as integer
+		record[2]: variable name as integer
+*/
+
+
 #define PUBLIC_FIELD 0
 #define PRIVATE_FIELD 1
 #define PUBLIC_METHOD 2
@@ -43,6 +53,29 @@ static int* g_class_structure;
 	Local prototyping
 */
 char* obj_method(int method);
+
+char* begin_compiling_class(int class){
+	// Initialize parameters
+	g_compiling_class=class;
+	g_class_structure=0;
+	// Register the class to cmpdata without class structure
+	return update_class_info(class);
+}
+
+char* end_compiling_class(int class){
+	char* err;
+	g_compiling_class=0;
+	// Construct class structure
+	err=construct_class_structure(class);
+	if (err) return err;
+	// Uppdate class information.
+	err=update_class_info(class);
+	if (err) return err;
+	// Delete some cmpdata.
+	delete_cmpdata_for_class();
+	return 0;
+}
+
 
 char* update_class_info(int class){
 	int* record;
@@ -286,9 +319,14 @@ char* obj_method(int method){
 	// Parameters preparation (to $s5) here.
 	next_position();
 	opos=g_objpos;
+
+	// Begin parameter(s) construction routine
+	// Note that this comment must be copied
+	// when inserting simiar routine to source
+
 	stack=12;
 	g_object[g_objpos++]=0x27BD0000;             // addiu       sp,sp,-xx
-	// 4(sp) is for $v0 (method name)
+	// 4(sp) is for $v0 (pointer to object)
 	g_object[g_objpos++]=0xAFA20004;             // sw          v0,4(sp)
 	if (g_source[g_srcpos]!=')') {
 		g_srcpos--;
@@ -311,6 +349,11 @@ char* obj_method(int method){
 	g_object[g_objpos++]=0xAFA2000C;             // sw          v0,12(sp)
 	g_object[g_objpos++]=0x27B50008;             // addiu       s5,sp,8
 	g_object[opos]|=((0-stack)&0xFFFF);          // addiu       sp,sp,-xx (See above)
+
+	// End parameter(s) construction routine
+	// Note that this comment must be copied
+	// when inserting simiar routine to source
+
 	// Determine address of method and store fields to local variables.
 	check_obj_space(3);
 	g_object[g_objpos++]=0x8FA20004;                           // lw          v0,4(sp)
@@ -443,6 +486,13 @@ void lib_let_str_field(char* prev_str, char* new_str){
 	Library for calling method statement
 */
 
+// Return code used for calling null method
+static const unsigned int g_return_code[]={
+	0x8FA30004, // lw          v1,4(sp)
+	0x00600008, // jr          v1
+	0x27BD0004, // addiu       sp,sp,4
+};
+
 int lib_pre_method(int* object, int methodname){
 	int i,num,nums;
 	int* class;
@@ -476,8 +526,14 @@ int lib_pre_method(int* object, int methodname){
 	}
 	if (i==num) {
 		// Method not found
-		class=(int*)object[0];
-		err_not_field(methodname,class[0]);
+		if (methodname==LABEL_INIT) {
+			// INIT method not found
+			// Call null function
+			return (int)(&g_return_code[0]);
+		} else {
+			class=(int*)object[0];
+			err_not_field(methodname,class[0]);
+		}
 	}
 	// Method found. return it.
 	return class[1];
@@ -538,18 +594,14 @@ char* method_statement(){
 */
 
 char* delete_statement(){
-	int i;
 	char* err;
 	next_position();
 	g_srcpos--;
 	do{
 		g_srcpos++;
-		i=get_var_number();
-		if (i<0) return ERR_SYNTAX;
-		call_quicklib_code(lib_delete,ASM_LW_A0_XXXX_S8|(i*4));
-		                                              // lw a0,xxxx(s8)
-		check_obj_space(1);
-		g_object[g_objpos++]=0xAFC00000|(i*4);        // sw zero,xxx(s8)
+		err=get_value();
+		if (err) return err;
+		call_quicklib_code(lib_delete,ASM_ADDU_A0_V0_ZERO);
 		next_position();
 	} while (g_source[g_srcpos]==',');
 	return 0;
@@ -562,6 +614,144 @@ char* delete_statement(){
 char* call_statement(){
 	// Just get an integer value. That is it.
 	return get_value();
+}
+
+/*
+	Static statement
+*/
+
+char* static_statement(){
+	char* err;
+	int data[2];
+	int i;
+	int is_private=0;
+	// This statement is valid only in class file.
+	if (!g_compiling_class) return ERR_INVALID_NON_CLASS;
+	// Check which private or public
+	next_position();
+	if (nextCodeIs("PRIVATE ")) {
+		is_private=1;
+	} else if (nextCodeIs("PUBLIC ")) {
+		is_private=0;
+	}
+	do {
+		next_position();
+		i=check_var_name();
+		if (i<65536) return ERR_SYNTAX;
+		// Register varname
+		err=register_var_name(i);
+		if (err) return err;
+		if (g_source[g_srcpos]=='#' || g_source[g_srcpos]=='$') {
+			g_srcpos++;
+		}
+		// Register public static field
+		if (!is_private) {
+			data[0]=g_compiling_class; // class name as integer
+			data[1]=i;                 // static var name as integer
+			i=search_var_name(i);      // var number of this static field
+			if (i<0) return ERR_UNKNOWN;
+			err=cmpdata_insert(CMPDATA_STATIC,i,(int*)&data[0],2);
+			if (err) return err;
+		}
+		next_position();
+		if (g_source[g_srcpos]==',') {
+			g_srcpos++;
+		} else {
+			break;
+		}
+	} while(1);
+	return 0;
+	
+}
+
+/*
+	Static method
+		Type is either 0, '$', or '#', 
+		for integer, string, or float
+*/
+
+char* static_method(char type){
+	char* err;
+	int* data;
+	int i,opos,method,stack;
+	next_position();
+	// Check class name
+	i=check_var_name();
+	if (i<65536) return ERR_SYNTAX;
+	// Check if the class exists
+	cmpdata_reset();
+	while(data=cmpdata_find(CMPDATA_CLASS)){
+		if (data[1]==i) {
+			// The class was already defined.
+			i=0;
+			break;
+		}
+	}
+	// Check '::'
+	if (g_source[g_srcpos]!=':') return ERR_SYNTAX;
+	g_srcpos++;
+	if (g_source[g_srcpos]!=':') return ERR_SYNTAX;
+	g_srcpos++;
+	if (i) return ERR_NO_CLASS;
+	data=(int*)data[2];
+	// Check method
+	i=check_var_name();
+	if (i<65536) return ERR_SYNTAX;
+	method=(int)search_method(data,i);
+	if (!method) return ERR_NOT_FIELD;
+	// Check type and '('
+	if (type) {// Either 0, '$', or '#'
+		if (g_source[g_srcpos]!=type) return ERR_SYNTAX;
+		g_srcpos++;
+
+	}
+	if (g_source[g_srcpos]!='(') return ERR_SYNTAX;
+	g_srcpos++;
+
+	// Begin parameter(s) construction routine
+	// Note that this comment must be copied
+	// when inserting simiar routine to source
+
+	stack=8;
+	opos=g_objpos;
+	g_object[g_objpos++]=0x27BD0000;           // addiu       sp,sp,-xx
+	while(g_source[g_srcpos]==',') {
+		g_srcpos++;
+		stack+=4;
+		err=get_stringFloatOrValue();
+		if (err) return err;
+		check_obj_space(1);
+		g_object[g_objpos++]=0xAFA20000|stack; // sw          v0,xx(sp)
+		next_position();
+	}
+	// 4(sp) is for $s5, 8(sp) is for # of parameters
+	check_obj_space(5);
+	g_object[g_objpos++]=0xAFB50004;             // sw          s5,4(sp)
+	g_object[g_objpos++]=0x34020000|(stack/4-2); // ori         v0,zero,xx
+	g_object[g_objpos++]=0xAFA20008;             // sw          v0,8(sp)
+	g_object[g_objpos++]=0x27B50004;             // addiu       s5,sp,4
+	g_object[opos]|=((0-stack)&0xFFFF);          // addiu       sp,sp,-xx (See above)
+
+	// End parameter(s) construction routine
+	// Note that this comment must be copied
+	// when inserting simiar routine to source
+
+	// Calling subroutine, which is static method of class
+	check_obj_space(6);
+	g_object[g_objpos++]=0x04130003;                            // bgezall     zero,label1
+	g_object[g_objpos++]=0x27BDFFFC;                            // addiu       sp,sp,-4
+	g_object[g_objpos++]=0x10000003;                            // beq         zero,zero,label2
+	g_object[g_objpos++]=0x00000000;                            // nop         
+	                                                            // label1:
+	g_object[g_objpos++]=0x08000000|((method&0x0FFFFFFF)>>2);   // j           xxxx
+	g_object[g_objpos++]=0xAFBF0004;                            // sw          ra,4(sp)
+		                                                            // label2:	
+	// Remove stack
+	check_obj_space(2);
+	g_object[g_objpos++]=0x8FB50004;           // lw          s5,4(sp)
+	g_object[g_objpos++]=0x27BD0000|stack;     // addiu       sp,sp,xx
+
+	return 0;
 }
 
 /*

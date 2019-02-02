@@ -218,7 +218,7 @@ extern unsigned short* g_graphic_area;
 extern int* g_libparams;
 extern int g_long_name_var_num;
 extern int g_class;
-extern char g_compiling_class;
+extern int g_compiling_class;
 extern int g_temp;
 
 /* Prototypes */
@@ -282,6 +282,7 @@ void call_library(void);
 void reset_dataread();
 
 void free_temp_str(char* str);
+void free_non_temp_str(char* str);
 void free_perm_str(char* str);
 void* alloc_memory(int size, int var_num);
 void* calloc_memory(int size, int var_num);
@@ -334,6 +335,8 @@ char* update_class_info(int class);
 char* construct_class_structure(int class);
 void delete_cmpdata_for_class();
 
+char* begin_compiling_class(int class);
+char* end_compiling_class(int class);
 char* new_function();
 char* field_statement();
 char* integer_obj_field();
@@ -347,6 +350,8 @@ char* delete_statement();
 char* call_statement();
 void lib_let_str_field(char* str, char* prev_str);
 char* let_object_field();
+char* static_statement();
+char* static_method(char type);
 
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])
@@ -379,11 +384,12 @@ char* let_object_field();
 #define ERR_INVALID_CLASS (char*)(g_err_str[27])
 #define ERR_NO_INIT (char*)(g_err_str[28])
 
-/* comple data type numbers */
+/* compile data type numbers */
 #define CMPDATA_RESERVED 0
 #define CMPDATA_USEVAR   1
 #define CMPDATA_CLASS    2
 #define CMPDATA_FIELD    3
+#define CMPDATA_STATIC   4
 
 /*
 	Hidden varname 31 bit values

@@ -397,6 +397,11 @@ char* gosub_statement(){
 	next_position();
 	// Rewind object and construct argument-creating routine.
 	g_objpos=opos;
+
+	// Begin parameter(s) construction routine
+	// Note that this comment must be copied
+	// when inserting simiar routine to source
+
 	stack=8;
 	g_object[g_objpos++]=0x27BD0000;           // addiu       sp,sp,-xx
 	while(g_source[g_srcpos]==',') {
@@ -415,6 +420,11 @@ char* gosub_statement(){
 	g_object[g_objpos++]=0xAFA20008;             // sw          v0,8(sp)
 	g_object[g_objpos++]=0x27B50004;             // addiu       s5,sp,4
 	g_object[opos]|=((0-stack)&0xFFFF);          // addiu       sp,sp,-xx (See above)
+
+	// End parameter(s) construction routine
+	// Note that this comment must be copied
+	// when inserting simiar routine to source
+
 	// Rewind source and construct GOSUB routine again.
 	opos=spos;
 	spos=g_srcpos;
@@ -425,7 +435,7 @@ char* gosub_statement(){
 	check_obj_space(2);
 	g_object[g_objpos++]=0x8FB50004;           // lw          s5,4(sp)
 	g_object[g_objpos++]=0x27BD0000|stack;     // addiu       sp,sp,xx
-	// All done, go back to wright source position
+	// All done, go back to right source position
 	g_srcpos=spos;
 	return 0;
 }
@@ -1697,6 +1707,7 @@ static const void* statement_list[]={
 	"METHOD ",method_statement,
 	"DELETE ",delete_statement,
 	"CALL ",call_statement,
+	"STATIC ",static_statement,
 	// List of additional statements follows
 	ADDITIONAL_STATEMENTS
 };
