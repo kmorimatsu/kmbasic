@@ -54,6 +54,29 @@ static int* g_class_structure;
 */
 char* obj_method(int method);
 
+char* begin_compiling_class(int class){
+	// Initialize parameters
+	g_compiling_class=class;
+	g_class_structure=0;
+	// Register the class to cmpdata without class structure
+	return update_class_info(class);
+}
+
+char* end_compiling_class(int class){
+	char* err;
+	g_compiling_class=0;
+	// Construct class structure
+	err=construct_class_structure(class);
+	if (err) return err;
+	// Uppdate class information.
+	err=update_class_info(class);
+	if (err) return err;
+	// Delete some cmpdata.
+	delete_cmpdata_for_class();
+	return 0;
+}
+
+
 char* update_class_info(int class){
 	int* record;
 	int data[2];
@@ -463,6 +486,13 @@ void lib_let_str_field(char* prev_str, char* new_str){
 	Library for calling method statement
 */
 
+// Return code used for calling null method
+static const unsigned int g_return_code[]={
+	0x8FA30004, // lw          v1,4(sp)
+	0x00600008, // jr          v1
+	0x27BD0004, // addiu       sp,sp,4
+};
+
 int lib_pre_method(int* object, int methodname){
 	int i,num,nums;
 	int* class;
@@ -496,8 +526,14 @@ int lib_pre_method(int* object, int methodname){
 	}
 	if (i==num) {
 		// Method not found
-		class=(int*)object[0];
-		err_not_field(methodname,class[0]);
+		if (methodname==LABEL_INIT) {
+			// INIT method not found
+			// Call null function
+			return (int)(&g_return_code[0]);
+		} else {
+			class=(int*)object[0];
+			err_not_field(methodname,class[0]);
+		}
 	}
 	// Method found. return it.
 	return class[1];

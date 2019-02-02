@@ -335,6 +335,8 @@ char* update_class_info(int class);
 char* construct_class_structure(int class);
 void delete_cmpdata_for_class();
 
+char* begin_compiling_class(int class);
+char* end_compiling_class(int class);
 char* new_function();
 char* field_statement();
 char* integer_obj_field();
