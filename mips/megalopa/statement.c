@@ -359,9 +359,10 @@ char* gosub_statement_sub(){
 		// Label/number is constant.
 		// Linker will change following codes later.
 		// Note that 0x0812xxxx and 0x0813xxxx are specific codes for these.
-		check_obj_space(6);
-		g_object[g_objpos++]=0x04130003;                            // bgezall     zero,label1
+		check_obj_space(7);
 		g_object[g_objpos++]=0x27BDFFFC;                            // addiu       sp,sp,-4
+		g_object[g_objpos++]=0x04130003;                            // bgezall     zero,label1
+		g_object[g_objpos++]=0xAEBD0000|ARGS_S5_SP;                 // sw          sp,-12(s5)
 		g_object[g_objpos++]=0x10000003;                            // beq         zero,zero,label2
 		g_object[g_objpos++]=0x08120000|((g_label>>16)&0x0000FFFF); // nop         
 		                                                            // label1:
@@ -373,15 +374,16 @@ char* gosub_statement_sub(){
 		err=get_value();
 		if (err) return err;
 		call_lib_code(LIB_LABEL);
-		check_obj_space(6);
-		g_object[g_objpos++]=0x04130003; // bgezall     zero,label1
-		g_object[g_objpos++]=0x27BDFFFC; // addiu       sp,sp,-4
-		g_object[g_objpos++]=0x10000003; // beq         zero,zero,label2
-		g_object[g_objpos++]=0x00000000; // nop         
-		                                 // label1:
-		g_object[g_objpos++]=0x00400008; // jr          v0
-		g_object[g_objpos++]=0xAFBF0004; // sw          ra,4(sp)
-		                                 // label2:
+		check_obj_space(7);
+		g_object[g_objpos++]=0x27BDFFFC;            // addiu       sp,sp,-4
+		g_object[g_objpos++]=0x04130003;            // bgezall     zero,label1
+		g_object[g_objpos++]=0xAEBD0000|ARGS_S5_SP; // sw          sp,-12(s5)
+		g_object[g_objpos++]=0x10000003;            // beq         zero,zero,label2
+		g_object[g_objpos++]=0x00000000;            // nop         
+		                                            // label1:
+		g_object[g_objpos++]=0x00400008;            // jr          v0
+		g_object[g_objpos++]=0xAFBF0004;            // sw          ra,4(sp)
+		                                            // label2:
 	}
 	return 0;
 }
@@ -397,34 +399,10 @@ char* gosub_statement(){
 	next_position();
 	// Rewind object and construct argument-creating routine.
 	g_objpos=opos;
-
 	// Begin parameter(s) construction routine
-	// Note that this comment must be copied
-	// when inserting simiar routine to source
-
-	stack=8;
-	g_object[g_objpos++]=0x27BD0000;           // addiu       sp,sp,-xx
-	while(g_source[g_srcpos]==',') {
-		g_srcpos++;
-		stack+=4;
-		err=get_stringFloatOrValue();
-		if (err) return err;
-		check_obj_space(1);
-		g_object[g_objpos++]=0xAFA20000|stack; // sw          v0,xx(sp)
-		next_position();
-	}
-	// 4(sp) is for $s5, 8(sp) is for # of parameters
-	check_obj_space(5);
-	g_object[g_objpos++]=0xAFB50004;             // sw          s5,4(sp)
-	g_object[g_objpos++]=0x34020000|(stack/4-2); // ori         v0,zero,xx
-	g_object[g_objpos++]=0xAFA20008;             // sw          v0,8(sp)
-	g_object[g_objpos++]=0x27B50004;             // addiu       s5,sp,4
-	g_object[opos]|=((0-stack)&0xFFFF);          // addiu       sp,sp,-xx (See above)
-
-	// End parameter(s) construction routine
-	// Note that this comment must be copied
-	// when inserting simiar routine to source
-
+	g_object[g_objpos++]=0x8EA20000|ARGS_S5_V0_OBJ;           // lw          v0,-8(s5)
+	err=prepare_args_stack(',');
+	if (err) return err;
 	// Rewind source and construct GOSUB routine again.
 	opos=spos;
 	spos=g_srcpos;
@@ -432,9 +410,8 @@ char* gosub_statement(){
 	err=gosub_statement_sub();
 	if (err) return err;
 	// Remove stack
-	check_obj_space(2);
-	g_object[g_objpos++]=0x8FB50004;           // lw          s5,4(sp)
-	g_object[g_objpos++]=0x27BD0000|stack;     // addiu       sp,sp,xx
+	err=remove_args_stack();
+	if (err) return err;
 	// All done, go back to right source position
 	g_srcpos=spos;
 	return 0;
@@ -450,10 +427,11 @@ char* return_statement(){
 		err=get_stringFloatOrValue();
 		if (err) return err;
 	}
-	check_obj_space(3);
-	g_object[g_objpos++]=0x8FA30004; // lw          v1,4(sp)
-	g_object[g_objpos++]=0x00600008; // jr          v1
-	g_object[g_objpos++]=0x27BD0004; // addiu       sp,sp,4
+	check_obj_space(4);
+	g_object[g_objpos++]=0x8EBD0000|ARGS_S5_SP; // lw          sp,-12(s5)
+	g_object[g_objpos++]=0x8FA30004;            // lw          v1,4(sp)
+	g_object[g_objpos++]=0x00600008;            // jr          v1
+	g_object[g_objpos++]=0x27BD0004;            // addiu       sp,sp,4
 	return 0;
 }
 
@@ -1258,6 +1236,9 @@ char* var_statement(){
 		call_lib_code(LIB_VAR_PUSH);
 
 	} while (g_source[g_srcpos-1]==',');
+	// Renew sp stored in s5 stack.
+	check_obj_space(1);
+	g_object[g_objpos++]=0xAEBD0000|ARGS_S5_SP; // sw          sp,-12(s5)
 	return 0;
 }
 

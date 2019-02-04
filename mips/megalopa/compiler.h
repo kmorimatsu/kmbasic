@@ -335,6 +335,11 @@ char* update_class_info(int class);
 char* construct_class_structure(int class);
 void delete_cmpdata_for_class();
 
+extern const unsigned int g_initial_s5_stack[3];
+char* prepare_args_stack(char start_char);
+char* remove_args_stack(void);
+char* args_function_main(void);
+
 char* begin_compiling_class(int class);
 char* end_compiling_class(int class);
 char* new_function();
@@ -344,7 +349,7 @@ char* string_obj_field();
 char* float_obj_field();
 int lib_obj_field(int* object, int fieldname);
 int lib_pre_method(int* object, int methodname);
-int lib_post_method(int* object, int methodname, int v0);
+int lib_post_method(int* object, int v0);
 char* method_statement();
 char* delete_statement();
 char* call_statement();
@@ -390,6 +395,16 @@ char* static_method(char type);
 #define CMPDATA_CLASS    2
 #define CMPDATA_FIELD    3
 #define CMPDATA_STATIC   4
+
+/* Stack position for values in args.c */
+#define ARGS_SP_SP       4
+#define ARGS_SP_V0_OBJ   8
+#define ARGS_SP_PREV_S5  12
+#define ARGS_SP_NUM_ARGS 16
+#define ARGS_S5_SP       (-12 & 0xFFFF)
+#define ARGS_S5_V0_OBJ   (-8  & 0xFFFF)
+#define ARGS_S5_PREV_S5  (-4  & 0xFFFF)
+#define ARGS_S5_NUM_ARGS (0   & 0xFFFF)
 
 /*
 	Hidden varname 31 bit values

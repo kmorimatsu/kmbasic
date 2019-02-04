@@ -57,6 +57,8 @@ void start_program(void* addr, void* memory){
 	asm volatile("la $v0,%0"::"i"(&g_end_addr));
 	asm volatile("la $v1,label");
 	asm volatile("sw $v1,0($v0)");
+	// Set s5 for initial_s5_stack
+	asm volatile("la $s5,%0"::"i"(&g_initial_s5_stack[2]));
 	// Set s7 for easy calling call_library()
 	asm volatile("la $s7,%0"::"i"(&call_library));
 	// Set fp and execute program

@@ -319,51 +319,22 @@ char* obj_method(int method){
 	// Parameters preparation (to $s5) here.
 	next_position();
 	opos=g_objpos;
-
 	// Begin parameter(s) construction routine
-	// Note that this comment must be copied
-	// when inserting simiar routine to source
-
-	stack=12;
-	g_object[g_objpos++]=0x27BD0000;             // addiu       sp,sp,-xx
-	// 4(sp) is for $v0 (pointer to object)
-	g_object[g_objpos++]=0xAFA20004;             // sw          v0,4(sp)
-	if (g_source[g_srcpos]!=')') {
-		g_srcpos--;
-		do {
-			g_srcpos++;
-			stack+=4;
-			err=get_stringFloatOrValue();
-			if (err) return err;
-			check_obj_space(1);
-			g_object[g_objpos++]=0xAFA20000|stack;   // sw          v0,xx(sp)
-			next_position();
-		} while(g_source[g_srcpos]==',');
-	}
+	err=prepare_args_stack('(');
+	if (err) return err;
 	if (g_source[g_srcpos]!=')') return ERR_SYNTAX;
 	g_srcpos++;
-	// 8(sp) is for $s5, 12(sp) is for # of arguments
-	check_obj_space(4);
-	g_object[g_objpos++]=0xAFB50008;             // sw          s5,8(sp)
-	g_object[g_objpos++]=0x34020000|(stack/4-3); // ori         v0,zero,xx
-	g_object[g_objpos++]=0xAFA2000C;             // sw          v0,12(sp)
-	g_object[g_objpos++]=0x27B50008;             // addiu       s5,sp,8
-	g_object[opos]|=((0-stack)&0xFFFF);          // addiu       sp,sp,-xx (See above)
-
-	// End parameter(s) construction routine
-	// Note that this comment must be copied
-	// when inserting simiar routine to source
-
 	// Determine address of method and store fields to local variables.
 	check_obj_space(3);
-	g_object[g_objpos++]=0x8FA20004;                           // lw          v0,4(sp)
+	g_object[g_objpos++]=0x8FA20000|ARGS_SP_V0_OBJ;            // lw          v0,8(sp)
 	g_object[g_objpos++]=0x3C050000|((method>>16)&0x0000FFFF); // lui   a1,xxxx
 	g_object[g_objpos++]=0x34A50000|(method&0x0000FFFF);       // ori a1,a1,xxxx
 	call_quicklib_code(lib_pre_method,ASM_ADDU_A0_V0_ZERO);
 	// Call method address here. Same routine for GOSUB statement with integer value is used.
 	check_obj_space(6);
-	g_object[g_objpos++]=0x04130003;                           // bgezall     zero,label1
 	g_object[g_objpos++]=0x27BDFFFC;                           // addiu       sp,sp,-4
+	g_object[g_objpos++]=0x04130003;                           // bgezall     zero,label1
+	g_object[g_objpos++]=0xAEBD0000|ARGS_S5_SP;                // sw          sp,-12(s5)
 	g_object[g_objpos++]=0x10000003;                           // beq         zero,zero,label2
 	g_object[g_objpos++]=0x00000000;                           // nop         
 	                                                           // label1:
@@ -371,14 +342,11 @@ char* obj_method(int method){
 	g_object[g_objpos++]=0xAFBF0004;                           // sw          ra,4(sp)	                                                           // label2:
 	// Restore fields from local variables.
 	check_obj_space(3);
-	g_object[g_objpos++]=0x8FA40004;                           // lw          a0,4(sp)
-	g_object[g_objpos++]=0x3C050000|((method>>16)&0x0000FFFF); // lui   a1,xxxx
-	g_object[g_objpos++]=0x34A50000|(method&0x0000FFFF);       // ori a1,a1,xxxx
-	call_quicklib_code(lib_post_method,ASM_ADDU_A2_V0_ZERO);
+	g_object[g_objpos++]=0x8FA40008;                           // lw          a0,8(sp)
+	call_quicklib_code(lib_post_method,ASM_ADDU_A1_V0_ZERO);
 	// Remove stack
-	check_obj_space(2);
-	g_object[g_objpos++]=0x8FB50008;                           // lw          s5,8(sp)
-	g_object[g_objpos++]=0x27BD0000|stack;                     // addiu       sp,sp,xx	
+	err=remove_args_stack();
+	if (err) return err;
 	return 0;
 }
 
@@ -402,16 +370,14 @@ char* _obj_field(char mode){
 	int i;
 	char* err;
 	do {
-		i=check_var_name(); // TODO: consider accepting reserbed var names for field name
+		i=check_var_name();
 		if (i<65536) return ERR_SYNTAX;
 		if (g_source[g_srcpos]=='(' && mode==OBJ_FIELD_INTEGER) {
 			// This is a method
-			g_srcpos++;
 			return obj_method(i);
 		} else if (g_source[g_srcpos+1]=='(') {
 			if (g_source[g_srcpos]==mode) {
 				// This is a string/float method
-				g_srcpos++;
 				g_srcpos++;
 				return obj_method(i);
 			}
@@ -539,8 +505,8 @@ int lib_pre_method(int* object, int methodname){
 	return class[1];
 }
 
-int lib_post_method(int* object, int methodname, int v0){
-	// Note that existence of the method was checked in above function before reaching this function.
+int lib_post_method(int* object, int v0){
+	// Note that v0 (a1) contains the return value from a method.
 	int i,num,nums;
 	int* class;
 	// Restore local variables to object field values
@@ -706,51 +672,25 @@ char* static_method(char type){
 
 	}
 	if (g_source[g_srcpos]!='(') return ERR_SYNTAX;
-	g_srcpos++;
-
 	// Begin parameter(s) construction routine
-	// Note that this comment must be copied
-	// when inserting simiar routine to source
-
-	stack=8;
-	opos=g_objpos;
-	g_object[g_objpos++]=0x27BD0000;           // addiu       sp,sp,-xx
-	while(g_source[g_srcpos]==',') {
-		g_srcpos++;
-		stack+=4;
-		err=get_stringFloatOrValue();
-		if (err) return err;
-		check_obj_space(1);
-		g_object[g_objpos++]=0xAFA20000|stack; // sw          v0,xx(sp)
-		next_position();
-	}
-	// 4(sp) is for $s5, 8(sp) is for # of parameters
-	check_obj_space(5);
-	g_object[g_objpos++]=0xAFB50004;             // sw          s5,4(sp)
-	g_object[g_objpos++]=0x34020000|(stack/4-2); // ori         v0,zero,xx
-	g_object[g_objpos++]=0xAFA20008;             // sw          v0,8(sp)
-	g_object[g_objpos++]=0x27B50004;             // addiu       s5,sp,4
-	g_object[opos]|=((0-stack)&0xFFFF);          // addiu       sp,sp,-xx (See above)
-
-	// End parameter(s) construction routine
-	// Note that this comment must be copied
-	// when inserting simiar routine to source
-
+	check_obj_space(1);
+	g_object[g_objpos++]=0x34020000; // ori v0,zero,0
+	err=prepare_args_stack('(');
+	if (err) return err;
 	// Calling subroutine, which is static method of class
-	check_obj_space(6);
-	g_object[g_objpos++]=0x04130003;                            // bgezall     zero,label1
+	check_obj_space(7);
 	g_object[g_objpos++]=0x27BDFFFC;                            // addiu       sp,sp,-4
+	g_object[g_objpos++]=0x04130003;                            // bgezall     zero,label1
+	g_object[g_objpos++]=0xAEBD0000|ARGS_S5_SP;                 // sw          sp,-12(s5)
 	g_object[g_objpos++]=0x10000003;                            // beq         zero,zero,label2
 	g_object[g_objpos++]=0x00000000;                            // nop         
 	                                                            // label1:
 	g_object[g_objpos++]=0x08000000|((method&0x0FFFFFFF)>>2);   // j           xxxx
 	g_object[g_objpos++]=0xAFBF0004;                            // sw          ra,4(sp)
-		                                                            // label2:	
+		                                                        // label2:	
 	// Remove stack
-	check_obj_space(2);
-	g_object[g_objpos++]=0x8FB50004;           // lw          s5,4(sp)
-	g_object[g_objpos++]=0x27BD0000|stack;     // addiu       sp,sp,xx
-
+	err=remove_args_stack();
+	if (err) return err;
 	return 0;
 }
 
