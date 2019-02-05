@@ -333,7 +333,7 @@ char* register_var_name(int nameint);
 
 char* update_class_info(int class);
 char* construct_class_structure(int class);
-void delete_cmpdata_for_class();
+void delete_cmpdata_for_class(int class);
 
 extern const unsigned int g_initial_s5_stack[3];
 char* prepare_args_stack(char start_char);
@@ -357,6 +357,7 @@ void lib_let_str_field(char* str, char* prev_str);
 char* let_object_field();
 char* static_statement();
 char* static_method(char type);
+char* resolve_unresolved(int class);
 
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])
@@ -395,6 +396,14 @@ char* static_method(char type);
 #define CMPDATA_CLASS    2
 #define CMPDATA_FIELD    3
 #define CMPDATA_STATIC   4
+#define CMPDATA_UNSOLVED 5
+// Sub types follow
+#define CMPTYPE_PUBLIC_FIELD 0
+#define CMPTYPE_PRIVATE_FIELD 1
+#define CMPTYPE_PUBLIC_METHOD 2
+#define CMPTYPE_NEW_FUNCTION 0
+#define CMPTYPE_STATIC_METHOD 1
+
 
 /* Stack position for values in args.c */
 #define ARGS_SP_SP       4

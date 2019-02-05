@@ -27,10 +27,9 @@ static int* g_class_structure;
 		type:      CMPDATA_FIELD (3)
 		len:       2 or 3 (2: field; 3: method)
 		data16:    field or method
-		             0: public field
-		             1: private field
-		             2: public method
-		             3: reserved
+		             CMPTYPE_PUBLIC_FIELD:  0
+		             CMPTYPE_PRIVATE_FIELD: 1
+		             CMPTYPE_PUBLIC_METHOD: 2
 		record[1]: field/method name as integer
 		record[2]: pointer to method
 */
@@ -44,15 +43,39 @@ static int* g_class_structure;
 		record[2]: variable name as integer
 */
 
+/*
+	CMPDATA_UNSOLVED structure
+		type:      CMPDATA_UNSOLVED (5)
+		len:       4
+		data16:    CMPTYPE_NEW_FUNCTION (0)
+		record[1]: class name as integer
+		record[2]: address of code for pointer to class structure
+		record[3]: address of code for size definition
 
-#define PUBLIC_FIELD 0
-#define PRIVATE_FIELD 1
-#define PUBLIC_METHOD 2
+		type:      CMPDATA_UNSOLVED (5)
+		len:       4
+		data16:    CMPTYPE_STATIC_METHOD (1)
+		record[1]: class name as integer
+		record[2]: method name as integer
+		record[3]: address of code for pointer to method
+
+*/
 
 /*
 	Local prototyping
 */
 char* obj_method(int method);
+
+/*
+	Return code used for calling null method
+*/
+static const unsigned int g_return_code[]={
+	0x8FA30004, // lw          v1,4(sp)
+	0x00600008, // jr          v1
+	0x27BD0004, // addiu       sp,sp,4
+};
+
+
 
 char* begin_compiling_class(int class){
 	// Initialize parameters
@@ -71,11 +94,71 @@ char* end_compiling_class(int class){
 	// Uppdate class information.
 	err=update_class_info(class);
 	if (err) return err;
+	// Resolve CMPDATA_UNSOLVED.
+	resolve_unresolved(class);
 	// Delete some cmpdata.
-	delete_cmpdata_for_class();
+	delete_cmpdata_for_class(class);
 	return 0;
 }
 
+void* search_method(int* classdata,int method){
+	int pos,i;
+	int nums=classdata[1];
+
+	classdata+=2;                  // exclude first 2 words
+	classdata+=2*(nums&0xff);      // exclude public field
+	classdata+=2*((nums>>8)&0xff); // exclude private field
+	nums=(nums>>16)&0xff;          // number of methods
+	for(i=0;i<nums;i++){
+		if (classdata[0]==method) return (void*)classdata[1];
+		classdata+=2;
+	}
+	return 0; // not found
+}
+
+char* resolve_unresolved(int class){
+	int* classdata;
+	int* record;
+	int* code;
+	int i;
+	// Get class structure
+	cmpdata_reset();
+	while(record=cmpdata_find(CMPDATA_CLASS)){
+		if (record[1]==class) break;
+	}
+	if (!record) return ERR_UNKNOWN;
+	classdata=(int*)record[2];
+	// Explore CMPDATA_UNSOLVED
+	cmpdata_reset();
+	while(record=cmpdata_find(CMPDATA_UNSOLVED)){
+		// Note: don't use cmpdata_find() again in the loop.
+		// If used, the solved CMPDATA_UNSOLVED must be removed before.
+		if (record[1]!=class) continue;
+		switch (record[0]&0xffff) {
+			case CMPTYPE_NEW_FUNCTION:
+				// Resolve address of code for pointer to class structure
+				code=(int*)record[2];
+				code[0]=(code[0]&0xFFFF0000) | (((int)classdata)>>16);
+				code[1]=(code[1]&0xFFFF0000) | (((int)classdata) & 0x0000FFFF);
+				// Resolve size of object
+				code=(int*)record[3];
+				code[0]=(code[0]&0xFFFF0000) | (object_size(classdata) & 0x0000FFFF);
+				// All done
+				break;
+			case CMPTYPE_STATIC_METHOD:
+				// Resolve address of code for pointer to method
+				// Find method
+				i=(int)search_method(classdata,record[2]);
+				if (!i) return ERR_NOT_FIELD;
+				code=(int*)record[3];
+				code[0]=(code[0]&0xFC000000)|((i&0x0FFFFFFF)>>2);
+				// All done
+				break;
+			default:
+				return ERR_UNKNOWN;
+		}	}
+	return 0;	
+}
 
 char* update_class_info(int class){
 	int* record;
@@ -124,7 +207,7 @@ char* construct_class_structure(int class){
 	// Public fields
 	cmpdata_reset();
 	while(record=cmpdata_find(CMPDATA_FIELD)){
-		if ((record[0]&0xffff)==PUBLIC_FIELD) {
+		if ((record[0]&0xffff)==CMPTYPE_PUBLIC_FIELD) {
 			num+=1<<0;
 			check_obj_space(2);
 			g_object[g_objpos++]=record[1]; // Field name
@@ -134,7 +217,7 @@ char* construct_class_structure(int class){
 	// Private fields
 	cmpdata_reset();
 	while(record=cmpdata_find(CMPDATA_FIELD)){
-		if ((record[0]&0xffff)==PRIVATE_FIELD) {
+		if ((record[0]&0xffff)==CMPTYPE_PRIVATE_FIELD) {
 			num+=1<<8;
 			check_obj_space(2);
 			g_object[g_objpos++]=record[1]; // Field name
@@ -144,7 +227,7 @@ char* construct_class_structure(int class){
 	// Public methods
 	cmpdata_reset();
 	while(record=cmpdata_find(CMPDATA_FIELD)){
-		if ((record[0]&0xffff)==PUBLIC_METHOD) {
+		if ((record[0]&0xffff)==CMPTYPE_PUBLIC_METHOD) {
 			num+=1<<16;
 			check_obj_space(2);
 			g_object[g_objpos++]=record[1]; // Method name
@@ -163,7 +246,7 @@ char* construct_class_structure(int class){
 	return 0;
 }
 
-void delete_cmpdata_for_class(){
+void delete_cmpdata_for_class(int class){
 	int* record;
 	// Delete field/method data
 	cmpdata_reset();
@@ -177,28 +260,21 @@ void delete_cmpdata_for_class(){
 		cmpdata_delete(record);
 		cmpdata_reset();
 	}
-}
-
-void* search_method(int* classdata,int method){
-	int pos,i;
-	int nums=classdata[1];
-
-	classdata+=2;                  // exclude first 2 words
-	classdata+=2*(nums&0xff);      // exclude public field
-	classdata+=2*((nums>>8)&0xff); // exclude private field
-	nums=(nums>>16)&0xff;          // number of methods
-	for(i=0;i<nums;i++){
-		if (classdata[0]==method) return (void*)classdata[1];
-		classdata+=2;
+	// Delete solved class codes
+	cmpdata_reset();
+	while(record=cmpdata_find(CMPDATA_UNSOLVED)){
+		if (record[1]!=class) continue;
+		cmpdata_delete(record);
+		cmpdata_reset();
 	}
-	return 0; // not found
 }
 
 int object_size(int* classdata){
 	int nums=classdata[1];
 	int size=nums&0xff;   // public field
 	size+=(nums>>8)&0xff; // private
-	return size;	
+	// Add 1 for pointer to class data.
+	return size+1;	
 }
 
 char* new_function(){
@@ -207,12 +283,14 @@ char* new_function(){
 	int i,stack, opos;
 	int* data;
 	int* classdata;
+	int record[3];
 	void* init_method;
 	// Resolve class name
 	err=get_label();
 	if (err) return err;
 	if (!g_label) return ERR_SYNTAX;
 	class=g_label;
+	record[0]=class;
 	next_position();
 	// Get class data from cmpdata
 	// Note that the address of class structure can be resolved
@@ -224,16 +302,30 @@ char* new_function(){
 	}
 	if (!data) return ERR_NO_CLASS;
 	classdata=(int*)data[2];
-	size=object_size(classdata);
+	if (classdata) {
+		size=object_size(classdata);
+	} else {
+		// Class structure is unsolved.
+		size=0;
+	}
 	// Create object
-	call_quicklib_code(lib_calloc_memory,ASM_ORI_A0_ZERO_|(size+1));
+	record[2]=(int)&g_object[g_objpos+3];
+	call_quicklib_code(lib_calloc_memory,ASM_ORI_A0_ZERO_|size);
 	// First word of object is pointer to classdata
 	check_obj_space(3);
+	record[1]=(int)&g_object[g_objpos];
 	g_object[g_objpos++]=0x3C080000|(((unsigned int)classdata)>>16);        // lui         t0,xxxx
 	g_object[g_objpos++]=0x35080000|(((unsigned int)classdata)&0x0000FFFF); // ori         t0,t0,xxxx
 	g_object[g_objpos++]=0xAC480000; // sw          t0,0(v0)
 	// Check if INIT method exists
-	init_method=search_method(classdata,LABEL_INIT);
+	if (classdata) {
+		init_method=search_method(classdata,LABEL_INIT);
+	} else {
+		// Class structure is unknown. Use null method.
+		init_method=(int*)&g_return_code[0];
+		// Register CMPDATA
+		cmpdata_insert(CMPDATA_UNSOLVED,CMPTYPE_NEW_FUNCTION,(int*)record[0],3);
+	}		
 	if (!init_method) {
 		// All done
 		// Note that $v0 is address of object here.
@@ -294,9 +386,9 @@ char* field_statement(){
 		// Register field
 		data[0]=i;
 		if (is_private) {
-			err=cmpdata_insert(CMPDATA_FIELD,PRIVATE_FIELD,(int*)&data[0],1);
+			err=cmpdata_insert(CMPDATA_FIELD,CMPTYPE_PRIVATE_FIELD,(int*)&data[0],1);
 		} else {
-			err=cmpdata_insert(CMPDATA_FIELD,PUBLIC_FIELD,(int*)&data[0],1);
+			err=cmpdata_insert(CMPDATA_FIELD,CMPTYPE_PUBLIC_FIELD,(int*)&data[0],1);
 		}
 		next_position();
 		if (g_source[g_srcpos]==',') {
@@ -452,13 +544,6 @@ void lib_let_str_field(char* prev_str, char* new_str){
 	Library for calling method statement
 */
 
-// Return code used for calling null method
-static const unsigned int g_return_code[]={
-	0x8FA30004, // lw          v1,4(sp)
-	0x00600008, // jr          v1
-	0x27BD0004, // addiu       sp,sp,4
-};
-
 int lib_pre_method(int* object, int methodname){
 	int i,num,nums;
 	int* class;
@@ -552,7 +637,7 @@ char* method_statement(){
 	// Register cmpdata
 	data[0]=g_label;
 	data[1]=(int)(&g_object[opos]);
-	return cmpdata_insert(CMPDATA_FIELD,PUBLIC_METHOD,(int*)&data[0],2);
+	return cmpdata_insert(CMPDATA_FIELD,CMPTYPE_PUBLIC_METHOD,(int*)&data[0],2);
 }
 
 /*
@@ -588,6 +673,7 @@ char* call_statement(){
 
 char* static_statement(){
 	char* err;
+	int* record;
 	int data[2];
 	int i;
 	int is_private=0;
@@ -604,20 +690,41 @@ char* static_statement(){
 		next_position();
 		i=check_var_name();
 		if (i<65536) return ERR_SYNTAX;
-		// Register varname
-		err=register_var_name(i);
-		if (err) return err;
 		if (g_source[g_srcpos]=='#' || g_source[g_srcpos]=='$') {
 			g_srcpos++;
 		}
 		// Register public static field
-		if (!is_private) {
-			data[0]=g_compiling_class; // class name as integer
-			data[1]=i;                 // static var name as integer
-			i=search_var_name(i);      // var number of this static field
-			if (i<0) return ERR_UNKNOWN;
-			err=cmpdata_insert(CMPDATA_STATIC,i,(int*)&data[0],2);
+		if (is_private) {
+			// This is the same as USEVAR
+			// Register varname
+			err=register_var_name(i);
 			if (err) return err;
+		} else {
+			// Check if there is already a CMPDATA record
+			cmpdata_reset();
+			while(record=cmpdata_find(CMPDATA_STATIC)){
+				if (record[1]!=g_compiling_class) continue;
+				if (record[2]!=i) continue;
+				break;
+			}
+			if (record) {
+				// There is already a record.
+				// Do not allocate new number but use the registered number;
+				i=record[0]&0xffff;
+				err=cmpdata_insert(CMPDATA_USEVAR,i,&record[2],1);
+				if (err) return err;
+			} else {
+				// Register varname
+				err=register_var_name(i);
+				if (err) return err;
+				// Insert a CMDATA_STATIC record
+				data[0]=g_compiling_class; // class name as integer
+				data[1]=i;                 // static var name as integer
+				i=search_var_name(i);      // var number of this static field
+				if (i<0) return ERR_UNKNOWN;
+				err=cmpdata_insert(CMPDATA_STATIC,i,(int*)&data[0],2);
+				if (err) return err;
+			}
 		}
 		next_position();
 		if (g_source[g_srcpos]==',') {
@@ -639,6 +746,7 @@ char* static_statement(){
 char* static_method(char type){
 	char* err;
 	int* data;
+	int record[3];
 	int i,opos,method,stack;
 	next_position();
 	// Check class name
@@ -653,6 +761,7 @@ char* static_method(char type){
 			break;
 		}
 	}
+	record[0]=i;
 	// Check '::'
 	if (g_source[g_srcpos]!=':') return ERR_SYNTAX;
 	g_srcpos++;
@@ -663,8 +772,13 @@ char* static_method(char type){
 	// Check method
 	i=check_var_name();
 	if (i<65536) return ERR_SYNTAX;
-	method=(int)search_method(data,i);
-	if (!method) return ERR_NOT_FIELD;
+	if (data) {
+		method=(int)search_method(data,i);
+		if (!method) return ERR_NOT_FIELD;
+	} else {
+		method=(int)&g_return_code[0];
+		record[1]=i;
+	}
 	// Check type and '('
 	if (type) {// Either 0, '$', or '#'
 		if (g_source[g_srcpos]!=type) return ERR_SYNTAX;
@@ -678,6 +792,7 @@ char* static_method(char type){
 	err=prepare_args_stack('(');
 	if (err) return err;
 	// Calling subroutine, which is static method of class
+	record[2]=(int)&g_object[g_objpos+5];
 	check_obj_space(7);
 	g_object[g_objpos++]=0x27BDFFFC;                            // addiu       sp,sp,-4
 	g_object[g_objpos++]=0x04130003;                            // bgezall     zero,label1
@@ -688,6 +803,10 @@ char* static_method(char type){
 	g_object[g_objpos++]=0x08000000|((method&0x0FFFFFFF)>>2);   // j           xxxx
 	g_object[g_objpos++]=0xAFBF0004;                            // sw          ra,4(sp)
 		                                                        // label2:	
+	// Register CMPDATA if required.
+	if (!data) {
+		cmpdata_insert(CMPDATA_UNSOLVED,CMPTYPE_STATIC_METHOD,(int*)record[0],3);
+	}
 	// Remove stack
 	err=remove_args_stack();
 	if (err) return err;
