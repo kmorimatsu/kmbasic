@@ -49,8 +49,6 @@ char* prepare_args_stack(char start_char){
 			if (start_char==','){
 				if (g_source[g_srcpos]!=',') break;
 			} else if (start_char=='('){
-				if (g_source[g_srcpos]!='(') return ERR_SYNTAX;
-				g_srcpos++;
 				next_position();
 				if (g_source[g_srcpos]==')') break;
 				g_srcpos--;

@@ -189,7 +189,8 @@ int compile_and_link_class(char* buff,int class){
 		i=compile_and_link_file(buff,&classfile[0]);
 		if (i) break;
 		// End compiling class
-		end_compiling_class(class);
+		err=end_compiling_class(class);
+		if (err) break;
 		// Initial assembly is a jump statement to jump to the end of class file
 		g_object[0]=0x08000000 | ((((int)(&g_object[g_objpos]))&0x0FFFFFFF)>>2); // j xxxxxxxx
 		// In the next link, current region of object is ignored.

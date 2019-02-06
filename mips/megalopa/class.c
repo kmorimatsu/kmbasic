@@ -95,7 +95,8 @@ char* end_compiling_class(int class){
 	err=update_class_info(class);
 	if (err) return err;
 	// Resolve CMPDATA_UNSOLVED.
-	resolve_unresolved(class);
+	err=resolve_unresolved(class);
+	if (err) return err;
 	// Delete some cmpdata.
 	delete_cmpdata_for_class(class);
 	return 0;
@@ -136,13 +137,23 @@ char* resolve_unresolved(int class){
 		if (record[1]!=class) continue;
 		switch (record[0]&0xffff) {
 			case CMPTYPE_NEW_FUNCTION:
+				// Shift of code may happen (man not).
+				for(i=-1;i<=0;i++){
+					code=(int*)(record[2]);
+					if (code[i]!=0x3C080000) continue;
+					if (code[i+1]!=0x35080000) continue;
+					code=(int*)(record[3]);
+					if (code[i]!=ASM_ORI_A0_ZERO_) continue;
+					break;
+				}
+				if (0<i) return ERR_UNKNOWN;
 				// Resolve address of code for pointer to class structure
-				code=(int*)record[2];
-				code[0]=(code[0]&0xFFFF0000) | (((int)classdata)>>16);
-				code[1]=(code[1]&0xFFFF0000) | (((int)classdata) & 0x0000FFFF);
+				code=(int*)(record[2]);
+				code[i+0]=0x3C080000 | (((unsigned int)classdata)>>16);
+				code[i+1]=0x35080000 | (((unsigned int)classdata) & 0x0000FFFF);
 				// Resolve size of object
-				code=(int*)record[3];
-				code[0]=(code[0]&0xFFFF0000) | (object_size(classdata) & 0x0000FFFF);
+				code=(int*)(record[3]);
+				code[i+0]=ASM_ORI_A0_ZERO_ | (object_size(classdata) & 0x0000FFFF);
 				// All done
 				break;
 			case CMPTYPE_STATIC_METHOD:
@@ -150,7 +161,7 @@ char* resolve_unresolved(int class){
 				// Find method
 				i=(int)search_method(classdata,record[2]);
 				if (!i) return ERR_NOT_FIELD;
-				code=(int*)record[3];
+				code=(int*)(record[3]);
 				code[0]=(code[0]&0xFC000000)|((i&0x0FFFFFFF)>>2);
 				// All done
 				break;
@@ -324,7 +335,7 @@ char* new_function(){
 		// Class structure is unknown. Use null method.
 		init_method=(int*)&g_return_code[0];
 		// Register CMPDATA
-		cmpdata_insert(CMPDATA_UNSOLVED,CMPTYPE_NEW_FUNCTION,(int*)record[0],3);
+		cmpdata_insert(CMPDATA_UNSOLVED,CMPTYPE_NEW_FUNCTION,(int*)&record[0],3);
 	}		
 	if (!init_method) {
 		// All done
@@ -406,6 +417,7 @@ char* field_statement(){
 */
 char* obj_method(int method){
 	// $v0 contains the address of object.
+	// Note that '(' has been passed.
 	char* err;
 	int stack,opos;
 	// Parameters preparation (to $s5) here.
@@ -466,10 +478,12 @@ char* _obj_field(char mode){
 		if (i<65536) return ERR_SYNTAX;
 		if (g_source[g_srcpos]=='(' && mode==OBJ_FIELD_INTEGER) {
 			// This is a method
+			g_srcpos++;
 			return obj_method(i);
 		} else if (g_source[g_srcpos+1]=='(') {
 			if (g_source[g_srcpos]==mode) {
 				// This is a string/float method
+				g_srcpos++;
 				g_srcpos++;
 				return obj_method(i);
 			}
