@@ -249,7 +249,7 @@ static const char classtext[]=
 " T6=rnd()\n" 
 " return\n"
 "METHOD T3\n"
-" o=new(CLASS1)\n" // TODO: save variables to object field before calling method of another object
+" o=new(CLASS1)\n"
 " return o\n"
 "METHOD T4\n"
 " return T6\n"
@@ -269,10 +269,7 @@ static const void* debugjumptable[]={
 
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
-	asm volatile("lw    $a0,0($v1)");
-	asm volatile("sw $sp,-12($s5)");
-	asm volatile("lw $sp,-12($s5)");
-	asm volatile("lw $v0,-8($s5)");
+	asm volatile("lw    $a0,-8($s5)");
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");

@@ -350,6 +350,9 @@ char* float_obj_field();
 int lib_obj_field(int* object, int fieldname);
 int lib_pre_method(int* object, int methodname);
 int lib_post_method(int* object, int v0);
+int lib_save_vars_to_fields(int* object,int v0);
+int lib_load_vars_from_fields(int* object, int v0);
+
 char* method_statement();
 char* delete_statement();
 char* call_statement();
@@ -463,6 +466,7 @@ char* resolve_unresolved(int class);
 #define ASM_ADDU_A3_V0_ZERO 0x00403821
 #define ASM_ORI_A0_ZERO_ 0x34040000
 #define ASM_LW_A0_XXXX_S8 0x8FC40000
+#define ASM_LW_A0_XXXX_S5 0x8EA40000
 
 // Division macro for unsigned long
 // Valid for 31 bits for all cases and 32 bits for some cases

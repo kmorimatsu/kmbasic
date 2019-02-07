@@ -420,6 +420,13 @@ char* obj_method(int method){
 	// Note that '(' has been passed.
 	char* err;
 	int stack,opos;
+	// When method of an object is called from object, 
+	// current variables must be saved to object fields
+	if (g_compiling_class) {
+		check_obj_space(1);
+		g_object[g_objpos++]=0x00402821; // addu        a1,v0,zero
+		call_quicklib_code(lib_save_vars_to_fields,ASM_LW_A0_XXXX_S5|ARGS_S5_V0_OBJ);
+	}
 	// Parameters preparation (to $s5) here.
 	next_position();
 	opos=g_objpos;
@@ -451,6 +458,13 @@ char* obj_method(int method){
 	// Remove stack
 	err=remove_args_stack();
 	if (err) return err;
+	// When method of an object is called from object, 
+	// current variables must be saved to object fields
+	if (g_compiling_class) {
+		check_obj_space(1);
+		g_object[g_objpos++]=0x00402821; // addu        a1,v0,zero
+		call_quicklib_code(lib_load_vars_from_fields,ASM_LW_A0_XXXX_S5|ARGS_S5_V0_OBJ);
+	}
 	return 0;
 }
 
@@ -558,6 +572,12 @@ void lib_let_str_field(char* prev_str, char* new_str){
 	Library for calling method statement
 */
 
+int lib_load_vars_from_fields(int* object, int v0){
+	// Do nothing if no object
+	if (object) lib_pre_method(object,LABEL_INIT);
+	return v0;
+}
+
 int lib_pre_method(int* object, int methodname){
 	int i,num,nums;
 	int* class;
@@ -602,6 +622,19 @@ int lib_pre_method(int* object, int methodname){
 	}
 	// Method found. return it.
 	return class[1];
+}
+
+int lib_save_vars_to_fields(int* object,int v0){
+	int* class;
+	// Do nothing if no object
+	if (!object) return;
+	// Check if this is an object (if within the RAM).
+	if (!withinRAM(object)) err_not_obj();
+	class=(int*)object[0];
+	if (!withinRAM(class)) err_not_obj();
+	// save vars
+	lib_post_method(object,0);
+	return v0;
 }
 
 int lib_post_method(int* object, int v0){
