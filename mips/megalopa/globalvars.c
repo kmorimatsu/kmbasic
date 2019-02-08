@@ -28,6 +28,7 @@ int g_end_addr;
 // handling values and strings.
 int g_sdepth;
 int g_maxsdepth;
+char g_allow_shift_obj;
 
 // Following var shows what type of variable was defined
 // in compiling the last code.

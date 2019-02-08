@@ -1702,6 +1702,9 @@ char* statement(void){
 	g_temp_area_used=0;
 	// Initialize stack handler used for value
 	g_sdepth=g_maxsdepth=0;
+	// Allow shifting code object when stack is used.
+	// This will be disalloed when CMPDATA_UNSOLVED etc is used.
+	g_allow_shift_obj=1;
 	// Seek the statement
 	for (i=0;i<sizeof(statement_list)/sizeof(statement_list[0]);i+=2){
 		if (nextCodeIs((char*)statement_list[i])) break;

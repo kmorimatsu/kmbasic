@@ -189,6 +189,7 @@ extern unsigned int g_rnd_seed;
 extern unsigned int g_label;
 extern int g_sdepth;
 extern int g_maxsdepth;
+extern char g_allow_shift_obj;
 extern enum variable g_lastvar;
 extern char* g_source;
 extern int g_srcpos;

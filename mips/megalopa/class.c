@@ -137,23 +137,13 @@ char* resolve_unresolved(int class){
 		if (record[1]!=class) continue;
 		switch (record[0]&0xffff) {
 			case CMPTYPE_NEW_FUNCTION:
-				// Shift of code may happen (man not).
-				for(i=-1;i<=0;i++){
-					code=(int*)(record[2]);
-					if (code[i]!=0x3C080000) continue;
-					if (code[i+1]!=0x35080000) continue;
-					code=(int*)(record[3]);
-					if (code[i]!=ASM_ORI_A0_ZERO_) continue;
-					break;
-				}
-				if (0<i) return ERR_UNKNOWN;
 				// Resolve address of code for pointer to class structure
 				code=(int*)(record[2]);
-				code[i+0]=0x3C080000 | (((unsigned int)classdata)>>16);
-				code[i+1]=0x35080000 | (((unsigned int)classdata) & 0x0000FFFF);
+				code[0]=(code[0]&0xFFFF0000) | (((unsigned int)classdata)>>16);
+				code[1]=(code[1]&0xFFFF0000) | (((unsigned int)classdata) & 0x0000FFFF);
 				// Resolve size of object
 				code=(int*)(record[3]);
-				code[i+0]=ASM_ORI_A0_ZERO_ | (object_size(classdata) & 0x0000FFFF);
+				code[0]=(code[0]&0xFFFF0000) | (object_size(classdata) & 0x0000FFFF);
 				// All done
 				break;
 			case CMPTYPE_STATIC_METHOD:
@@ -336,6 +326,7 @@ char* new_function(){
 		init_method=(int*)&g_return_code[0];
 		// Register CMPDATA
 		cmpdata_insert(CMPDATA_UNSOLVED,CMPTYPE_NEW_FUNCTION,(int*)&record[0],3);
+		g_allow_shift_obj=0;
 	}		
 	if (!init_method) {
 		// All done
@@ -853,6 +844,7 @@ char* static_method(char type){
 	// Register CMPDATA if required.
 	if (!data) {
 		cmpdata_insert(CMPDATA_UNSOLVED,CMPTYPE_STATIC_METHOD,(int*)record[0],3);
+		g_allow_shift_obj=0;
 	}
 	// Remove stack
 	err=remove_args_stack();
