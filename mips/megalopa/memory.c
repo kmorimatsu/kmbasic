@@ -26,22 +26,31 @@
 */
 
 static int g_temp_var_num_candidate=ALLOC_PERM_BLOCK;
-static int g_last_deleted_pointer;
-static int g_last_deleted_size=0;
+
+#define DELETE_LIST_SIZE 10
+static int g_deleted_num;
+static int g_deleted_pointer[DELETE_LIST_SIZE];
+static int g_deleted_size[DELETE_LIST_SIZE];
+
 
 #define register_deleted_block(x,y) \
 	do {\
-		g_last_deleted_pointer=(x);\
-		g_last_deleted_size=(y);\
+		if (g_deleted_num<DELETE_LIST_SIZE) {\
+			g_deleted_pointer[g_deleted_num]=(x);\
+			g_deleted_size[g_deleted_num]=(y);\
+			g_deleted_num++;\
+		}\
 	} while(0)
 
 void set_free_area(void* begin, void* end){
+	// Initialize heap area
 	int i;
 	for(i=0;i<ALLOC_BLOCK_NUM;i++){
 		g_var_size[i]=0;
 	}
 	g_heap_mem=(int*)begin;
 	g_max_mem=(int)((end-begin)/4);
+	g_deleted_num=0;
 }
 
 void* calloc_memory(int size, int var_num){
@@ -98,13 +107,19 @@ void* _alloc_memory_main(int size, int var_num){
 	g_var_pointer[var_num]=0;
 	while(1){
 		// Try the block previously deleted
-		if (size<=g_last_deleted_size) {
-			g_last_deleted_size=0;
-			candidate=g_last_deleted_pointer;
+		candidate=0;
+		while(g_deleted_num){
+			// Check if the last deleted block fits
+			// If not, these cannot be used anymore
+			g_deleted_num--;
+			if (size<=g_deleted_size[g_deleted_num]) {
+				candidate=g_deleted_pointer[g_deleted_num];
+				break;
+			}
+		}
+		if (candidate || g_deleted_num) {
+			// Candidate found
 			break;
-		} else {
-			// Last deleted block is a candidate only once
-			g_last_deleted_size=0;
 		}
 		// Try the block after last block
 		candidate=0;
