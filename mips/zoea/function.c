@@ -261,23 +261,7 @@ char* inkey_function(void){
 }
 
 char* args_function(void){
-	char* err;
-	int i;
-	err=get_value();
-	if (err) return err;
-	i=g_object[g_objpos-1];
-	if ((i>>16)==0x3402) {
-		// Previous object is "ori v0,zero,xxxx".
-		i&=0xffff;
-		i=(i+1)<<2;
-		g_object[g_objpos-1]=0x8EA20000|i; //   lw          v0,xx(s5)
-	} else {
-		check_obj_space(3);
-		g_object[g_objpos++]=0x00021080;   //   sll         v0,v0,0x2
-		g_object[g_objpos++]=0x02A21021;   //   addu        v0,s5,v0
-		g_object[g_objpos++]=0x8C420004;   //   lw          v0,4(v0)
-	}
-	return 0;	
+	return args_function_main();
 }
 
 char* system_function(void){

@@ -229,23 +229,8 @@ static const char bastext[]=
 "USECLASS CLASS1\n"
 "CLS\n"
 "a=new(CLASS1)\n"
-"call a.INIT(123,456)\n"
-"CLASS1::TEST=123\n"
-"CLASS1::TEST2=456\n"
-"print CLASS1::TEST3(),\n"
-"print CLASS1::TEST4#(),\n"
-"print CLASS1::TEST5$(),\n"
+"print a.T3()\n"
 "\n"
-"\n"
-"\n"
-"\n"
-"end\n"
-"for i=1 to 150\n"
-"  a=new(CLASS1)\n"
-"  delete a\n"
-"  cursor 0,0\n"
-"  print i,\n"
-"next\n"
 "\n"
 "\n"
 "\n"
@@ -254,17 +239,8 @@ static const char bastext[]=
 
 
 static const char classtext[]=
-"REM\n"
-"STATIC TEST,TEST2\n"
-"METHOD TEST3\n"
-"return TEST+TEST2\n"
-"METHOD TEST4\n"
-"return 3.14\n"
-"METHOD TEST5\n"
-"return hex$(0xabc)\n"
-"\n"
-"\n"
-"\n"
+"METHOD T3\n"
+" return 123\n"
 "\n"
 "\n"
 "\n"
@@ -281,9 +257,7 @@ static const void* debugjumptable[]={
 
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
-	asm volatile("lw    $a0,0($v1)");
-	asm volatile("nop");
-	asm volatile("nop");
+	asm volatile("lw    $a0,-8($s5)");
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");

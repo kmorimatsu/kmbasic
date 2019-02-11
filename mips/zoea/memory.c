@@ -25,6 +25,16 @@
                       Therefore, it must be released when it's not used any more.
 */
 
+static int g_temp_var_num_candidate=ALLOC_PERM_BLOCK;
+static int g_last_deleted_pointer;
+static int g_last_deleted_size=0;
+
+#define register_deleted_block(x,y) \
+	do {\
+		g_last_deleted_pointer=(x);\
+		g_last_deleted_size=(y);\
+	} while(0)
+
 void set_free_area(void* begin, void* end){
 	int i;
 	for(i=0;i<ALLOC_BLOCK_NUM;i++){
@@ -87,6 +97,15 @@ void* _alloc_memory_main(int size, int var_num){
 	g_var_size[var_num]=0;
 	g_var_pointer[var_num]=0;
 	while(1){
+		// Try the block previously deleted
+		if (size<=g_last_deleted_size) {
+			g_last_deleted_size=0;
+			candidate=g_last_deleted_pointer;
+			break;
+		} else {
+			// Last deleted block is a candidate only once
+			g_last_deleted_size=0;
+		}
 		// Try the block after last block
 		candidate=0;
 		for(i=0;i<ALLOC_BLOCK_NUM;i++){
@@ -137,6 +156,7 @@ void free_temp_str(char* str){
 	for(i=26;i<ALLOC_VAR_NUM;i++){
 		if (g_var_pointer[i]==pointer) {
 			if (g_var_size[i] && g_var_mem[i]==(int)str) {
+				register_deleted_block(pointer,g_var_size[i]);
 				g_var_size[i]=0;
 			}
 		}
@@ -151,6 +171,7 @@ void free_non_temp_str(char* str){
 	for(i=0;i<26;i++){
 		if (g_var_pointer[i]==pointer) {
 			if (g_var_size[i] && g_var_mem[i]==(int)str) {
+				register_deleted_block(pointer,g_var_size[i]);
 				g_var_size[i]=0;
 				g_var_mem[i]=0;
 			}
@@ -159,8 +180,10 @@ void free_non_temp_str(char* str){
 	for(i=ALLOC_VAR_NUM;i<ALLOC_BLOCK_NUM;i++){
 		if (g_var_pointer[i]==pointer && g_var_size[i]) {
 			if (g_var_size[i] && g_var_mem[i]==(int)str) {
+				register_deleted_block(pointer,g_var_size[i]);
 				g_var_size[i]=0;
 				g_var_mem[i]=0;
+				if (ALLOC_PERM_BLOCK<=i) g_temp_var_num_candidate=i;
 			}
 		}
 	}
@@ -175,7 +198,9 @@ void free_perm_str(char* str){
 	for(i=ALLOC_PERM_BLOCK;i<ALLOC_BLOCK_NUM;i++){
 		if (g_var_pointer[i]==pointer) {
 			if (g_var_size[i] && g_var_mem[i]==(int)str) {
+				register_deleted_block(pointer,g_var_size[i]);
 				g_var_size[i]=0;
+				g_temp_var_num_candidate=i;
 				break;
 			}
 		}
@@ -185,10 +210,7 @@ void free_perm_str(char* str){
 void move_to_perm_block(int var_num){
 	int i;
 	// Find available permanent block
-	for (i=ALLOC_PERM_BLOCK;i<ALLOC_BLOCK_NUM;i++){
-		if (g_var_size[i]==0) break;
-	}
-	if (ALLOC_BLOCK_NUM<=i) err_no_block(); // Not found
+	i=get_permanent_var_num();
 	// Available block found.
 	// Copy value from variable.
 	g_var_size[i]=g_var_size[var_num];
@@ -214,6 +236,7 @@ int move_from_perm_block_if_exists(int var_num){
 	g_var_pointer[var_num]=g_var_pointer[i];
 	// Clear block
 	g_var_size[i]=0;
+	g_temp_var_num_candidate=i;
 	return 1;
 }
 
@@ -224,8 +247,19 @@ void move_from_perm_block(int var_num){
 
 int get_permanent_var_num(){
 	int i;
+	// Try candidate first
+	if (!g_var_size[g_temp_var_num_candidate]) {
+		if (ALLOC_PERM_BLOCK<g_temp_var_num_candidate && 
+				g_temp_var_num_candidate<ALLOC_BLOCK_NUM) {
+			return g_temp_var_num_candidate++;
+		}
+	}
+	// Candidate is not available. Seek all.
 	for (i=ALLOC_PERM_BLOCK;i<ALLOC_BLOCK_NUM;i++) {
-		if (g_var_size[i]==0) return i;
+		if (g_var_size[i]==0) {
+			g_temp_var_num_candidate=i+1;
+			return i;
+		}
 	}
 	err_no_block();
 	return 0;
@@ -241,14 +275,8 @@ int get_varnum_from_address(void* address){
 }
 
 void* lib_calloc_memory(int size){
-	int i;
-	// Find available permanent block
-	for (i=ALLOC_PERM_BLOCK;i<ALLOC_BLOCK_NUM;i++){
-		if (g_var_size[i]==0) break;
-	}
-	if (ALLOC_BLOCK_NUM<=i) err_no_block(); // Not found
 	// Allocate memory and return address
-	return calloc_memory(size,i);
+	return calloc_memory(size,get_permanent_var_num());
 }
 
 void lib_delete(int* object){

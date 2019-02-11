@@ -10,6 +10,7 @@
 */
 
 var filearray=[
+	'args.c',
 	'class.c',
 	'cmpdata.c',
 	'compiler.c',

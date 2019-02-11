@@ -232,15 +232,17 @@ char* get_value(){
 		prevpos=g_objpos;
 		// Stack decrement command will be filled later
 		check_obj_space(1);
-		g_objpos++;
+		g_object[g_objpos++]=0x00000000; // nop (will be replaced by "addiu sp,sp,-xx")
 	}
 	err=get_value_sub(priority(OP_VOID));
 	if (err) return err;
 	if (g_sdepth==0) {
 		if (g_maxsdepth==0) {
 			// Stack was not used.
-			shift_obj(&g_object[prevpos+1],&g_object[prevpos],g_objpos-prevpos-1);
-			g_objpos--;
+			if (g_allow_shift_obj) {
+				shift_obj(&g_object[prevpos+1],&g_object[prevpos],g_objpos-prevpos-1);
+				g_objpos--;
+			}
 		} else {
 			// Stack was used.
 			check_obj_space(1);

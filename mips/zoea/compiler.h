@@ -189,6 +189,7 @@ extern unsigned int g_rnd_seed;
 extern unsigned int g_label;
 extern int g_sdepth;
 extern int g_maxsdepth;
+extern char g_allow_shift_obj;
 extern enum variable g_lastvar;
 extern char* g_source;
 extern int g_srcpos;
@@ -333,7 +334,12 @@ char* register_var_name(int nameint);
 
 char* update_class_info(int class);
 char* construct_class_structure(int class);
-void delete_cmpdata_for_class();
+void delete_cmpdata_for_class(int class);
+
+extern const unsigned int g_initial_s5_stack[3];
+char* prepare_args_stack(char start_char);
+char* remove_args_stack(void);
+char* args_function_main(void);
 
 char* begin_compiling_class(int class);
 char* end_compiling_class(int class);
@@ -344,7 +350,10 @@ char* string_obj_field();
 char* float_obj_field();
 int lib_obj_field(int* object, int fieldname);
 int lib_pre_method(int* object, int methodname);
-int lib_post_method(int* object, int methodname, int v0);
+int lib_post_method(int* object, int v0);
+int lib_save_vars_to_fields(int* object,int v0);
+int lib_load_vars_from_fields(int* object, int v0);
+
 char* method_statement();
 char* delete_statement();
 char* call_statement();
@@ -352,6 +361,7 @@ void lib_let_str_field(char* str, char* prev_str);
 char* let_object_field();
 char* static_statement();
 char* static_method(char type);
+char* resolve_unresolved(int class);
 
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])
@@ -390,6 +400,24 @@ char* static_method(char type);
 #define CMPDATA_CLASS    2
 #define CMPDATA_FIELD    3
 #define CMPDATA_STATIC   4
+#define CMPDATA_UNSOLVED 5
+// Sub types follow
+#define CMPTYPE_PUBLIC_FIELD 0
+#define CMPTYPE_PRIVATE_FIELD 1
+#define CMPTYPE_PUBLIC_METHOD 2
+#define CMPTYPE_NEW_FUNCTION 0
+#define CMPTYPE_STATIC_METHOD 1
+
+
+/* Stack position for values in args.c */
+#define ARGS_SP_SP       4
+#define ARGS_SP_V0_OBJ   8
+#define ARGS_SP_PREV_S5  12
+#define ARGS_SP_NUM_ARGS 16
+#define ARGS_S5_SP       (-12 & 0xFFFF)
+#define ARGS_S5_V0_OBJ   (-8  & 0xFFFF)
+#define ARGS_S5_PREV_S5  (-4  & 0xFFFF)
+#define ARGS_S5_NUM_ARGS (0   & 0xFFFF)
 
 /*
 	Hidden varname 31 bit values
@@ -439,6 +467,7 @@ char* static_method(char type);
 #define ASM_ADDU_A3_V0_ZERO 0x00403821
 #define ASM_ORI_A0_ZERO_ 0x34040000
 #define ASM_LW_A0_XXXX_S8 0x8FC40000
+#define ASM_LW_A0_XXXX_S5 0x8EA40000
 
 // Division macro for unsigned long
 // Valid for 31 bits for all cases and 32 bits for some cases
