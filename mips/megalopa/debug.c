@@ -228,8 +228,7 @@ static const char initext[]=
 static const char bastext[]=
 "USECLASS CLASS1\n"
 "CLS\n"
-"a=new(CLASS1)\n"
-"print a.T3()\n"
+"print CLASS1::T3()\n"
 "\n"
 "\n"
 "\n"

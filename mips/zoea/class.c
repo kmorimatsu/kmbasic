@@ -824,6 +824,7 @@ char* static_method(char type){
 
 	}
 	if (g_source[g_srcpos]!='(') return ERR_SYNTAX;
+	g_srcpos++;
 	// Begin parameter(s) construction routine
 	check_obj_space(1);
 	g_object[g_objpos++]=0x34020000; // ori v0,zero,0
