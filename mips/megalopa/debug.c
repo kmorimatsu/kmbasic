@@ -32,7 +32,8 @@ const unsigned char _debug_filename[] __attribute__((address(FILENAME_FLASH_ADDR
 
 static const char initext[];
 static const char bastext[];
-static const char classtext[];
+static const char class1text[];
+static const char class2text[];
 
 static char* readtext;
 static int filepos;
@@ -130,10 +131,12 @@ FSFILE* FSfopen(const char * fileName, const char *mode){
 		// INI file
 		readtext=(char*)&initext[0];
 	} else if (fileName[i+1]=='B' && fileName[i+2]=='A' && fileName[i+3]=='S') {
-		// BAS file
+		// Select BAS file
 		if (fileName[i-6]=='C' && fileName[i-5]=='L' && fileName[i-4]=='A' &&
-			fileName[i-3]=='S' && fileName[i-2]=='S' && fileName[i-1]=='1') {
-			readtext=(char*)&classtext[0];
+			fileName[i-3]=='S' && fileName[i-2]=='S') {
+			if (fileName[i-1]=='1') readtext=(char*)&class1text[0];
+			else if (fileName[i-1]=='2') readtext=(char*)&class2text[0];
+			else readtext=(char*)&bastext[0];
 		} else {
 			readtext=(char*)&bastext[0];
 		}
@@ -228,36 +231,29 @@ static const char initext[]=
 static const char bastext[]=
 "USECLASS CLASS1\n"
 "CLS\n"
-"dim o(95),v(95)\n"
-"for i=1 to 85\n"
-" o(i)=new(CLASS1)\n"
-"next\n"
-"for i=1 to 100\n"
-" for j=1 to 85\n"
-"  v(j)=rnd()\n"
-"  o(j).T1=v(j)\n"
-" next\n"
-" for j=86 to 95\n"
-"  o(j)=new(CLASS1)\n"
-" next\n"
-" for j=86 to 95\n"
-"  DELETE o(j)\n"
-" next\n"
-" for j=1 to 85\n"
-"  if v(j)!=o(j).T1 then print \"ERR\":end\n"
-" next\n"
-"next\n"
-"print \"OK\"\n"
-"\n"
+"a=new(CLASS1)"
+"print a.T1()\n"
 "\n"
 "\n"
 "\n";
 
+static const char class1text[]=
+"useclass CLASS2\n"
+"field private T2\n"
+"method INIT\n"
+" T2=new(CLASS2)\n"
+" return\n"
+"METHOD T1\n"
+" return T2.T1()\n"
+"method T3\n"
+" return 456\n"
+"\n"
+"\n";
 
-static const char classtext[]=
-"FIELD T1,T2\n"
-"METHOD T3\n"
-" return 123\n"
+static const char class2text[]=
+"useclass CLASS1\n"
+"method T1\n"
+" return CLASS1::T3()\n"
 "\n"
 "\n"
 "\n"
