@@ -229,31 +229,34 @@ static const char initext[]=
 
 
 static const char bastext[]=
-"USECLASS CLASS1\n"
+"USECLASS CLASS1,CLASS2\n"
 "CLS\n"
-"a=new(CLASS1)"
-"print a.T1()\n"
-"\n"
+"CLASS1::T1=123\n"
+"CLASS2::T2=456\n"
+"print CLASS1::T3(),\n"
+"print CLASS2::T4(),\n"
+"print CLASS1::T5(),\n"
+"print CLASS2::T6(),\n"
 "\n"
 "\n";
 
 static const char class1text[]=
+"STATIC T1\n"
 "useclass CLASS2\n"
-"field private T2\n"
-"method INIT\n"
-" T2=new(CLASS2)\n"
-" return\n"
-"METHOD T1\n"
-" return T2.T1()\n"
 "method T3\n"
-" return 456\n"
+" return CLASS2::T2\n"
+"method T5\n"
+" return T1\n"
 "\n"
 "\n";
 
 static const char class2text[]=
+"STATIC T2\n"
 "useclass CLASS1\n"
-"method T1\n"
-" return CLASS1::T3()\n"
+"method T4\n"
+" return CLASS1::T1\n"
+"method T6\n"
+" return T2\n"
 "\n"
 "\n"
 "\n"
