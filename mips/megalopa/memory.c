@@ -32,15 +32,17 @@ static int g_deleted_num;
 static int g_deleted_pointer[DELETE_LIST_SIZE];
 static int g_deleted_size[DELETE_LIST_SIZE];
 
-
-#define register_deleted_block(x,y) \
-	do {\
-		if (g_deleted_num<DELETE_LIST_SIZE) {\
-			g_deleted_pointer[g_deleted_num]=(x);\
-			g_deleted_size[g_deleted_num]=(y);\
-			g_deleted_num++;\
-		}\
-	} while(0)
+void register_deleted_block(int pointer, int size){
+	// There is maximum
+	if (DELETE_LIST_SIZE<=g_deleted_num) return;
+	if (g_deleted_num) {
+		// Avoid duplication
+		if (g_deleted_pointer[g_deleted_num-1]==pointer) return;
+	}
+	g_deleted_pointer[g_deleted_num]=pointer;
+	g_deleted_size[g_deleted_num]=size;
+	g_deleted_num++;
+} 
 
 void set_free_area(void* begin, void* end){
 	// Initialize heap area
@@ -106,20 +108,25 @@ void* _alloc_memory_main(int size, int var_num){
 	g_var_size[var_num]=0;
 	g_var_pointer[var_num]=0;
 	while(1){
-		// Try the block previously deleted
-		candidate=0;
-		while(g_deleted_num){
-			// Check if the last deleted block fits
-			// If not, these cannot be used anymore
-			g_deleted_num--;
-			if (size<=g_deleted_size[g_deleted_num]) {
-				candidate=g_deleted_pointer[g_deleted_num];
+		// Try the block previously deleted, not for temporary block.
+		// This is for fast allocation of memory for class object.
+		// Note that the temporary areas can be invaded for following purpose
+		// because these are temporary ones.
+		if (var_num<26 || ALLOC_VAR_NUM<=var_num) {
+			candidate=0;
+			while(g_deleted_num){
+				// Check if the last deleted block fits
+				// If not, these cannot be used anymore
+				g_deleted_num--;
+				if (size<=g_deleted_size[g_deleted_num]) {
+					candidate=g_deleted_pointer[g_deleted_num];
+					break;
+				}
+			}
+			if (candidate || g_deleted_num) {
+				// Candidate found
 				break;
 			}
-		}
-		if (candidate || g_deleted_num) {
-			// Candidate found
-			break;
 		}
 		// Try the block after last block
 		candidate=0;
@@ -193,7 +200,7 @@ void free_non_temp_str(char* str){
 		}
 	}
 	for(i=ALLOC_VAR_NUM;i<ALLOC_BLOCK_NUM;i++){
-		if (g_var_pointer[i]==pointer && g_var_size[i]) {
+		if (g_var_pointer[i]==pointer) {
 			if (g_var_size[i] && g_var_mem[i]==(int)str) {
 				register_deleted_block(pointer,g_var_size[i]);
 				g_var_size[i]=0;

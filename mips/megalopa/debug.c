@@ -229,14 +229,21 @@ static const char initext[]=
 
 
 static const char bastext[]=
-"USECLASS CLASS1,CLASS2\n"
+"USECLASS CLASS1\n"
 "CLS\n"
-"CLASS1::T1=123\n"
-"CLASS2::T2=456\n"
-"print CLASS1::T3(),\n"
-"print CLASS2::T4(),\n"
-"print CLASS1::T5(),\n"
-"print CLASS2::T6(),\n"
+"dim o(9)\n"
+"for j=1 to 100\n"
+" cursor 0,0\n"
+" for i=1 to 9\n"
+"   o(i)=new(CLASS1)\n"
+" next\n"
+" for i=1 to 9\n"
+"  a=o(i)\n"
+"  print hex$(a),\n"
+"  delete a\n"
+" next\n"
+"next\n"
+"\n"
 "\n"
 "\n";
 
