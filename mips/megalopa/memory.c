@@ -110,8 +110,6 @@ void* _alloc_memory_main(int size, int var_num){
 	while(1){
 		// Try the block previously deleted, not for temporary block.
 		// This is for fast allocation of memory for class object.
-		// Note that the temporary areas can be invaded for following purpose
-		// because these are temporary ones.
 		if (var_num<26 || ALLOC_VAR_NUM<=var_num) {
 			candidate=0;
 			while(g_deleted_num){
@@ -136,7 +134,29 @@ void* _alloc_memory_main(int size, int var_num){
 				candidate=g_var_pointer[i]+g_var_size[i];
 			}
 		}
-		if (candidate+size<=g_max_mem) break;
+		if (candidate+size<=g_max_mem) {
+			// Check after deleted block
+			j=candidate;
+			for(i=0;i<g_deleted_num;i++){
+				if (j<g_deleted_pointer[i]+g_deleted_size[i]) {
+					j=g_deleted_pointer[i]+g_deleted_size[i];
+				}
+			}
+			if (j+size<=g_max_mem) {
+				// Candidate block found after previously deleted blokcs
+				candidate=j;
+				break;
+			} else {
+				// Candidate is before previously deleted blocks,
+				// and there is no candidate block after previously deleted blocks.
+				// Therefore, use the current candidate, which may invade previously
+				// deleted blocks. Therefore, erase the previously deleted blocks list.
+				g_deleted_num=0;
+				break;
+			}
+		}
+		// Peviously deleted blocks cannot be used any more
+		g_deleted_num=0;
 		// Check between blocks
 		// Note that there is at least one block with zero pointer and zero size (see above).
 		for(i=0;i<ALLOC_BLOCK_NUM;i++){
