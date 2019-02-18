@@ -109,7 +109,7 @@ char* compile_file(){
 }
 
 int compile_and_link_file(char* buff,char* appname){
-	int i;
+	int i,j;
 	char* err;
 
 	while(1){
@@ -129,7 +129,9 @@ int compile_and_link_file(char* buff,char* appname){
 
 		// If compiling a class file is required, do it.
 		if (err==ERR_COMPILE_CLASS) {
+			j=g_compiling_class;
 			i=compile_and_link_class(buff, g_class);
+			g_compiling_class=j;
 			if (i) return i;
 			// Continue compiling current file from the beginning.
 			continue;

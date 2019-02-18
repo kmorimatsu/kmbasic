@@ -790,6 +790,7 @@ char* static_method(char type){
 	// Check class name
 	i=check_var_name();
 	if (i<65536) return ERR_SYNTAX;
+	record[0]=i;
 	// Check if the class exists
 	cmpdata_reset();
 	while(data=cmpdata_find(CMPDATA_CLASS)){
@@ -799,7 +800,6 @@ char* static_method(char type){
 			break;
 		}
 	}
-	record[0]=i;
 	// Check '::'
 	if (g_source[g_srcpos]!=':') return ERR_SYNTAX;
 	g_srcpos++;
@@ -844,7 +844,7 @@ char* static_method(char type){
 		                                                        // label2:	
 	// Register CMPDATA if required.
 	if (!data) {
-		cmpdata_insert(CMPDATA_UNSOLVED,CMPTYPE_STATIC_METHOD,(int*)record[0],3);
+		cmpdata_insert(CMPDATA_UNSOLVED,CMPTYPE_STATIC_METHOD,(int*)&record[0],3);
 		g_allow_shift_obj=0;
 	}
 	// Remove stack

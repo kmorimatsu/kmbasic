@@ -26,22 +26,33 @@
 */
 
 static int g_temp_var_num_candidate=ALLOC_PERM_BLOCK;
-static int g_last_deleted_pointer;
-static int g_last_deleted_size=0;
 
-#define register_deleted_block(x,y) \
-	do {\
-		g_last_deleted_pointer=(x);\
-		g_last_deleted_size=(y);\
-	} while(0)
+#define DELETE_LIST_SIZE 10
+static int g_deleted_num;
+static int g_deleted_pointer[DELETE_LIST_SIZE];
+static int g_deleted_size[DELETE_LIST_SIZE];
+
+void register_deleted_block(int pointer, int size){
+	// There is maximum
+	if (DELETE_LIST_SIZE<=g_deleted_num) return;
+	if (g_deleted_num) {
+		// Avoid duplication
+		if (g_deleted_pointer[g_deleted_num-1]==pointer) return;
+	}
+	g_deleted_pointer[g_deleted_num]=pointer;
+	g_deleted_size[g_deleted_num]=size;
+	g_deleted_num++;
+} 
 
 void set_free_area(void* begin, void* end){
+	// Initialize heap area
 	int i;
 	for(i=0;i<ALLOC_BLOCK_NUM;i++){
 		g_var_size[i]=0;
 	}
 	g_heap_mem=(int*)begin;
 	g_max_mem=(int)((end-begin)/4);
+	g_deleted_num=0;
 }
 
 void* calloc_memory(int size, int var_num){
@@ -97,14 +108,23 @@ void* _alloc_memory_main(int size, int var_num){
 	g_var_size[var_num]=0;
 	g_var_pointer[var_num]=0;
 	while(1){
-		// Try the block previously deleted
-		if (size<=g_last_deleted_size) {
-			g_last_deleted_size=0;
-			candidate=g_last_deleted_pointer;
-			break;
-		} else {
-			// Last deleted block is a candidate only once
-			g_last_deleted_size=0;
+		// Try the block previously deleted, not for temporary block.
+		// This is for fast allocation of memory for class object.
+		if (var_num<26 || ALLOC_VAR_NUM<=var_num) {
+			candidate=0;
+			while(g_deleted_num){
+				// Check if the last deleted block fits
+				// If not, these cannot be used anymore
+				g_deleted_num--;
+				if (size<=g_deleted_size[g_deleted_num]) {
+					candidate=g_deleted_pointer[g_deleted_num];
+					break;
+				}
+			}
+			if (candidate || g_deleted_num) {
+				// Candidate found
+				break;
+			}
 		}
 		// Try the block after last block
 		candidate=0;
@@ -114,7 +134,29 @@ void* _alloc_memory_main(int size, int var_num){
 				candidate=g_var_pointer[i]+g_var_size[i];
 			}
 		}
-		if (candidate+size<=g_max_mem) break;
+		if (candidate+size<=g_max_mem) {
+			// Check after deleted block
+			j=candidate;
+			for(i=0;i<g_deleted_num;i++){
+				if (j<g_deleted_pointer[i]+g_deleted_size[i]) {
+					j=g_deleted_pointer[i]+g_deleted_size[i];
+				}
+			}
+			if (j+size<=g_max_mem) {
+				// Candidate block found after previously deleted blokcs
+				candidate=j;
+				break;
+			} else {
+				// Candidate is before previously deleted blocks,
+				// and there is no candidate block after previously deleted blocks.
+				// Therefore, use the current candidate, which may invade previously
+				// deleted blocks. Therefore, erase the previously deleted blocks list.
+				g_deleted_num=0;
+				break;
+			}
+		}
+		// Peviously deleted blocks cannot be used any more
+		g_deleted_num=0;
 		// Check between blocks
 		// Note that there is at least one block with zero pointer and zero size (see above).
 		for(i=0;i<ALLOC_BLOCK_NUM;i++){
@@ -178,7 +220,7 @@ void free_non_temp_str(char* str){
 		}
 	}
 	for(i=ALLOC_VAR_NUM;i<ALLOC_BLOCK_NUM;i++){
-		if (g_var_pointer[i]==pointer && g_var_size[i]) {
+		if (g_var_pointer[i]==pointer) {
 			if (g_var_size[i] && g_var_mem[i]==(int)str) {
 				register_deleted_block(pointer,g_var_size[i]);
 				g_var_size[i]=0;
