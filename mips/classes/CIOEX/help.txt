@@ -1,6 +1,6 @@
 ＜クラス名およびバージョン＞
 CIOEX
-ver 0.11
+ver 0.12
 
 ＜ファイル名＞
 CIOEX.BAS
@@ -23,60 +23,60 @@ TRISA()
 	現在のTRISA値を返す。TRIS値は、ポートを入力で使うか出力で使うかの値で、ビッ
 	トごとに１で入力、０で出力。デフォルトは、0xFF（全て入力）。
 
-TRISA x
+TRISA(x)
 	TRISA値を、８ビットの値、xで指定。
 
-TRISA x,y
+TRISA(x,y)
 	TRISA値の、下位からxビット目を、yに指定。
 
 TRISB()
 	現在のTRISB値を返す。TRIS値は、ポートを入力で使うか出力で使うかの値で、ビッ
 	トごとに１で入力、０で出力。デフォルトは、0xFF（全て入力）。
 
-TRISB x
+TRISB(x)
 	TRISB値を、８ビットの値、xで指定。
 
-TRISB x,y
+TRISB(x,y)
 	TRISB値の、下位からxビット目を、yに指定。
 
 LATA()
 	現在のLATA値を返す。LAT値は、ポートを出力で使う場合の出力値で、ビットごと
 	に設定。デフォルトは、0x00（全て0を出力）。
 
-LATA x
+LATA(x)
 	LATA値を、８ビットの値、xで指定。
 
-LATA x,y
+LATA(x,y)
 	LATA値の、下位からxビット目を、yに指定。
 
 LATB()
 	現在のLATB値を返す。LAT値は、ポートを出力で使う場合の出力値で、ビットごと
 	に設定。デフォルトは、0x00（全て0を出力）。
 
-LATB x
+LATB(x)
 	LATB値を、８ビットの値、xで指定。
 
-LATB x,y
+LATB(x,y)
 	LATB値の、下位からxビット目を、yに指定。
 
 CNPUA()
 	現在のCNPUA値を返す。CNPU値は、ポートを入力で使う場合のプルアップの設定で、
 	ビットごとに１で使用、０で不使用。デフォルトは、0x00（全て不使用）。
 
-CNPUA x
+CNPUA(x)
 	CNPUA値を、８ビットの値、xで指定。
 
-CNPUA x,y
+CNPUA(x,y)
 	CNPUA値の、下位からxビット目を、yに指定。
 
 CNPUB()
 	現在のCNPUB値を返す。CNPU値は、ポートを入力で使う場合のプルアップの設定で、
 	ビットごとに１で使用、０で不使用。デフォルトは、0x00（全て不使用）。
 
-CNPUB x
+CNPUB(x)
 	CNPUB値を、８ビットの値、xで指定。
 
-CNPUB x,y
+CNPUB(x,y)
 	CNPUB値の、下位からxビット目を、yに指定。
 
 PORTA()

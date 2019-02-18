@@ -1,4 +1,4 @@
-REM CIOEX.BAS ver 0.11
+REM CIOEX.BAS ver 0.12
 REM Class CIOEX for MachiKania Type M 
 REM using I/O expander MCP23017
 
@@ -13,7 +13,7 @@ REM   (default 400)
 METHOD INIT
   REM Address setting
   if 1<=args(0) then ADDR7=args(1) else ADDR7=0
-  ADDR7=0x20 | (ADDR7 and 0x07)
+  ADDR7=0x20 OR (ADDR7 and 0x07)
   REM Initialize I2C
   if 2<=args(0) then I2C args(2) else I2C 400
   REM Initialize MCP23017
@@ -40,7 +40,7 @@ REM TRISA x:   Set byte value
 REM TRISA x,y: Set bit value
 METHOD TRISA
   if args(0)=0 then return TRISAV
-  if args(1)=1 then
+  if args(0)=1 then
     gosub SET8,&TRISAV,0x00,args(1)
   else
     gosub SETBIT,&TRISAV,0x00,args(1),args(2)
@@ -52,7 +52,7 @@ REM TRISB x:   Set byte value
 REM TRISB x,y: Set bit value
 METHOD TRISB
   if args(0)=0 then return TRISBV
-  if args(1)=1 then
+  if args(0)=1 then
     gosub SET8,&TRISBV,0x01,args(1)
   else
     gosub SETBIT,&TRISBV,0x01,args(1),args(2)
@@ -64,7 +64,7 @@ REM LATA x:   Set byte value
 REM LATA x,y: Set bit value
 METHOD LATA
   if args(0)=0 then return LATAV
-  if args(1)=1 then
+  if args(0)=1 then
     gosub SET8,&LATAV,0x14,args(1)
   else
     gosub SETBIT,&LATAV,0x14,args(1),args(2)
@@ -76,7 +76,7 @@ REM LATB x:   Set byte value
 REM LATB x,y: Set bit value
 METHOD LATB
   if args(0)=0 then return LATBV
-  if args(1)=1 then
+  if args(0)=1 then
     gosub SET8,&LATBV,0x15,args(1)
   else
     gosub SETBIT,&LATBV,0x15,args(1),args(2)
@@ -88,7 +88,7 @@ REM CNPUA x:   Set byte value
 REM CNPUA x,y: Set bit value
 METHOD CNPUA
   if args(0)=0 then return CNPUAV
-  if args(1)=1 then
+  if args(0)=1 then
     gosub SET8,&CNPUAV,0x0C,args(1)
   else
     gosub SETBIT,&CNPUAV,0x0C,args(1),args(2)
@@ -100,7 +100,7 @@ REM CNPUB x:   Set byte value
 REM CNPUB x,y: Set bit value
 METHOD CNPUB
   if args(0)=0 then return CNPUBV
-  if args(1)=1 then
+  if args(0)=1 then
     gosub SET8,&CNPUBV,0x0D,args(1)
   else
     gosub SETBIT,&CNPUBV,0x0D,args(1),args(2)
