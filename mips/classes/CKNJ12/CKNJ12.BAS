@@ -1,14 +1,14 @@
-REM CKNJ16.BAS ver 0.11
-REM Class CKNJ16 for MachiKania Type Z/M
-REM using Shinonome 16x16 font
+REM CKNJ16.BAS ver 0.1
+REM Class CKNJ12 for MachiKania Type Z/M
+REM using Shinonome 12x12 font
 
 STATIC PRIVATE MODE,FBUFF,FO,PLT,BMPF
 
 METHOD INIT
-  REM File buffer size is 32 bytes
-  dim FBUFF(7)
-  REM 16x16 bytes matrix for PUTBMP
-  dim BMPF(63)
+  REM File buffer size is 18 bytes
+  dim FBUFF(4)
+  REM 12x12 bytes matrix for PUTBMP
+  dim BMPF(35)
   REM Set encoding
   REM MODE: either "EUC-JP", or "UTF-8"
   if 0<args(0) then
@@ -42,33 +42,48 @@ LABEL GPRTCH
   var i,x,y
   REM Create BMP from font file
   gosub FGETCH,args(1)
-  for y=0 to 15
-    i=peek(FBUFF+y*2)
+  for y=0 to 5
+    i=peek(FBUFF+y*3)
     for x=0 to 7
       if i and (1<<(7-x)) then
-        poke BMPF+y*16+x,PLT>>8
+        poke BMPF+y*24+x,PLT>>8
       else
-        poke BMPF+y*16+x,PLT and 0xff
+        poke BMPF+y*24+x,PLT and 0xff
       endif
     next
-    i=peek(FBUFF+y*2+1)
-    for x=8 to 15
+    i=peek(FBUFF+y*3+1)
+    for x=8 to 11
       if i and (1<<(15-x)) then
-        poke BMPF+y*16+x,PLT>>8
+        poke BMPF+y*24+x,PLT>>8
       else
-        poke BMPF+y*16+x,PLT and 0xff
+        poke BMPF+y*24+x,PLT and 0xff
+      endif
+    next
+    for x=0 to 3
+      if i and (1<<(3-x)) then
+        poke BMPF+(y*2+1)*12+x,PLT>>8
+      else
+        poke BMPF+(y*2+1)*12+x,PLT and 0xff
+      endif
+    next
+    i=peek(FBUFF+y*3+2)
+    for x=4 to 11
+      if i and (1<<(11-x)) then
+        poke BMPF+(y*2+1)*12+x,PLT>>8
+      else
+        poke BMPF+(y*2+1)*12+x,PLT and 0xff
       endif
     next
   next
   REM Draw in graphic
   x=SYSTEM(28)
   y=SYSTEM(29)
-  putbmp x,y,16,16,BMPF
-  if x+32<SYSTEM(22) then
-    x=x+16
+  putbmp x,y,12,12,BMPF
+  if x+24<SYSTEM(22) then
+    x=x+12
   else
     x=0
-    y=y+16
+    y=y+12
   endif
   point x,y
   return
@@ -82,9 +97,9 @@ LABEL FGETCH
     REM open it 
     FO=1
     if 2=MODE then
-      fopen "SINONOME.UNI","r"
+      fopen "SHNMK12.UNI","r"
     else
-      fopen "SINONOME.JIS","r"
+      fopen "SHNMK12.JIS","r"
     endif
   endif
   p=args(1)
@@ -114,12 +129,12 @@ LABEL FGETCH
     REM EUC
     p=p-0xa1a1
   endif
-  p=p*32
-  if 0<=p and p+32<flen() then
+  p=p*18
+  if 0<=p and p+18<flen() then
     fseek p
-    fget FBUFF,32
+    fget FBUFF,18
   else
-    for p=0 to 7
+    for p=0 to 4
       FBUFF(p)=0
     next
   endif

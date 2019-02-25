@@ -1,14 +1,14 @@
 ＜クラス名およびバージョン＞
-CKNJ16
-ver 0.11
+CKNJ12
+ver 0.1
 
 ＜ファイル名＞
-CKNJ16.BAS
-SINONOME.JIS
-SINONOME.UNI
+CKNJ12.BAS
+SHNMK12.JIS
+SHNMK12.UNI
 
 ＜概要＞
-日本語表示クラス。東雲フォント(16x16)を使用し、グラフィックディスプレイに日本語を
+日本語表示クラス。東雲フォント(12x12)を使用し、グラフィックディスプレイに日本語を
 含む文字列を表示する。文字コードは、EUC-JP, UTF-8に対応。
 
 ＜コンストラクター＞
@@ -28,18 +28,18 @@ GPRT(x$,y,z)
 テキストモードでの日本語表示例。この場合は、BASファイルをUTF-8(BOMなし)で保存す
 る事。
 
-USECLASS CKNJ16
+USECLASS CKNJ12
 USEGRAPHIC
 POINT 50,50
-K=new(CKNJ16,"UTF-8")
+K=new(CKNJ12,"UTF-8")
 K.GPRT("本日は晴天なり",7,0)
 A$=INPUT$()
 
 次のように使用する事も出来る。
 
-USECLASS CKNJ16
+USECLASS CKNJ12
 USEGRAPHIC
 POINT 50,50
-CKNJ16::INIT("UTF-8")
-CKNJ16::GPRT("本日は晴天なり",7,0)
+CKNJ12::INIT("UTF-8")
+CKNJ12::GPRT("本日は晴天なり",7,0)
 A$=INPUT$()

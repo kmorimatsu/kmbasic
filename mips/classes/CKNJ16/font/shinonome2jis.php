@@ -2,7 +2,7 @@
 
 /*
 
-	Binary font file generator for Misaki 8x8 font.
+	Binary font file generator for Shinonome 16x16 font.
 	Place 'shnmk16.bdf' in the same directory and run this script.
 	The font file is used for EUC-JP.
 	On 2/23/2019, Shinonome font is available from: https://www.mgo-tec.com/kanji-font-shinonome
