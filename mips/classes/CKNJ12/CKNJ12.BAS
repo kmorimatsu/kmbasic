@@ -1,4 +1,4 @@
-REM CKNJ16.BAS ver 0.1
+REM CKNJ12.BAS ver 0.1
 REM Class CKNJ12 for MachiKania Type Z/M
 REM using Shinonome 12x12 font
 
@@ -79,7 +79,7 @@ LABEL GPRTCH
   x=SYSTEM(28)
   y=SYSTEM(29)
   putbmp x,y,12,12,BMPF
-  if x+24<SYSTEM(22) then
+  if x+24<=SYSTEM(22) then
     x=x+12
   else
     x=0

@@ -64,7 +64,7 @@ LABEL GPRTCH
   x=SYSTEM(28)
   y=SYSTEM(29)
   putbmp x,y,16,16,BMPF
-  if x+32<SYSTEM(22) then
+  if x+32<=SYSTEM(22) then
     x=x+16
   else
     x=0
