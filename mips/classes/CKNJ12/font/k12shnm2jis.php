@@ -10,6 +10,44 @@
 
 */
 
+$tfile=file_get_contents('./shnm6x12a.bdf');
+$ftable=array();
+preg_replace_callback('/STARTCHAR[\s]+([0-9a-f]{2})[\s\S]*?(([0-9a-f]{2}[\s]+){12})/',function($m) use(&$ftable){
+	/* 0x23 # */
+	/* example:
+		STARTCHAR 23
+		ENCODING 35
+		SWIDTH 960 0
+		DWIDTH 6 0
+		BBX 6 12 0 -2
+		BITMAP
+		00
+		50
+		50
+		f8
+		50
+		50
+		50
+		f8
+		50
+		50
+		00
+		00
+		ENDCHAR
+	*/
+	$ftable[hexdec($m[1])]=preg_replace('/([0-9a-f]{2})[\s]+/','$1',$m[2]);
+},$tfile);
+//print_r($ftable);exit;
+
+$result='';
+for($code=0x20;$code<=0x7f;$code++){
+	for($i=0;$i<24;$i+=2){
+		$result.=chr(hexdec(substr($ftable[$code],$i,2)));
+	}
+}
+// half font area is 1152 bytes (12*96)
+//file_put_contents('./result',$result);exit;
+
 $tfile=file_get_contents('./shnmk12.bdf');
 $ftable=array();
 preg_replace_callback('/STARTCHAR[\s]+([0-9a-f]{4})[\s\S]*?(([0-9a-f]{4}[\s]+){12})/',function($m) use(&$ftable){
@@ -39,7 +77,6 @@ preg_replace_callback('/STARTCHAR[\s]+([0-9a-f]{4})[\s\S]*?(([0-9a-f]{4}[\s]+){1
 },$tfile);
 //print_r($ftable);exit;
 
-$result='';
 for($code=0x2121;$code<=0x7426;$code++){
 	if (isset($ftable[$code])) {
 		for($i=0;$i<36;$i+=2){

@@ -2,6 +2,7 @@
 /*
 
 	Binary font file generator for Shinonome 12x12 font.
+	Place 'shnm6x12a.bdf' in the same directory and run this script.
 	Place 'shnmk16.bdf' in the same directory and run this script.
 	Place 'JIS0208.TXT' in the same directory and run this script.
 	The font file is used for UTF-8.
@@ -10,6 +11,44 @@
 	Unicode - JIS table was obtained from: http://www.unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0208.TXT
 
 */
+
+$tfile=file_get_contents('./shnm6x12a.bdf');
+$ftable=array();
+preg_replace_callback('/STARTCHAR[\s]+([0-9a-f]{2})[\s\S]*?(([0-9a-f]{2}[\s]+){12})/',function($m) use(&$ftable){
+	/* 0x23 # */
+	/* example:
+		STARTCHAR 23
+		ENCODING 35
+		SWIDTH 960 0
+		DWIDTH 6 0
+		BBX 6 12 0 -2
+		BITMAP
+		00
+		50
+		50
+		f8
+		50
+		50
+		50
+		f8
+		50
+		50
+		00
+		00
+		ENDCHAR
+	*/
+	$ftable[hexdec($m[1])]=preg_replace('/([0-9a-f]{2})[\s]+/','$1',$m[2]);
+},$tfile);
+//print_r($ftable);exit;
+
+$result='';
+for($code=0x20;$code<=0x7f;$code++){
+	for($i=0;$i<24;$i+=2){
+		$result.=chr(hexdec(substr($ftable[$code],$i,2)));
+	}
+}
+// half font area is 1152 bytes (12*96)
+//file_put_contents('./result',$result);exit;
 
 $tfile=file_get_contents('./shnmk12.bdf');
 $ftable=array();
@@ -49,7 +88,6 @@ preg_replace_callback('/[\r\n]0x([0-9A-F]{4})[\s]+0x([0-9A-F]{4})[\s]+0x([0-9A-F
 	}
 },$tfile);
 
-$result='';
 for($code=0x0000;$code<=0xffff;$code++){
 	/*
 		Skip:
