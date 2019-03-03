@@ -1,4 +1,4 @@
-REM CKNJ16.BAS ver 0.11
+REM CKNJ16.BAS ver 0.2
 REM Class CKNJ16 for MachiKania Type Z/M
 REM using Shinonome 16x16 font
 
@@ -42,6 +42,10 @@ LABEL GPRTCH
   var i,x,y
   REM Create BMP from font file
   gosub FGETCH,args(1)
+  if args(1)<0x100 then
+    REM Half sized font
+    goto GPRTHS
+  endif
   for y=0 to 15
     i=peek(FBUFF+y*2)
     for x=0 to 7
@@ -63,14 +67,36 @@ LABEL GPRTCH
   REM Draw in graphic
   x=SYSTEM(28)
   y=SYSTEM(29)
-  putbmp x,y,16,16,BMPF
-  if x+32<=SYSTEM(22) then
-    x=x+16
-  else
+  if SYSTEM(22)<x+16 then
     x=0
     y=y+16
+    point x,y
   endif
-  point x,y
+  putbmp x,y,16,16,BMPF
+  point x+16,y
+  return
+
+LABEL GPRTHS
+  for y=0 to 15
+    i=peek(FBUFF+y)
+    for x=0 to 7
+      if i and (1<<(7-x)) then
+        poke BMPF+y*8+x,PLT>>8
+      else
+        poke BMPF+y*8+x,PLT and 0xff
+      endif
+    next
+  next
+  REM Draw in graphic
+  x=SYSTEM(28)
+  y=SYSTEM(29)
+  if SYSTEM(22)<x+8 then
+    x=0
+    y=y+16
+    point x,y
+  endif
+  putbmp x,y,8,16,BMPF
+  point x+8,y
   return
 
 REM Private medthod FGETCH
@@ -88,6 +114,12 @@ LABEL FGETCH
     endif
   endif
   p=args(1)
+  if 0x20<=p and p<=0x7f then
+    REM 7 bits half size font
+    fseek (p-0x20)*16
+    fget FBUFF,16
+    return
+  endif
   if 2=MODE then
     REM UTF-8
     if p<0x0500 then
@@ -114,7 +146,7 @@ LABEL FGETCH
     REM EUC
     p=p-0xa1a1
   endif
-  p=p*32
+  p=p*32+1536
   if 0<=p and p+32<flen() then
     fseek p
     fget FBUFF,32
@@ -151,9 +183,9 @@ LABEL EUCSTR
       i=i+2
       REM GPrint character
       gosub GPRTCH,j
-    elseif 0x20<b then
+    elseif 0x20<b and b<0x80 then
       REM 7 bit character
-      gosub GPRTCH,0xa3b0+b-0x30
+      gosub GPRTCH,b
       i=i+1
     endif
   wend
@@ -176,9 +208,9 @@ LABEL UTFSTR
       i=i+3
       REM GPrint character
       gosub GPRTCH,j
-    elseif 0x20<b then
+    elseif 0x20<b and b<0x80 then
       REM 7 bit character
-      gosub GPRTCH,0xff00+b-0x20
+      gosub GPRTCH,b
       i=i+1
     endif
   wend
