@@ -170,11 +170,14 @@ int compile_and_link_file(char* buff,char* appname){
 }
 
 int compile_and_link_class(char* buff,int class){
-	int i;
+	int i,j;
 	char* err;
 	char* classname;
 	char classfile[13];
+	char classdir[11];
 	int data[2];
+	unsigned short cwd_id;
+	int* record;
 	while(1){
 		// Begin compiling class
 		err=begin_compiling_class(class);
@@ -187,9 +190,41 @@ int compile_and_link_class(char* buff,int class){
 		classfile[i++]='A';
 		classfile[i++]='S';
 		classfile[i]=0;
-		// Compile it
-		i=compile_and_link_file(buff,&classfile[0]);
-		if (i) break;
+		// Check if file exists in current directory
+		err=init_file(buff,&classfile[0]);
+		if (!err) {
+			// Class file found in current directory
+			close_file();
+			// Compile it
+			i=compile_and_link_file(buff,&classfile[0]);
+			if (i) break;
+		} else {
+			// Class file not found in current directory.
+			// Try library directory, for example, \LIB\CLASS1\CLASS1.BAS
+			// Store current directory, first
+			if (!FSgetcwd(buff,256)) break;
+			for(i=0;buff[i];i++);
+			cwd_id=cmpdata_get_id();
+			if (!cwd_id) break;
+			err=cmpdata_insert(CMPDATA_TEMP,cwd_id,(int*)(&buff[0]),(i+1+3)>>2);
+			if (err) break;
+			// Change current directory to class library directory
+			for(i=0;classdir[i]="\\LIB\\"[i];i++);
+			for(j=0;classdir[i++]=classname[j];j++);
+			classdir[i]=0;
+			FSchdir(classdir);
+			// Compile class file
+			i=compile_and_link_file(buff,&classfile[0]);
+			// Restore current dirctory
+			cmpdata_reset();
+			while(record=cmpdata_find(CMPDATA_TEMP)){
+				if (cwd_id=(record[0]&0xffff)) break;
+			}
+			if (!record) break;
+			FSchdir((char*)(&record[1]));
+			cmpdata_delete(record);
+			if (i) break;
+		}
 		// End compiling class
 		err=end_compiling_class(class);
 		if (err) break;

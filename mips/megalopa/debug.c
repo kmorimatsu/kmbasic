@@ -227,22 +227,12 @@ static const char initext[]=
 "#PRINT\n"
 "#PRINT\n";
 
-
 static const char bastext[]=
-"USECLASS CLASS1\n"
-"CLS\n"
-"dim o(9)\n"
-"for j=1 to 100\n"
-" cursor 0,0\n"
-" for i=1 to 9\n"
-"   o(i)=new(CLASS1)\n"
-" next\n"
-" for i=1 to 9\n"
-"  a=o(i)\n"
-"  print hex$(a),\n"
-"  delete a\n"
-" next\n"
-"next\n"
+"print getdir$()\n"
+"end\n"
+"\n"
+"\n"
+"\n"
 "\n"
 "\n"
 "\n";
@@ -280,7 +270,14 @@ static const void* debugjumptable[]={
 
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
-	asm volatile("lw    $a0,-8($s5)");
+	asm volatile("lw $a0,4($s5)");
+	asm volatile("lw $a1,8($s5)");
+	asm volatile("lw $a2,12($s5)");
+	asm volatile("lw $a3,16($s5)");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");

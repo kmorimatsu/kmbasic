@@ -1,5 +1,5 @@
 REM CSWTIF.BAS ver 0.1
-REM Class CSWPNG for MachiKania Type M
+REM Class CSWTIF for MachiKania Type M
 REM for showing TIFF picture file
 
 REM FNAME: file name

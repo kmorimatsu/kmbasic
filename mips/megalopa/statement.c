@@ -1542,6 +1542,14 @@ char* useclass_statement(){
 	return 0;
 }
 
+char* setdir_statement(){
+	char* err;
+	err=get_string();
+	if (err) return err;
+	call_lib_code(LIB_SETDIR);
+	return 0;
+}
+
 #ifdef __DEBUG
 	char* debug_statement(){
 		call_lib_code(LIB_DEBUG);
@@ -1689,6 +1697,7 @@ static const void* statement_list[]={
 	"DELETE ",delete_statement,
 	"CALL ",call_statement,
 	"STATIC ",static_statement,
+	"SETDIR ",setdir_statement,
 	// List of additional statements follows
 	ADDITIONAL_STATEMENTS
 };

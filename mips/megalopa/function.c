@@ -379,6 +379,19 @@ char* playwave_function(){
 	return 0;
 }
 
+char* setdir_function(){
+	char* err;
+	err=get_string();
+	if (err) return err;
+	call_lib_code(LIB_SETDIRFUNC);
+	return 0;
+}
+
+char* getdir_function(){
+	call_lib_code(LIB_GETDIR);
+	return 0;
+}
+
 char* float_constant(float val){
 	volatile int i;
 	((float*)(&i))[0]=val;
@@ -498,6 +511,7 @@ static const void* str_func_list[]={
 	"FLOAT$(",floatstr_function,
 	"SYSTEM$(",system_function,
 	"FINPUT$(",finput_function,
+	"GETDIR$(",getdir_function,
 	// Additional functions follow
 	ADDITIONAL_STR_FUNCTIONS
 };
@@ -582,6 +596,7 @@ static const void* int_func_list[]={
 	"FEOF(",feof_function,
 	"PLAYWAVE(",playwave_function,
 	"NEW(",new_function,
+	"SETDIR(",setdir_function,
 	// Additional functions follow
 	ADDITIONAL_INT_FUNCTIONS
 };

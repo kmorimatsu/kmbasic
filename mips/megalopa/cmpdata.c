@@ -25,10 +25,22 @@
 			data16: general 16 bit data (short)
 */
 
+/*
+	CMPDATA_TEMP structure
+		type:      CMPDATA_TEMP (6)
+		len:       n+1
+		data16:    id
+		record[1]: any data
+		record[2]: any data
+		...
+		record[n]: any data
+*/
+
 #define g_cmpdata g_objmax
 
 static int* g_cmpdata_end;
 static int* g_cmpdata_point;
+static unsigned short g_cmpdata_id;
 
 /*
 	Initialize routine must be called when starting compiler.
@@ -36,6 +48,15 @@ static int* g_cmpdata_point;
 void cmpdata_init(){
 	g_cmpdata_end=g_objmax;
 	g_cmpdata_point=g_objmax;
+	g_cmpdata_id=1;
+}
+
+/*
+	Returns ID as 16 bit indivisual number
+*/
+unsigned short cmpdata_get_id(){
+	if ((++g_cmpdata_id)==0) printstr("CMPDATA: no more ID!\n");
+	return g_cmpdata_id;
 }
 
 /*
