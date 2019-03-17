@@ -69,6 +69,7 @@ static const int reserved_var_names[]={
 	0x00aefdec, /*FSEEK*/
 	0x00063b90, /*GCLS*/
 	0x1a808bcb, /*GCOLOR*/
+	0x1ab733b3, /*GETDIR*/
 	0x00c60f03, /*GOSUB*/
 	0x0006796c, /*GOTO*/
 	0x1bcfcc39, /*GPRINT*/
@@ -109,6 +110,7 @@ static const int reserved_var_names[]={
 	0x425c9703, /*RETURN*/
 	0x00015e69, /*RND*/
 	0x45c26d49, /*SCROLL*/
+	0x45f6e3b3, /*SETDIR*/
 	0x00016287, /*SGN*/
 	0x000162cf, /*SIN*/
 	0x000ee52d, /*SINH*/

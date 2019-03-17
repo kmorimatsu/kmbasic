@@ -122,6 +122,9 @@ enum libs{
 	LIB_FILE           =LIB_STEP*48,
 	LIB_PLAYWAVE       =LIB_STEP*49,
 	LIB_PLAYWAVEFUNC   =LIB_STEP*50,
+	LIB_SETDIR         =LIB_STEP*51,
+	LIB_SETDIRFUNC     =LIB_STEP*52,
+	LIB_GETDIR         =LIB_STEP*53,
 	LIB_DEBUG          =LIB_STEP*127,
 };
 
@@ -321,6 +324,7 @@ void blue_screen(void);
 char* get_float();
 
 void cmpdata_init();
+unsigned short cmpdata_get_id();
 char* cmpdata_insert(unsigned char type, short data16, int* data, unsigned char num);
 void cmpdata_reset();
 int* cmpdata_find(unsigned char type);
@@ -401,6 +405,7 @@ char* resolve_unresolved(int class);
 #define CMPDATA_FIELD    3
 #define CMPDATA_STATIC   4
 #define CMPDATA_UNSOLVED 5
+#define CMPDATA_TEMP     6
 // Sub types follow
 #define CMPTYPE_PUBLIC_FIELD 0
 #define CMPTYPE_PRIVATE_FIELD 1

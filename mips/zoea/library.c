@@ -25,6 +25,20 @@ static int g_gcolor=7;
 static int g_prev_x=0;
 static int g_prev_y=0;
 
+int lib_setdir(int mode,char* path){
+	int ret;
+	ret=FSchdir(path);
+	if (mode==LIB_SETDIR && ret) err_file();
+	return ret;
+}
+
+int lib_getdir(){
+	char* path;
+	path=calloc_memory(32,-1);
+	FSgetcwd (path,128);
+	return (int)path;
+}
+
 int lib_read(int mode, unsigned int label){
 	unsigned int i,code,code2;
 	static unsigned int pos=0;
@@ -1016,6 +1030,11 @@ int _call_library(int a0,int a1,int v0,enum libs a3){
 		case LIB_SETDRAWCOUNT:
 			drawcount=(v0&0x0000FFFF);
 			return v0;
+		case LIB_GETDIR:
+			return lib_getdir();
+		case LIB_SETDIRFUNC:
+		case LIB_SETDIR:
+			return lib_setdir(a3,(char*)v0);
 		case LIB_DRAWCOUNT:
 			return drawcount;
 		case LIB_SYSTEM:
