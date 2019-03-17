@@ -1663,7 +1663,7 @@ int getfilelist(int *p_num_dir){
 	SearchRec sr;
 	filenum=0;
 	//ディレクトリのサーチ
-	if(FindFirst("*.*",ATTR_DIRECTORY,&sr)==0){
+	if(FindFirst("*",ATTR_DIRECTORY,&sr)==0){
 		do{
 			//filenames[]にディレクトリ名の一覧を読み込み
 			ps=sr.filename;
