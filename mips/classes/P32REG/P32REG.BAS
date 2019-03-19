@@ -1,4 +1,4 @@
-REM P32REG.BAS ver 0.2
+REM P32REG.BAS ver 0.3
 REM Class P32REG for MachiKania Type Z/M 
 REM Prepare P32MX.S file containing
 REM registor address information
@@ -51,10 +51,24 @@ METHOD WRREG
   RET(0)=args(2)
   return
 
+REM Private method FOP
+REM 1st param: file name
+LABEL FOP
+  var t
+  REM Try current directory
+  if fopen(args$(1),"r") then return
+  REM Try library directory
+  t$=getdir$()
+  setdir "\\LIB\\P32REG"
+  fopen args$(1),"r"
+  setdir t$
+  delete t
+  return
+
 LABEL FO
   REM Buffer contains 128 + 512 bytes
   dim FBUFF(159)
-  fopen FNAME$,"r"
+  gosub FOP,FNAME$
   FPO=128
   FEND=FPO+FGET(FBUFF,512)
   poke FBUFF+FPO-1,0x0A

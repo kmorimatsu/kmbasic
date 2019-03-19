@@ -1,4 +1,4 @@
-REM CKNJ8.BAS ver 0.1
+REM CKNJ8.BAS ver 0.3
 REM Class CKNJ8 for MachiKania Type Z/M
 REM using Misaki 8x8 font
 
@@ -80,6 +80,20 @@ LABEL GETPCG
   pcg i,gosub(LE2BE,FBUFF(0)),gosub(LE2BE,FBUFF(1))
   return i
 
+REM Private method FOP
+REM 1st param: file name
+LABEL FOP
+  var t
+  REM Try current directory
+  if fopen(args$(1),"r") then return
+  REM Try library directory
+  t$=getdir$()
+  setdir "\\LIB\\CKNJ8"
+  fopen args$(1),"r"
+  setdir t$
+  delete t
+  return
+
 REM Private medthod FGETCH
 REM 1st param: JIS code # starting from 0x2121
 LABEL FGETCH
@@ -89,9 +103,9 @@ LABEL FGETCH
     REM open it 
     FO=1
     if 2=MODE then
-      fopen "MISAKI.UNI","r"
+      gosub FOP,"MISAKI.UNI"
     else
-      fopen "MISAKI.JIS","r"
+      gosub FOP,"MISAKI.JIS"
     endif
   endif
   p=args(1)

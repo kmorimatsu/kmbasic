@@ -1,4 +1,4 @@
-REM CKNJ12.BAS ver 0.2
+REM CKNJ12.BAS ver 0.3
 REM Class CKNJ12 for MachiKania Type Z/M
 REM using Shinonome 12x12 font
 
@@ -114,6 +114,20 @@ LABEL GPRTHS
   point x+6,y
   return
 
+REM Private method FOP
+REM 1st param: file name
+LABEL FOP
+  var t
+  REM Try current directory
+  if fopen(args$(1),"r") then return
+  REM Try library directory
+  t$=getdir$()
+  setdir "\\LIB\\CKNJ12"
+  fopen args$(1),"r"
+  setdir t$
+  delete t
+  return
+
 REM Private medthod FGETCH
 REM 1st param: JIS code #
 LABEL FGETCH
@@ -123,9 +137,9 @@ LABEL FGETCH
     REM open it 
     FO=1
     if 2=MODE then
-      fopen "SHNMK12.UNI","r"
+      gosub FOP,"SHNMK12.UNI"
     else
-      fopen "SHNMK12.JIS","r"
+      gosub FOP,"SHNMK12.JIS"
     endif
   endif
   p=args(1)
