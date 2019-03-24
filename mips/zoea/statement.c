@@ -1717,6 +1717,8 @@ static const void* statement_list[]={
 	"STATIC ",static_statement,
 	"SETDIR ",setdir_statement,
 	"OPTION ",option_statement,
+	"USETIMER ",usetimer_statement,
+	"TIMER ",timer_statement,
 	// List of additional statements follows
 	ADDITIONAL_STATEMENTS
 };

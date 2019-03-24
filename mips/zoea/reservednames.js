@@ -139,6 +139,7 @@ var namearray=[
 	'SYSTEM',
 	'TAN',
 	'TANH',
+	'TIMER',
 	'TVRAM',
 	'UNTIL',
 	'USEPCG',

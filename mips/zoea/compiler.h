@@ -368,6 +368,13 @@ char* static_statement();
 char* static_method(char type);
 char* resolve_unresolved(int class);
 
+void init_timer();
+void stop_timer();
+char* usetimer_statement();
+char* timer_statement();
+char* timer_function();
+
+
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])
 #define ERR_NE_BINARY (char*)(g_err_str[1])

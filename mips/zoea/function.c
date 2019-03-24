@@ -597,6 +597,7 @@ static const void* int_func_list[]={
 	"PLAYWAVE(",playwave_function,
 	"NEW(",new_function,
 	"SETDIR(",setdir_function,
+	"TIMER(",timer_function,
 	// Additional functions follow
 	ADDITIONAL_INT_FUNCTIONS
 };

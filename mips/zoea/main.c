@@ -14,6 +14,72 @@
 // lib_colortext32.a : カラービデオ信号出力システムライブラリ（30×27テキスト版）
 // libsdfsio.a ： SDカードアクセス用ライブラリ
 
+/*
+	PIC32MX ペリフェラル使用状況
+	
+	割り込み
+		NTSC,   Timer2, vector  8, priority 5
+		NTSC,   OC3,    vector 14, priority 5
+		NTSC,   OC2,    vector 10, priority 5
+		NTSC,   OC1,    vector  6, priority 5
+		PS/2,   CNF,    vector 33, priority 6
+		PS/2,   Timer5, vector 20, priority 4
+		MUSIC,  CS0,    vector  1, priority 2
+		TIMER,  Timer1, vector  4, priority 3
+		INT,    CS1,    vector  2, priority 1
+	
+	タイマー
+		Timer1 BASIC用タイマー
+		Timer2 NTSC
+		Timer3 MUSIC/PWM
+		Timer4 MUSIC
+		Timer5 PS/2
+	
+	DMA
+		DMA0 未使用
+		DMA1 未使用
+		DMA2 MUSIC
+		DMA3 PS/2
+	
+	Output compair
+		OC1 NTSC
+		OC2 NTSC
+		OC3 NTSC
+		OC4 MUSIC/PWM
+		OC5 
+		
+	SPI
+		SPI1 未使用
+		SPI2 マルチメディアカード
+	
+	I2C
+		I2C1 未使用
+		I2C2 未使用
+	
+	ポート使用
+		A0  MMC
+		A1  PS2/button 切換え
+		A2  Crystal
+		A3  Crystal
+		A4  MMC
+		B0  NTSC
+		B1  NTSC
+		B2  NTSC
+		B3  NTSC
+		B4  NTSC
+		B5  MMC
+		B6  未使用
+		B7  button
+		B8  PS2/button
+		B9  PS2/button
+		B10 button
+		B11 button
+		B12 未使用
+		B13 audio out
+		B14 button
+		B15 MMC
+*/
+
 #include <xc.h>
 #include "api.h"
 #include "compiler.h"

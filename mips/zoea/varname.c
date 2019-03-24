@@ -120,6 +120,7 @@ static const int reserved_var_names[]={
 	0x47f711de, /*SYSTEM*/
 	0x000166bf, /*TAN*/
 	0x000f72ed, /*TANH*/
+	0x020ed5f3, /*TIMER*/
 	0x02182fee, /*TVRAM*/
 	0x022c2a2d, /*UNTIL*/
 	0x4e8887d0, /*USEPCG*/

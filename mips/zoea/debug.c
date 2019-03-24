@@ -228,13 +228,13 @@ static const char initext[]=
 "#PRINT\n";
 
 static const char bastext[]=
-"REM 1\n"
-"REM 2\n"
-"REM 3\n"
+"USETIMER 600\n"
+"END\n"
 "\n"
-"CLS\n"
 "\n"
-"LABEL TST:PRINT\n"
+"\n"
+"\n"
+"\n"
 "\n";
 
 static const char class1text[]=
@@ -270,13 +270,9 @@ static const void* debugjumptable[]={
 
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
-	asm volatile("lw $a0,4($s5)");
-	asm volatile("lw $a1,8($s5)");
-	asm volatile("lw $a2,12($s5)");
-	asm volatile("lw $a3,16($s5)");
-	asm volatile("nop");
-	asm volatile("nop");
-	asm volatile("nop");
+	asm volatile("lui $v1,0x1234");
+	asm volatile("ori $v1,$v1,0x5678");
+	asm volatile("sw $v0,0($v1)");
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");
