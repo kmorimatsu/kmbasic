@@ -110,6 +110,7 @@ var namearray=[
 	'NEXT',
 	'NEW',
 	'NOT',
+	'OPTION',
 	'PCG',
 	'PEEK',
 	'PEEK16',

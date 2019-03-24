@@ -55,6 +55,9 @@ unsigned short g_var_size[ALLOC_BLOCK_NUM];
 // Flag to use temporary area when compiling
 char g_temp_area_used;
 
+// Flag to use option nolinenum
+char g_nolinenum;
+
 // Heap area
 int* g_heap_mem;
 int g_max_mem;

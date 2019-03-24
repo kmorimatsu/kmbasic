@@ -213,6 +213,7 @@ extern int g_var_mem[ALLOC_BLOCK_NUM];
 extern unsigned short g_var_pointer[ALLOC_BLOCK_NUM];
 extern unsigned short g_var_size[ALLOC_BLOCK_NUM];
 extern char g_temp_area_used;
+extern char g_nolinenum;
 extern int* g_heap_mem;
 extern int g_max_mem;
 extern char g_disable_break;
