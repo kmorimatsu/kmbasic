@@ -229,9 +229,10 @@ static const char initext[]=
 
 static const char bastext[]=
 "USETIMER 600\n"
+"INTERRUPT TIMER,LABEL1\n"
 "END\n"
-"\n"
-"\n"
+"LABEL LABEL1\n"
+"RETURN\n"
 "\n"
 "\n"
 "\n"
@@ -270,10 +271,11 @@ static const void* debugjumptable[]={
 
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
+	asm volatile("b label1");
 	asm volatile("lui $v1,0x1234");
 	asm volatile("ori $v1,$v1,0x5678");
 	asm volatile("sw $v0,0($v1)");
-	asm volatile("nop");
+	asm volatile("label1:");
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");

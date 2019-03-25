@@ -110,8 +110,9 @@ int nextCodeIs(char* str){
 	if (!strncmp(g_source+g_srcpos,str,len)) {
 		if ('A'<=str[len-1] && str[len-1]<='Z') {
 			// When the last character of str is alphabet, 
-			// the next character in source must be space, enter, or ':'.
-			if (0x20<g_source[g_srcpos+len] && g_source[g_srcpos+len]!=':') return 0;
+			// the next character in source must be space, enter, ',', or ':'.
+			if (0x20<g_source[g_srcpos+len] && 
+				g_source[g_srcpos+len]!=':' && g_source[g_srcpos+len]!=',') return 0;
 		}
 		// String matches in the current position in source.
 		g_srcpos+=len;

@@ -373,7 +373,7 @@ void stop_timer();
 char* usetimer_statement();
 char* timer_statement();
 char* timer_function();
-
+char* interrupt_statement();
 
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])

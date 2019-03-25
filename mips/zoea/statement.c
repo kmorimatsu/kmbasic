@@ -1719,6 +1719,7 @@ static const void* statement_list[]={
 	"OPTION ",option_statement,
 	"USETIMER ",usetimer_statement,
 	"TIMER ",timer_statement,
+	"INTERRUPT ",interrupt_statement,
 	// List of additional statements follows
 	ADDITIONAL_STATEMENTS
 };
