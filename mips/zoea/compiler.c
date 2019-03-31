@@ -160,8 +160,10 @@ char* compile_line(void){
 			printstr(resolve_label(g_line));
 			return ERR_MULTIPLE_LABEL;
 		}
-		check_obj_space(1);
-		g_object[g_objpos++]=0x34160000|g_line; //ori         s6,zero,xxxx;
+		if (!g_nolinenum) {
+			check_obj_space(1);
+			g_object[g_objpos++]=0x34160000|g_line; //ori         s6,zero,xxxx;
+		}
 	}
 	while(g_source[g_srcpos]!=0x0D && g_source[g_srcpos]!=0x0A){
 		err=statement();

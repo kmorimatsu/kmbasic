@@ -228,13 +228,13 @@ static const char initext[]=
 "#PRINT\n";
 
 static const char bastext[]=
-"print getdir$()\n"
-"end\n"
+"REM 1\n"
+"REM 2\n"
+"REM 3\n"
 "\n"
+"CLS\n"
 "\n"
-"\n"
-"\n"
-"\n"
+"LABEL TST:PRINT\n"
 "\n";
 
 static const char class1text[]=

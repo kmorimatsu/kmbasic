@@ -91,6 +91,7 @@ static const int reserved_var_names[]={
 	0x000b4321, /*NEXT*/
 	0x000148f8, /*NEW*/
 	0x00014a5d, /*NOT*/
+	0x38a658d7, /*OPTION*/
 	0x000152c0, /*PCG*/
 	0x000cacec, /*PEEK*/
 	0x3b1c6aea, /*PEEK16*/
