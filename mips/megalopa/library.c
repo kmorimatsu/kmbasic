@@ -13,7 +13,7 @@
 #include "main.h"
 #include "compiler.h"
 #include "api.h"
-#include "keyinput.h"
+#include "interface/keyinput.h"
 #include "stdlib.h"
 #include "math.h"
 
