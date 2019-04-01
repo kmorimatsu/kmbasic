@@ -482,6 +482,19 @@ char* interrupt_statement();
 #define ASM_LW_A0_XXXX_S8 0x8FC40000
 #define ASM_LW_A0_XXXX_S5 0x8EA40000
 
+// Interrupt macros
+// 16 different type interruptions are possible
+#define NUM_INTERRUPT_TYPES 1
+#define INTERRUPT_TIMER 0
+extern short g_interrupt_flags;
+extern int g_int_vector[NUM_INTERRUPT_TYPES];
+#define raise_interrupt_flag(x) do {\
+	if (g_int_vector[x]) {\
+		IFS0bits.CS1IF=1;\
+		g_interrupt_flags|=(1<<(x));\
+	}\
+} while(0)
+
 // Division macro for unsigned long
 // Valid for 31 bits for all cases and 32 bits for some cases
 #define div32(x,y,z) ((((unsigned long long)((unsigned long)(x)))*((unsigned long long)((unsigned long)(y))))>>(z))

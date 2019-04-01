@@ -8,8 +8,7 @@
 #include <xc.h>
 #include "main.h"
 #include "compiler.h"
-#include "videoout.h"
-#include "ps2keyboard.h"
+#include "api.h"
 
 /*
 	int readbuttons();

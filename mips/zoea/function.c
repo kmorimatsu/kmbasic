@@ -157,7 +157,6 @@ char* rnd_function(){
 	return 0;
 }
 
-
 char* chr_function(void){
 	char* err;
 	err=get_value();

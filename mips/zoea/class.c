@@ -157,7 +157,8 @@ char* resolve_unresolved(int class){
 				break;
 			default:
 				return ERR_UNKNOWN;
-		}	}
+		}
+	}
 	return 0;	
 }
 
@@ -192,6 +193,15 @@ char* update_class_info(int class){
 		cstruct[y+1]: private field var number
 		cstruct[z]:   public method name
 		cstruct[z+1]: public method pointer
+*/
+
+/*
+	Object structure:
+		object[0]:   pointer to class structure
+		object[1]:   field value
+		...
+		object[n]:   field value
+		(according to class structure; public field(s) first, then private field(s))
 */
 
 char* construct_class_structure(int class){

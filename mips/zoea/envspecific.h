@@ -5,7 +5,7 @@
    kmorimatsu@users.sourceforge.jp
 */
 
-#define CPU_CLOCK_HZ 57272720
+#define CPU_CLOCK_HZ (g_use_graphic ? 53693175 : 57272720)
 #define PERSISTENT_RAM_SIZE (1024*52)
 
 int readbuttons();

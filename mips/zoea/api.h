@@ -32,7 +32,7 @@
 // Used for asm("wait")
 #define WAIT "wait"
 
-#include "videoout.h"
-#include "SDFSIO.h"
-#include "ps2keyboard.h"
+#include "interface/videoout.h"
+#include "interface/SDFSIO.h"
+#include "interface/ps2keyboard.h"
 #include "debug.h"
