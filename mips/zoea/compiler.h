@@ -222,6 +222,7 @@ extern char g_use_graphic;
 extern unsigned short* g_graphic_area;
 extern int* g_libparams;
 extern int g_long_name_var_num;
+extern char g_music_active;
 extern int g_class;
 extern int g_compiling_class;
 extern int g_temp;
@@ -261,6 +262,7 @@ void err_not_field(int fieldname, int classname);
 void err_str(char* str);
 char* resolve_label(int s6);
 
+void musicint();
 void set_sound(unsigned long* data, int flagsLR);
 int musicRemaining(int flagsLR);
 int waveRemaining(int mode);
@@ -483,11 +485,17 @@ char* interrupt_statement();
 #define ASM_LW_A0_XXXX_S5 0x8EA40000
 
 // Interrupt macros
-// 16 different type interruptions are possible
-#define NUM_INTERRUPT_TYPES 1
-#define INTERRUPT_TIMER 0
-extern short g_interrupt_flags;
-extern int g_int_vector[NUM_INTERRUPT_TYPES];
+// 32 different type interruptions are possible
+// See also envspecific.h for additional interruptions
+#define INTERRUPT_TIMER     0
+#define INTERRUPT_DRAWCOUNT 1
+#define INTERRUPT_KEYS      2
+#define INTERRUPT_KEYINPUT  3
+#define INTERRUPT_MUSIC     4
+#define INTERRUPT_WAVE      5
+
+extern int g_interrupt_flags;
+extern int g_int_vector[];
 #define raise_interrupt_flag(x) do {\
 	if (g_int_vector[x]) {\
 		IFS0bits.CS1IF=1;\

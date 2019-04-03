@@ -106,12 +106,10 @@ int musicRemaining(int flagsLR){
 	return (g_musicend-g_musicstart)&31;
 }
 
-#pragma interrupt musicint IPL3SOFT vector 1
 void musicint(){
 	unsigned int i;
 	static unsigned short wavtable_pos;
 	// This function is called every 1/60 sec.
-	IFS0bits.CS0IF=0;
 	switch(g_sound_mode){
 		case SOUND_MODE_MUSIC:
 			if (g_soundstart!=g_soundend){
@@ -160,6 +158,10 @@ void musicint(){
 					g_musicstart++;
 					g_musicstart&=31;
 					g_musicwait=g_musiclen[g_musicstart];
+					if (((g_musicstart+1)&31)==g_musicend) {
+						// Raise MUSIC interrupt flag
+						raise_interrupt_flag(INTERRUPT_MUSIC);
+					}
 				}
 			} else {
 				// Stop timer
@@ -181,6 +183,8 @@ void musicint(){
 				g_fhandle=0;
 				g_sound_mode=SOUND_MODE_MUSIC;
 				stop_music();
+				// Raise WAVE interrupt flag
+				raise_interrupt_flag(INTERRUPT_WAVE);
 				break;
 			}
 			break;
@@ -216,12 +220,6 @@ void stop_music(){
 	OC4CONSET=0x8000;// Start OC4
 	T3CON=0x0050;    // Prescaller: 1:32 (1.8 MHz), not yet started
 
-	// Software interrupt every 1/60 sec (triggered by Timer5)
-	IPC0bits.CS0IP=3;
-	IPC0bits.CS0IS=0;
-	IFS0bits.CS0IF=0;
-	IEC0bits.CS0IE=1;	
-
 	// Initializations for music/sound.
 	g_musicstart=g_musicend=g_musicwait=g_soundstart=g_soundend=g_soundwait=g_soundrepeat=0;
 	g_sound_mode=SOUND_MODE_MUSIC;
@@ -238,6 +236,9 @@ void stop_music(){
 	// Close handle if open.
 	if (g_fhandle) FSfclose(g_fhandle);
 	g_fhandle=0;
+
+	// Inactive music first
+	g_music_active=0;
 }
 
 void init_music(){
@@ -445,6 +446,7 @@ void set_sound(unsigned long* data, int flagsLR){
 	g_soundend=pos;
 	g_soundwait=g_soundlen[0];
 	IEC0bits.T4IE=1; // Restart interrupt.
+	g_music_active=1;// Activate music system
 }
 
 void set_music(char* str, int flagsLR){
@@ -547,6 +549,7 @@ void set_music(char* str, int flagsLR){
 		// Go to next character
 		while(0<g_mstr[g_mspos] && g_mstr[g_mspos]<=0x20 || g_mstr[g_mspos]=='|') g_mspos++;
 	}
+	g_music_active=1;// Activate music system
 }
 
 /*
@@ -636,4 +639,5 @@ void play_wave(char* filename, int start){
 	init_dma_music();	
 	g_sound_mode=SOUND_MODE_WAVE;
 
+	g_music_active=1;// Activate music system
 }

@@ -11,22 +11,33 @@
 
 #include <xc.h>
 #include "compiler.h"
+#include "api.h"
 
 /*
-	16 different type interruptions are possible.
+	32 different type interruptions are possible.
 	See definition in compiler.h like:
-		#define NUM_INTERRUPT_TYPES 1
 		#define INTERRUPT_TIMER 0
-		extern short g_interrupt_flags;
-		extern int g_int_vector[NUM_INTERRUPT_TYPES];
+		extern int g_interrupt_flags;
+		extern int g_int_vector[];
 		#define raise_interrupt_flag(x) do {\
 */
 
 // Timer value that increments every timer event
 static int g_timer;
 
+// Interrupt types
+static const void* interrupt_list[]={
+	"TIMER",    (void*)INTERRUPT_TIMER,
+	"DRAWCOUNT",(void*)INTERRUPT_DRAWCOUNT,
+	"KEYS",     (void*)INTERRUPT_KEYS,
+	"KEYINPUT", (void*)INTERRUPT_KEYINPUT,
+	"MUSIC",    (void*)INTERRUPT_MUSIC,
+	"WAVE",     (void*)INTERRUPT_WAVE,
+	ADDITIONAL_INTERRUPT_FUNCTIONS
+};
+#define NUM_INTERRUPT_TYPES ((sizeof(interrupt_list)/sizeof(interrupt_list[0]))/2)
 // Flags for interrupt
-short g_interrupt_flags;
+int g_interrupt_flags;
 // Jump address when interrupt
 int g_int_vector[NUM_INTERRUPT_TYPES];
 
@@ -45,6 +56,11 @@ void init_timer(){
 	// Disable interrupt
 	IEC0bits.CS1IE=0;
 	for(i=0;i<NUM_INTERRUPT_TYPES;i++) g_int_vector[i]=0;
+	// CS0 interrupt every 1/60 sec (triggered by Timer2)
+	IPC0bits.CS0IP=3;
+	IPC0bits.CS0IS=0;
+	IFS0bits.CS0IF=0;
+	IEC0bits.CS0IE=1;	
 }
 
 void stop_timer(){
@@ -190,11 +206,28 @@ char* interrupt_statement(){
 	int itype;
 	int i,opos;
 	char* err;
-	next_position();
-	if (nextCodeIs("TIMER")) {
-		itype=INTERRUPT_TIMER;
+	int stop=0;
+	// Check if STOP
+	stop=nextCodeIs("STOP ");
+	// Seek the interrupt
+	for (i=0;i<NUM_INTERRUPT_TYPES;i++){
+		if (nextCodeIs((char*)interrupt_list[i*2])) break;
+	}
+	if (i<NUM_INTERRUPT_TYPES) {
+		// Interrupt found
+		itype=(int)interrupt_list[i*2+1];
 	} else {
+		// Interrupt not found
 		return ERR_SYNTAX;
+	}
+	// Compile INTERRUPT STOP
+	if (stop) {
+		// g_int_vector[itype]=0;
+		i=(int)(&g_int_vector[itype]);
+		i-=g_gp;
+		check_obj_space(1);
+		g_object[g_objpos++]=0xAF800000|(i&0x0000FFFF); // sw          zero,xxxx(gp)
+		return 0;
 	}
 	// Detect ','
 	next_position();
@@ -225,3 +258,40 @@ char* interrupt_statement(){
 	return 0;
 }
 
+/*
+	CS0 interrupt
+	IPL3SOFT vector 1
+
+	This interrupt is always active. Therefore, Do things as few as possible.
+	1) Call music function if needed.
+		MUSIC interrupt is taken by music.c
+	2) Check buttons for KEYS interrupt
+	3) Check PS/2 for KEYINPUT interrupt
+	4) DRAWCOUNT interrupt
+*/
+
+#pragma interrupt CS0Handler IPL3SOFT vector 1
+void CS0Handler(void){
+	static int s_keys=-1;
+	static int s_vkey=0;
+	IFS0bits.CS0IF=0;
+	// Call music function
+	if (g_music_active) musicint();
+	// The interrupts are valid only when CS1 is active
+	if (IEC0bits.CS1IE) {
+		// Raise DRAWCOUNT interrupt flag
+		raise_interrupt_flag(INTERRUPT_DRAWCOUNT);
+		// Check buttons
+		if (0<=s_keys && s_keys!=(KEYPORT&(KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE))) {
+			// Raise KEYS interrupt flag
+			raise_interrupt_flag(INTERRUPT_KEYS);
+		}
+		s_keys!=KEYPORT&(KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE);
+		// Check PS/2 keyboard down
+		if ((vkey&0xff) && !s_vkey) {
+			// Raise KEYINPUT interrupt flag
+			raise_interrupt_flag(INTERRUPT_KEYINPUT);
+		}
+		s_vkey=vkey&0xff;
+	}
+}

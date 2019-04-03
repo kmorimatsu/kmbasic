@@ -280,8 +280,8 @@ int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile("ori $v1,$v1,0x5678");
 	asm volatile("sw $v0,0($v1)");
 	asm volatile("label1:");
-	asm volatile("nop");
-	asm volatile("nop");
+	asm volatile("sw $zero,0x1234($v1)");
+	asm volatile("sw $zero,0x1234($gp)");
 	asm volatile("nop");
 	int i;
 	for2(i,1,10){

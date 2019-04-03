@@ -83,6 +83,9 @@ int* g_libparams;
 // Number of long name variables
 int g_long_name_var_num;
 
+// Flag for active music/sound/wave function
+char g_music_active;
+
 // Class name being compiled
 int g_class;
 // Flag to compile class file
