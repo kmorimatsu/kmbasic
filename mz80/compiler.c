@@ -752,9 +752,6 @@ char* statementList(){
 //		.dw #_compileDebug
 //		.ascii "DEBUG"
 //		.db 0x00
-		.dw #_compileIf
-		.ascii "IF "
-		.db 0x00
 		.dw #_compileBye
 		.ascii "BYE"
 		.db 0x00
@@ -803,7 +800,7 @@ char* statementList(){
 		.dw #_compileClear
 		.ascii "CLEAR"
 		.db 0x00
-		.dw #_compileReturn
+		.dw #_compileRet
 		.ascii "RETURN"
 		.db 0x00
 		.dw #_compileGosub
@@ -847,7 +844,10 @@ char compile (){
 	g_ifElseJump=0;
 	slist=statementList();
 	while (skipBlank()!=0x00) {
-		if (command("REM")) {
+		if (command("IF ")) {
+			e=compileIf();
+			continue;
+		} else if (command("REM")) {
 			break;
 		} else {
 			sfunc=(char(*)())seekList(slist);
