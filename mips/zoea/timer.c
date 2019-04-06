@@ -167,14 +167,30 @@ char* timer_function(){
 */
 
 void BasicInt(int addr){
-	// $a0 is the address in BASIC code
+	// Note that $s0-$s7 values must be set again here.
 	asm volatile(".set noreorder");
+	// Set s5 for initial_s5_stack
+	asm volatile("la $s5,%0"::"i"(&g_initial_s5_stack[2]));
+	// Set s7 for easy calling call_library()
+	asm volatile("la $s7,%0"::"i"(&call_library));
+	// $a0 is the address in BASIC code
 	asm volatile("jr $a0");
 	asm volatile("nop");
 }
 #pragma interrupt CS1Handler IPL1SOFT vector 2
 void CS1Handler(void){
 	int i;
+	// Store s0-s7, fp, and ra in stacks
+	asm volatile("#":::"s0");
+	asm volatile("#":::"s1");
+	asm volatile("#":::"s2");
+	asm volatile("#":::"s3");
+	asm volatile("#":::"s4");
+	asm volatile("#":::"s5");
+	asm volatile("#":::"s6");
+	asm volatile("#":::"s7");
+	asm volatile("#":::"fp");
+	asm volatile("#":::"ra");
 	while(g_interrupt_flags){
 		for(i=0;i<NUM_INTERRUPT_TYPES;i++){
 			if (g_interrupt_flags & (1<<i)) {
