@@ -30,7 +30,7 @@ static const void* interrupt_list[]={
 	"TIMER",    (void*)INTERRUPT_TIMER,
 	"DRAWCOUNT",(void*)INTERRUPT_DRAWCOUNT,
 	"KEYS",     (void*)INTERRUPT_KEYS,
-	"KEYINPUT", (void*)INTERRUPT_KEYINPUT,
+	"INKEY",    (void*)INTERRUPT_INKEY,
 	"MUSIC",    (void*)INTERRUPT_MUSIC,
 	"WAVE",     (void*)INTERRUPT_WAVE,
 	ADDITIONAL_INTERRUPT_FUNCTIONS
@@ -266,14 +266,17 @@ char* interrupt_statement(){
 	1) Call music function if needed.
 		MUSIC interrupt is taken by music.c
 	2) Check buttons for KEYS interrupt
-	3) Check PS/2 for KEYINPUT interrupt
+	3) Check PS/2 for INKEY interrupt
 	4) DRAWCOUNT interrupt
 */
+
+const int* keystatus=(int*)&ps2keystatus[0];
 
 #pragma interrupt CS0Handler IPL3SOFT vector 1
 void CS0Handler(void){
 	static int s_keys=-1;
-	static int s_vkey=0;
+	static char s_inkey=0;
+	int i;
 	IFS0bits.CS0IF=0;
 	// Call music function
 	if (g_music_active) musicint();
@@ -286,12 +289,22 @@ void CS0Handler(void){
 			// Raise KEYS interrupt flag
 			raise_interrupt_flag(INTERRUPT_KEYS);
 		}
-		s_keys!=KEYPORT&(KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE);
+		s_keys=KEYPORT&(KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE);
 		// Check PS/2 keyboard down
-		if ((vkey&0xff) && !s_vkey) {
-			// Raise KEYINPUT interrupt flag
-			raise_interrupt_flag(INTERRUPT_KEYINPUT);
+		if (g_int_vector[INTERRUPT_INKEY]) {
+			for(i=0;i<64;i++){
+				if (keystatus[i]) {
+					// Raise INKEY interrupt flag
+					if (!s_inkey) raise_interrupt_flag(INTERRUPT_INKEY);
+					break;
+				}
+			}
+			s_inkey=(i==64) ? 0:1;
 		}
-		s_vkey=vkey&0xff;
 	}
 }
+/*
+		for(i=0;i<256;i++){
+			if (ps2keystatus[i]) return i;
+		}
+*/

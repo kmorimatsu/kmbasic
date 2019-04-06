@@ -261,7 +261,7 @@ INTERRUPT xxx,yyy[,z1[,z2 ... ]]
 			1/60秒毎の割り込み。
 		KEYS
 			ボタンの押下状態が変化した時。
-		KEYINPUT
+		INKEY
 			キーボード押下時。
 		MUSIC
 			音楽再生の時、最後の音の再生時に割り込み。

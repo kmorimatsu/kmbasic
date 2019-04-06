@@ -490,7 +490,7 @@ char* interrupt_statement();
 #define INTERRUPT_TIMER     0
 #define INTERRUPT_DRAWCOUNT 1
 #define INTERRUPT_KEYS      2
-#define INTERRUPT_KEYINPUT  3
+#define INTERRUPT_INKEY     3
 #define INTERRUPT_MUSIC     4
 #define INTERRUPT_WAVE      5
 
