@@ -1550,6 +1550,24 @@ char* setdir_statement(){
 	return 0;
 }
 
+char* option_statement(){
+	while(1){
+		next_position();
+		if (nextCodeIs("NOLINENUM")) {
+			g_nolinenum=1;
+		} else {
+			return ERR_SYNTAX;
+		}
+		next_position();
+		if (g_source[g_srcpos]==',') {
+			g_srcpos++;
+		} else {
+			break;
+		}
+	}
+	return 0;
+}
+
 #ifdef __DEBUG
 	char* debug_statement(){
 		call_lib_code(LIB_DEBUG);
@@ -1698,6 +1716,10 @@ static const void* statement_list[]={
 	"CALL ",call_statement,
 	"STATIC ",static_statement,
 	"SETDIR ",setdir_statement,
+	"OPTION ",option_statement,
+	"USETIMER ",usetimer_statement,
+	"TIMER ",timer_statement,
+	"INTERRUPT ",interrupt_statement,
 	// List of additional statements follows
 	ADDITIONAL_STATEMENTS
 };

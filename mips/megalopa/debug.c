@@ -228,11 +228,14 @@ static const char initext[]=
 "#PRINT\n";
 
 static const char bastext[]=
-"print getdir$()\n"
-"end\n"
+"I=1:WHILE I<=10\n"
+"I=I+1:WEND\n"
 "\n"
+"I=1:DO\n"
+"I=I+1:LOOP UNTIL I=11\n"
 "\n"
-"\n"
+"FOR I=1 TO 10\n"
+"NEXT\n"
 "\n"
 "\n"
 "\n";
@@ -268,12 +271,10 @@ static const void* debugjumptable[]={
 	FSfopen,
 };
 
+#define for2(x,y,z) for(x=y;x<=z;x++)
+
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
-	asm volatile("lw $a0,4($s5)");
-	asm volatile("lw $a1,8($s5)");
-	asm volatile("lw $a2,12($s5)");
-	asm volatile("lw $a3,16($s5)");
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");
@@ -281,6 +282,12 @@ int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	asm volatile("nop");
+	a2&=0xFFFFFFFC;
 	return a2+a3;
 }
 

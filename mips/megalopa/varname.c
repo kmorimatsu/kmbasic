@@ -91,6 +91,7 @@ static const int reserved_var_names[]={
 	0x000b4321, /*NEXT*/
 	0x000148f8, /*NEW*/
 	0x00014a5d, /*NOT*/
+	0x38a658d7, /*OPTION*/
 	0x000152c0, /*PCG*/
 	0x000cacec, /*PEEK*/
 	0x3b1c6aea, /*PEEK16*/
@@ -119,6 +120,7 @@ static const int reserved_var_names[]={
 	0x47f711de, /*SYSTEM*/
 	0x000166bf, /*TAN*/
 	0x000f72ed, /*TANH*/
+	0x020ed5f3, /*TIMER*/
 	0x02182fee, /*TVRAM*/
 	0x022c2a2d, /*UNTIL*/
 	0x4e8887d0, /*USEPCG*/

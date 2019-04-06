@@ -55,6 +55,9 @@ unsigned short g_var_size[ALLOC_BLOCK_NUM];
 // Flag to use temporary area when compiling
 char g_temp_area_used;
 
+// Flag to use option nolinenum
+char g_nolinenum;
+
 // Heap area
 int* g_heap_mem;
 int g_max_mem;
@@ -79,6 +82,9 @@ int* g_libparams;
 
 // Number of long name variables
 int g_long_name_var_num;
+
+// Flag for active music/sound/wave function
+char g_music_active;
 
 // Class name being compiled
 int g_class;

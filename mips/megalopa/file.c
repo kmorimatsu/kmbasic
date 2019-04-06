@@ -122,7 +122,10 @@ int compile_and_link_file(char* buff,char* appname){
 			printchar('\n');
 			return -1;
 		}
-	
+
+		// Option initialization(s)
+		g_nolinenum=0;
+
 		// Compile the file
 		err=compile_file();
 		close_file();

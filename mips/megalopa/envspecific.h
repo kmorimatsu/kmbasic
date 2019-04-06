@@ -8,6 +8,7 @@
 // Megalopa uses I/O statements/functions
 #include "io.h"
 
+#define CPU_CLOCK_HZ 95454533
 #define PERSISTENT_RAM_SIZE (1024*100)
 
 int readbuttons();
@@ -108,3 +109,5 @@ enum extra{
 	EXTRA_SPISWAPDATA  =EXTRA_STEP*25,
 	// MAX 63
 };
+
+#define ADDITIONAL_INTERRUPT_FUNCTIONS

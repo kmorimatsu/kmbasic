@@ -213,6 +213,7 @@ extern int g_var_mem[ALLOC_BLOCK_NUM];
 extern unsigned short g_var_pointer[ALLOC_BLOCK_NUM];
 extern unsigned short g_var_size[ALLOC_BLOCK_NUM];
 extern char g_temp_area_used;
+extern char g_nolinenum;
 extern int* g_heap_mem;
 extern int g_max_mem;
 extern char g_disable_break;
@@ -221,6 +222,7 @@ extern char g_use_graphic;
 extern unsigned short* g_graphic_area;
 extern int* g_libparams;
 extern int g_long_name_var_num;
+extern char g_music_active;
 extern int g_class;
 extern int g_compiling_class;
 extern int g_temp;
@@ -260,6 +262,7 @@ void err_not_field(int fieldname, int classname);
 void err_str(char* str);
 char* resolve_label(int s6);
 
+void musicint();
 void set_sound(unsigned long* data, int flagsLR);
 int musicRemaining(int flagsLR);
 int waveRemaining(int mode);
@@ -367,6 +370,13 @@ char* static_statement();
 char* static_method(char type);
 char* resolve_unresolved(int class);
 
+void init_timer();
+void stop_timer();
+char* usetimer_statement();
+char* timer_statement();
+char* timer_function();
+char* interrupt_statement();
+
 /* Error messages */
 #define ERR_SYNTAX (char*)(g_err_str[0])
 #define ERR_NE_BINARY (char*)(g_err_str[1])
@@ -473,6 +483,25 @@ char* resolve_unresolved(int class);
 #define ASM_ORI_A0_ZERO_ 0x34040000
 #define ASM_LW_A0_XXXX_S8 0x8FC40000
 #define ASM_LW_A0_XXXX_S5 0x8EA40000
+
+// Interrupt macros
+// 32 different type interruptions are possible
+// See also envspecific.h for additional interruptions
+#define INTERRUPT_TIMER     0
+#define INTERRUPT_DRAWCOUNT 1
+#define INTERRUPT_KEYS      2
+#define INTERRUPT_INKEY     3
+#define INTERRUPT_MUSIC     4
+#define INTERRUPT_WAVE      5
+
+extern int g_interrupt_flags;
+extern int g_int_vector[];
+#define raise_interrupt_flag(x) do {\
+	if (g_int_vector[x]) {\
+		IFS0bits.CS1IF=1;\
+		g_interrupt_flags|=(1<<(x));\
+	}\
+} while(0)
 
 // Division macro for unsigned long
 // Valid for 31 bits for all cases and 32 bits for some cases
