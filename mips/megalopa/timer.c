@@ -88,18 +88,17 @@ void T1Handler(void){
 	raise_interrupt_flag(INTERRUPT_TIMER);
 }
 
-void lib_usetimer(int hz){
+void lib_usetimer(int usec){
 	int temppr1;
 	// Stop timer, first
 	T1CON=0x0000;
 	IEC0bits.T1IE=0;
 	TMR1=0;
 	PR1=0xffff;
-	if (!hz) {
-		return;
-	}
 	// PR1 setting
-	temppr1=CPU_CLOCK_HZ/hz;
+	// ((CPU_CLOCK_HZ/10000)*usec)< 2147483648, 
+	// therefore, the calculation can be done as 32 bit signed integer
+	temppr1=((CPU_CLOCK_HZ/10000)*usec)/100;
 	if (temppr1<=65536) {
 		// no prescaler
 		T1CON=0x0000;

@@ -1568,6 +1568,12 @@ char* option_statement(){
 	return 0;
 }
 
+char* idle_statement(){
+	check_obj_space(2);
+	g_object[g_objpos++]=0x42000020; // wait
+	return 0;	
+}
+
 #ifdef __DEBUG
 	char* debug_statement(){
 		call_lib_code(LIB_DEBUG);
@@ -1720,6 +1726,7 @@ static const void* statement_list[]={
 	"USETIMER ",usetimer_statement,
 	"TIMER ",timer_statement,
 	"INTERRUPT ",interrupt_statement,
+	"IDLE",idle_statement,
 	// List of additional statements follows
 	ADDITIONAL_STATEMENTS
 };

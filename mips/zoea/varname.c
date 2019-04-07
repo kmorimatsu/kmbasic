@@ -74,6 +74,7 @@ static const int reserved_var_names[]={
 	0x0006796c, /*GOTO*/
 	0x1bcfcc39, /*GPRINT*/
 	0x00012a99, /*HEX*/
+	0x0007ad12, /*IDLE*/
 	0x00010153, /*IF*/
 	0x00f8701a, /*INKEY*/
 	0x00f88ba5, /*INPUT*/

@@ -93,6 +93,7 @@ var namearray=[
 	'GOTO',
 	'GPRINT',
 	'HEX',
+	'IDLE',
 	'IF',
 	'INKEY',
 	'INPUT',

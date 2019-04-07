@@ -275,10 +275,11 @@ static const void* debugjumptable[]={
 
 int _debug_test(int a0, int a1, int a2, int a3, int param4, int param5){
 	asm volatile(".set noreorder");
-	asm volatile("nop");
-	asm volatile("nop");
-	asm volatile("nop");
-	asm volatile("nop");
+	asm volatile("addiu $v0,$zero,4772");
+	asm volatile("loop:");
+	asm volatile("bne $v0,$zero,loop");
+	asm volatile("addi $v0,$v0,-1");
+	asm volatile("wait");
 	asm volatile("nop");
 	asm volatile("nop");
 	asm volatile("nop");

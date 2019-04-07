@@ -7,8 +7,8 @@
 
 #define ZOEA
 #define SYSVER1 "Zoea"
-#define SYSVER2 "1.2"
-#define BASVER "KM-1207"
+#define SYSVER2 "1.3"
+#define BASVER "KM-1208"
 
 #define INIFILE "MACHIKAZ.INI" // 初期設定ファイル
 #define HEXFILE "MACHIKAZ.HEX" // 実行中HEXファイル名がこれと一致した場合はエディタ起動
