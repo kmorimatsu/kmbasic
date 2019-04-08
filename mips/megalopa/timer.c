@@ -139,21 +139,22 @@ char* timer_statement(){
 	char* err;
 	err=get_value();
 	if (err) return err;
-	i=(int)(&g_timer);
-	check_obj_space(3);
+	i=(int)(&g_timer)+0x8000;
+	check_obj_space(4);
 	g_object[g_objpos++]=0x3C030000|((i>>16)&0x0000FFFF); // lui v1,xxxx
-	g_object[g_objpos++]=0x34630000|(i&0x0000FFFF);       // ori v1,v1,xxxx
-	g_object[g_objpos++]=0xAC620000;                      // sw  v0,0(v1)
+	g_object[g_objpos++]=0xAC620000|((i-0x8000)&0xFFFF);  // sw  v0,xxxx(v1)
+	i=(int)(&TMR1)+0x8000;//0xBF800610
+	g_object[g_objpos++]=0x3C030000|((i>>16)&0x0000FFFF); // lui v1,0xbf80
+	g_object[g_objpos++]=0xAC600000|((i-0x8000)&0xFFFF);  // sw  zero,0x0610(v1)
 	return 0;
 }
 
 char* timer_function(){
 	int i;
-	i=(int)(&g_timer);
-	check_obj_space(3);
+	i=(int)(&g_timer)+0x8000;
+	check_obj_space(2);
 	g_object[g_objpos++]=0x3C020000|((i>>16)&0x0000FFFF); // lui v0,xxxx
-	g_object[g_objpos++]=0x34420000|(i&0x0000FFFF);       // ori v0,v0,xxxx
-	g_object[g_objpos++]=0x8C420000;                      // lw  v0,0(v0)
+	g_object[g_objpos++]=0x8C420000|((i-0x8000)&0xFFFF);  // lw  v0,xxxx(v0)
 	return 0;
 }
 
@@ -165,16 +166,15 @@ char* timer_function(){
 
 */
 
-void BasicInt(int addr){
-	// Note that $s0-$s7 values must be set again here.
-	asm volatile(".set noreorder");
+void BasicInt(int addr,void* memory){
+	// Note that $s0-$s7 and $fp values must be set again here.
 	// Set s5 for initial_s5_stack
 	asm volatile("la $s5,%0"::"i"(&g_initial_s5_stack[2]));
 	// Set s7 for easy calling call_library()
 	asm volatile("la $s7,%0"::"i"(&call_library));
-	// $a0 is the address in BASIC code
+	// Set fp and execute BASIC code at $a0
+	asm volatile("addu $fp,$zero,$a1");
 	asm volatile("jr $a0");
-	asm volatile("nop");
 }
 #pragma interrupt CS1Handler IPL1SOFT vector 2
 void CS1Handler(void){
@@ -193,7 +193,7 @@ void CS1Handler(void){
 	while(g_interrupt_flags){
 		for(i=0;i<NUM_INTERRUPT_TYPES;i++){
 			if (g_interrupt_flags & (1<<i)) {
-				if (g_int_vector[i]) BasicInt(g_int_vector[i]);
+				if (g_int_vector[i]) BasicInt(g_int_vector[i],(void*)(&g_var_mem[0]));
 				g_interrupt_flags &= (1<<i)^0xffff;
 			}
 		}

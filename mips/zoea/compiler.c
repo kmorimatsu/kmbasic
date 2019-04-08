@@ -24,15 +24,17 @@
 	$s7:     address of call_library()
 	$t8-$t9: used as temporary registors
 	$k0-$k1: not used
-	$gp:     for accessing global valiables by C
+	$gp:     for accessing global variables by C
 	$sp:     stack pointer
-	$fp($s8) for accessing valiables by BASIC
+	$fp($s8) for accessing variables by BASIC
 	$ra:     contains return address
 */
 
 #include "compiler.h"
 
 void start_program(void* addr, void* memory){
+	// Note that if usage of $s0-$s7, and $fp is changed, 
+	// revice BasicInt() in timer.c, too.
 	static unsigned int stored_sp;
 	// Store s0-s7, fp, and ra in stacks
 	asm volatile("#":::"s0");
