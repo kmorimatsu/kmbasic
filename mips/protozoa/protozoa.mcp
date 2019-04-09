@@ -65,6 +65,8 @@ file_037=.
 file_038=.
 file_039=.
 file_040=.
+file_041=.
+file_042=.
 [GENERATED_FILES]
 file_000=no
 file_001=no
@@ -107,6 +109,8 @@ file_037=no
 file_038=no
 file_039=no
 file_040=no
+file_041=no
+file_042=no
 [OTHER_FILES]
 file_000=no
 file_001=no
@@ -149,6 +153,8 @@ file_037=no
 file_038=no
 file_039=no
 file_040=no
+file_041=yes
+file_042=yes
 [FILE_INFO]
 file_000=args.c
 file_001=class.c
@@ -191,6 +197,8 @@ file_037=interface\SDFSIO.h
 file_038=interface\videoout.h
 file_039=interface\libsdfsio.a
 file_040=App_32MX170F256B.ld
+file_041=reservednames.js
+file_042=sharedfiles.js
 [SUITE_INFO]
 suite_guid={62D235D8-2DB2-49CD-AF24-5489A6015337}
 suite_state=
