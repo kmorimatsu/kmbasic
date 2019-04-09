@@ -123,6 +123,7 @@ void lib_usetimer(int usec){
 	IPC1bits.T1IS=0;
 	IEC0bits.T1IE=1;
 	// Start timer
+	g_timer=0;
 	T1CONbits.ON=1;
 }
 
@@ -143,9 +144,6 @@ char* timer_statement(){
 	check_obj_space(4);
 	g_object[g_objpos++]=0x3C030000|((i>>16)&0x0000FFFF); // lui v1,xxxx
 	g_object[g_objpos++]=0xAC620000|((i-0x8000)&0xFFFF);  // sw  v0,xxxx(v1)
-	i=(int)(&TMR1)+0x8000;//0xBF800610
-	g_object[g_objpos++]=0x3C030000|((i>>16)&0x0000FFFF); // lui v1,0xbf80
-	g_object[g_objpos++]=0xAC600000|((i-0x8000)&0xFFFF);  // sw  zero,0x0610(v1)
 	return 0;
 }
 
@@ -318,8 +316,3 @@ void CS0Handler(void){
 		}
 	}
 }
-/*
-		for(i=0;i<256;i++){
-			if (ps2keystatus[i]) return i;
-		}
-*/

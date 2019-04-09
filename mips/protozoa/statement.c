@@ -1431,6 +1431,20 @@ char* fclose_statement(){
 	return 0;
 }
 
+/*
+
+TODO: candidates to add:
+
+int FSattrib (FSFILE * file, unsigned char attributes);
+int FSrename (const char * fileName, FSFILE * fo);
+int FSmkdir (char * path);
+int FSrmdir (char * path, unsigned char rmsubdirs);
+int SetClockVars (unsigned int year, unsigned char month, unsigned char day, unsigned char hour, unsigned char minute, unsigned char second);
+int FindFirst (const char * fileName, unsigned int attr, SearchRec * rec);
+int FindNext (SearchRec * rec);
+
+*/
+
 char* fget_statement(){
 	return param2_statement(LIB_FILE | FUNC_FGET);
 }
