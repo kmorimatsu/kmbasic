@@ -40,23 +40,6 @@ int readbuttons(){
 	TRISBSET=KEYMASK;
 	asm("nop");
 	keys=KEYPORT;
-#if LCD_ALIGNMENT == VERTICAL
-	keys=
-		((keys&KEYUP)?    0:1)|
-		((keys&KEYDOWN)?  0:2)|
-		((keys&KEYLEFT)?  0:4)|
-		((keys&KEYRIGHT)? 0:8)|
-		((keys&KEYSTART)? 0:16)|
-		((keys&KEYFIRE)?  0:32);
-#else
-	keys=
-		((keys&KEYRIGHT)? 0:1)|
-		((keys&KEYLEFT)?  0:2)|
-		((keys&KEYUP)?    0:4)|
-		((keys&KEYDOWN)?  0:8)|
-		((keys&KEYSTART)? 0:16)|
-		((keys&KEYFIRE)?  0:32);
-#endif
 	KEY_DS;
 	asm("nop");
 	TRISBCLR=KEYMASK;

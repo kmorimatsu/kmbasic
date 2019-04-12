@@ -1,29 +1,36 @@
 #include "LCDdriver.h"
 
 #if LCD_ALIGNMENT == VERTICAL
-#define WIDTH_X1 30 // 横方向文字数1
-#define WIDTH_X2 40 // 横方向文字数2(6ドットフォント利用時)
-#define WIDTH_Y 40 // 縦方向文字数
-#define ATTROFFSET1 (WIDTH_X1*WIDTH_Y) // VRAM上のカラーパレット格納位置1
-#define ATTROFFSET2 (WIDTH_X2*WIDTH_Y) // VRAM上のカラーパレット格納位置2
-#define G_X_RES 240 // 横方向解像度
-#define G_Y_RES 320 // 縦方向解像度
+	#define WIDTH_X1 30 // 横方向文字数1
+	#define WIDTH_X2 40 // 横方向文字数2(6ドットフォント利用時)
+	#define WIDTH_Y 40 // 縦方向文字数
+	#define ATTROFFSET1 (WIDTH_X1*WIDTH_Y) // VRAM上のカラーパレット格納位置1
+	#define ATTROFFSET2 (WIDTH_X2*WIDTH_Y) // VRAM上のカラーパレット格納位置2
+	#define G_X_RES 240 // 横方向解像度
+	#define G_Y_RES 320 // 縦方向解像度
 #else
-#define WIDTH_X1 40 // 横方向文字数1
-#define WIDTH_X2 52 // 横方向文字数2(6ドットフォント利用時)
-#define WIDTH_Y 30 // 縦方向文字数
-#define ATTROFFSET1 (WIDTH_X1*WIDTH_Y) // VRAM上のカラーパレット格納位置1
-#define ATTROFFSET2 (WIDTH_X2*WIDTH_Y) // VRAM上のカラーパレット格納位置2
-#define G_X_RES 320 // 横方向解像度
-#define G_Y_RES 240 // 縦方向解像度
+	#define WIDTH_X1 40 // 横方向文字数1
+	#define WIDTH_X2 52 // 横方向文字数2(6ドットフォント利用時)
+	#define WIDTH_Y 30 // 縦方向文字数
+	#define ATTROFFSET1 (WIDTH_X1*WIDTH_Y) // VRAM上のカラーパレット格納位置1
+	#define ATTROFFSET2 (WIDTH_X2*WIDTH_Y) // VRAM上のカラーパレット格納位置2
+	#define G_X_RES 320 // 横方向解像度
+	#define G_Y_RES 240 // 縦方向解像度
 #endif
 
 // 入力ボタンのポート、ビット定義
 #define KEYPORT PORTB
-#define KEYDOWN  0x0004
-#define KEYLEFT  0x0008
-#define KEYRIGHT 0x0010
-#define KEYUP    0x0020
+#if LCD_ALIGNMENT == VERTICAL
+	#define KEYDOWN  0x0004
+	#define KEYLEFT  0x0008
+	#define KEYRIGHT 0x0010
+	#define KEYUP    0x0020
+#else
+	#define KEYLEFT  0x0004
+	#define KEYUP    0x0008
+	#define KEYDOWN  0x0010
+	#define KEYRIGHT 0x0020
+#endif
 #define KEYSTART 0x0080
 #define KEYFIRE  0x0100
 #define KEYMASK (KEYSTART | KEYFIRE | KEYUP | KEYDOWN | KEYLEFT | KEYRIGHT)
