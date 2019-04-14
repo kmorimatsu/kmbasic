@@ -280,6 +280,7 @@ char* fput_statement();
 char* fputc_statement();
 char* fremove_statement();
 char* label_statement();
+char* exec_statement();
 
 char* function(void);
 char* str_function(void);
@@ -375,6 +376,8 @@ void stop_timer();
 char* usetimer_statement();
 char* timer_statement();
 char* timer_function();
+char* coretimer_statement();
+char* coretimer_function();
 char* interrupt_statement();
 
 /* Error messages */
@@ -443,7 +446,7 @@ char* interrupt_statement();
 /* Macros */
 
 // Lables as 31 bit integer
-#define LABEL_INIT 0x0007df55
+#define LABEL_INIT 0x0008727b
 
 // Skip blanc(s) in source code
 #define next_position() while(g_source[g_srcpos]==' ') {g_srcpos++;}
@@ -493,6 +496,7 @@ char* interrupt_statement();
 #define INTERRUPT_INKEY     3
 #define INTERRUPT_MUSIC     4
 #define INTERRUPT_WAVE      5
+#define INTERRUPT_CORETIMER 6
 
 extern int g_interrupt_flags;
 extern int g_int_vector[];

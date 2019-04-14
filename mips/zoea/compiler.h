@@ -446,7 +446,7 @@ char* interrupt_statement();
 /* Macros */
 
 // Lables as 31 bit integer
-#define LABEL_INIT 0x0007df55
+#define LABEL_INIT 0x0008727b
 
 // Skip blanc(s) in source code
 #define next_position() while(g_source[g_srcpos]==' ') {g_srcpos++;}
