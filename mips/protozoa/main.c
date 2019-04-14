@@ -251,12 +251,10 @@ int main(void){
 
 	wait60thsec(60); //1秒待ち
 
-/*
 	// 実行中HEXファイル名がHEXFILEと一致した場合はエディタ起動
 	appname=(char*)FILENAME_FLASH_ADDRESS;
 	s=HEXFILE;
 	while(*s++==*appname++) if(*s==0) texteditor(); //テキストエディター呼び出し
-*/
 
 	// 実行中HEXファイル名の「.HEX」を「.BAS」に置き換えてBASファイルを実行
 	appname=(char*)FILENAME_FLASH_ADDRESS;

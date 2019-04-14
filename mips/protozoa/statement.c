@@ -1741,7 +1741,6 @@ static const void* statement_list[]={
 	"TIMER ",timer_statement,
 	"INTERRUPT ",interrupt_statement,
 	"IDLE",idle_statement,
-	"CORETIMER",coretimer_statement,
 	// List of additional statements follows
 	ADDITIONAL_STATEMENTS
 };

@@ -391,10 +391,6 @@ char* getdir_function(){
 	return 0;
 }
 
-char* exec_function(){
-	return exec_statement();
-}
-
 char* float_constant(float val){
 	volatile int i;
 	((float*)(&i))[0]=val;
@@ -601,8 +597,6 @@ static const void* int_func_list[]={
 	"NEW(",new_function,
 	"SETDIR(",setdir_function,
 	"TIMER(",timer_function,
-	"EXEC(",exec_function,
-	"CORETIMER(",coretimer_function,
 	// Additional functions follow
 	ADDITIONAL_INT_FUNCTIONS
 };

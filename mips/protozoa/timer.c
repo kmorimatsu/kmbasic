@@ -33,7 +33,6 @@ static const void* interrupt_list[]={
 	"INKEY",    (void*)INTERRUPT_INKEY,
 	"MUSIC",    (void*)INTERRUPT_MUSIC,
 	"WAVE",     (void*)INTERRUPT_WAVE,
-	"CORETIMER",(void*)INTERRUPT_CORETIMER,
 	ADDITIONAL_INTERRUPT_FUNCTIONS
 };
 #define NUM_INTERRUPT_TYPES ((sizeof(interrupt_list)/sizeof(interrupt_list[0]))/2)
@@ -70,7 +69,6 @@ void stop_timer(){
 	IEC0bits.T1IE=0;
 	// Disable interrupt
 	IEC0bits.CS1IE=0;
-	IEC0bits.CTIE=0;
 }
 
 /*
@@ -155,40 +153,6 @@ char* timer_function(){
 	check_obj_space(2);
 	g_object[g_objpos++]=0x3C020000|((i>>16)&0x0000FFFF); // lui v0,xxxx
 	g_object[g_objpos++]=0x8C420000|((i-0x8000)&0xFFFF);  // lw  v0,xxxx(v0)
-	return 0;
-}
-
-/*
-	Coretimer implementaion
-*/
-
-#pragma interrupt CTHandler IPL2SOFT vector 0
-void CTHandler(void){
-	// Clear CT interrupt flag
-	IFS0bits.CTIF=0;
-	// Raise TIMER interrupt flag
-	raise_interrupt_flag(INTERRUPT_CORETIMER);
-}
-
-char* coretimer_function(){
-	check_obj_space(1);
-	g_object[g_objpos++]=0x40024800; // mfc0 v0,Count
-	return 0;
-}
-
-void lib_coretimer(){
-	// CT interrupt: priority 2
-	IPC0bits.CTIP=2;
-	IPC0bits.CTIS=0;
-	IEC0bits.CTIE=1;
-}
-
-char* coretimer_statement(){
-	char* err;
-	err=get_value();
-	if (err) return err;
-	// 0x40825800: mtc0 v0,Compare
-	call_quicklib_code(lib_coretimer,0x40825800);
 	return 0;
 }
 
