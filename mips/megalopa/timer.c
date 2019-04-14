@@ -70,6 +70,7 @@ void stop_timer(){
 	IEC0bits.T1IE=0;
 	// Disable interrupt
 	IEC0bits.CS1IE=0;
+	IEC0bits.CTIE=0;
 }
 
 /*
