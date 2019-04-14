@@ -63,20 +63,19 @@ void err_peri_not_init(void);
 
 #define ADDITIONAL_STR_FUNCTIONS
 #define ADDITIONAL_RESERVED_VAR_NAMES \
-	0x00015045, /*OUT*/ \
-	0x01975e81, /*OUT8H*/ \
-	0x01975e85, /*OUT8L*/ \
-	0x01975d7a, /*OUT16*/ \
-	0x0001015b, /*IN*/ \
-	0x0007dde1, /*IN8H*/ \
-	0x0007dde5, /*IN8L*/ \
-	0x0007dcda, /*IN16*/ \
-	0x05f0a740, /*ANALOG*/ \
-	0x00015596, /*PWM*/ \
-	0x45f58f5d, /*SERIAL*/ \
-	0x000163c6, /*SPI*/ \
-	0x00012de4, /*I2C*/
-
+	0x000154aa, /*OUT*/ \
+	0x01c5c253, /*OUT8H*/ \
+	0x01c5c257, /*OUT8L*/ \
+	0x01c5c145, /*OUT16*/ \
+	0x00010164, /*IN*/ \
+	0x000870fd, /*IN8H*/ \
+	0x00087101, /*IN8L*/ \
+	0x00086fef, /*IN16*/ \
+	0x06bd06f3, /*ANALOG*/ \
+	0x00015a46, /*PWM*/ \
+	0x502e9b15, /*SERIAL*/ \
+	0x0001694a, /*SPI*/ \
+	0x00013077, /*I2C*/ \
 
 #define EXTRA_MASK 0x003F
 #define EXTRA_STEP 0x0001

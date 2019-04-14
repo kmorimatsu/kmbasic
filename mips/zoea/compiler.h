@@ -519,5 +519,9 @@ extern int g_int_vector[];
 #define div36_32(x) div32(x,0xe38e38e4,37)
 #define rem36_32(x) (x-36*div36_32(x))
 
+// Divide by 37 (valid for 31 bits)
+#define div37_31(x) div32(x,0xdd67c8a7,37)
+#define rem37_31(x) (x-37*div37_31(x))
+
 // Check if within RAM
 #define withinRAM(x) ((&RAM[0])<=((char*)(x)) && ((char*)(x))<(&RAM[RAMSIZE]))

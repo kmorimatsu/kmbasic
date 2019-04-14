@@ -313,7 +313,7 @@ char* label_statement(){
 	char* err;
 	char b1;
 	b1=g_source[g_srcpos];
-	if (b1<'A' || 'Z'<b1) return ERR_SYNTAX; // Number is not allowed here.
+	if ('0'<=b1 && b1<='9') return ERR_SYNTAX; // Number is not allowed here.
 	err=get_label();
 	if (err) return err;
 	// Check existing label with the same name here.

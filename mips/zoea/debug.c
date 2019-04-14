@@ -228,14 +228,11 @@ static const char initext[]=
 "#PRINT\n";
 
 static const char bastext[]=
-"I=1:WHILE I<=10\n"
-"I=I+1:WEND\n"
+"CLS\n"
+"LABEL TEST_:i=0/0\n"
 "\n"
-"I=1:DO\n"
-"I=I+1:LOOP UNTIL I=11\n"
 "\n"
-"FOR I=1 TO 10\n"
-"NEXT\n"
+"\n"
 "\n"
 "\n"
 "\n";

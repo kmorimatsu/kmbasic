@@ -26,10 +26,10 @@
 	#define KEYRIGHT 0x0010
 	#define KEYUP    0x0020
 #else
-	#define KEYLEFT  0x0004
-	#define KEYUP    0x0008
-	#define KEYDOWN  0x0010
-	#define KEYRIGHT 0x0020
+	#define KEYRIGHT 0x0004
+	#define KEYDOWN  0x0008
+	#define KEYUP    0x0010
+	#define KEYLEFT  0x0020
 #endif
 #define KEYSTART 0x0080
 #define KEYFIRE  0x0100
