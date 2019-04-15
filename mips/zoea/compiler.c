@@ -163,7 +163,7 @@ char* compile_line(void){
 			printstr(resolve_label(g_line));
 			return ERR_MULTIPLE_LABEL;
 		}
-		if (!g_nolinenum) {
+		if (!g_option_nolinenum) {
 			check_obj_space(1);
 			g_object[g_objpos++]=0x34160000|g_line; //ori         s6,zero,xxxx;
 		}

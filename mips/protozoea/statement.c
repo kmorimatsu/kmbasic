@@ -1568,7 +1568,9 @@ char* option_statement(){
 	while(1){
 		next_position();
 		if (nextCodeIs("NOLINENUM")) {
-			g_nolinenum=1;
+			g_option_nolinenum=1;
+		} else if (nextCodeIs("FASTFIELD")) {
+			g_option_fastfield=1;
 		} else {
 			return ERR_SYNTAX;
 		}

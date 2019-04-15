@@ -213,7 +213,7 @@ extern int g_var_mem[ALLOC_BLOCK_NUM];
 extern unsigned short g_var_pointer[ALLOC_BLOCK_NUM];
 extern unsigned short g_var_size[ALLOC_BLOCK_NUM];
 extern char g_temp_area_used;
-extern char g_nolinenum;
+extern char g_option_nolinenum;
 extern int* g_heap_mem;
 extern int g_max_mem;
 extern char g_disable_break;
@@ -225,6 +225,8 @@ extern int g_long_name_var_num;
 extern char g_music_active;
 extern int g_class;
 extern int g_compiling_class;
+extern unsigned char g_num_classes;
+extern char g_option_fastfield;
 extern int g_temp;
 
 /* Prototypes */
@@ -412,13 +414,14 @@ char* interrupt_statement();
 #define ERR_NO_INIT (char*)(g_err_str[28])
 
 /* compile data type numbers */
-#define CMPDATA_RESERVED 0
-#define CMPDATA_USEVAR   1
-#define CMPDATA_CLASS    2
-#define CMPDATA_FIELD    3
-#define CMPDATA_STATIC   4
-#define CMPDATA_UNSOLVED 5
-#define CMPDATA_TEMP     6
+#define CMPDATA_RESERVED  0
+#define CMPDATA_USEVAR    1
+#define CMPDATA_CLASS     2
+#define CMPDATA_FIELD     3
+#define CMPDATA_STATIC    4
+#define CMPDATA_UNSOLVED  5
+#define CMPDATA_TEMP      6
+#define CMPDATA_FASTFIELD 7
 // Sub types follow
 #define CMPTYPE_PUBLIC_FIELD 0
 #define CMPTYPE_PRIVATE_FIELD 1

@@ -228,32 +228,28 @@ static const char initext[]=
 "#PRINT\n";
 
 static const char bastext[]=
+"USECLASS CLASS1,CLASS2\n"
+"OPTION FASTFIELD\n"
 "CLS\n"
-"LABEL TEST_:i=0/0\n"
-"\n"
-"\n"
+"o=new(CLASS1)\n"
+"o.T1=123\n"
+"print o.T2()\n"
 "\n"
 "\n"
 "\n"
 "\n";
 
 static const char class1text[]=
-"STATIC T1\n"
-"useclass CLASS2\n"
-"method T3\n"
-" return CLASS2::T2\n"
-"method T5\n"
-" return T1\n"
+"FIELD T1\n"
+"method T2\n"
+" return T1+100\n"
 "\n"
 "\n";
 
 static const char class2text[]=
-"STATIC T2\n"
-"useclass CLASS1\n"
-"method T4\n"
-" return CLASS1::T1\n"
+"FIELD T3\n"
 "method T6\n"
-" return T2\n"
+" return T3+100\n"
 "\n"
 "\n"
 "\n"

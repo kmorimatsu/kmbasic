@@ -5,7 +5,7 @@
    http://hp.vector.co.jp/authors/VA016157/
 */
 
-#define SYSVER1 "Protozoa"
+#define SYSVER1 "Protozoea"
 #define SYSVER2 "1.3"
 #define BASVER "KM-1208"
 
