@@ -207,11 +207,12 @@ void videowidth(int width){
 
 int lib_system(int a0, int a1 ,int v0, int a3, int g_gcolor, int g_prev_x, int g_prev_y){
 	switch(a0){
-		// Version info
+		// Version info etc
 		case 0: return (int)SYSVER1;
 		case 1: return (int)SYSVER2;
 		case 2: return (int)BASVER;
 		case 3: return (int)FILENAME_FLASH_ADDRESS;
+		case 4: return (int)CPU_CLOCK_HZ;
 		// Display info
 		case 20: return twidth;
 		case 21: return WIDTH_Y;
