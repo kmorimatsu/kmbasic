@@ -124,7 +124,8 @@ int compile_and_link_file(char* buff,char* appname){
 		}
 
 		// Option initialization(s)
-		g_nolinenum=0;
+		g_option_nolinenum=0;
+		g_option_fastfield=0;
 
 		// Compile the file
 		err=compile_file();
@@ -181,6 +182,7 @@ int compile_and_link_class(char* buff,int class){
 	int data[2];
 	unsigned short cwd_id;
 	int* record;
+	g_num_classes++;
 	while(1){
 		// Begin compiling class
 		err=begin_compiling_class(class);
@@ -250,7 +252,10 @@ int compile_and_link_class(char* buff,int class){
 
 int compile_and_link_main_file(char* buff,char* appname){
 	int i;
+	// Reset parameters
 	g_compiling_class=0;
+	g_num_classes=0;
+	// Compile the file
 	i=compile_and_link_file(buff,appname);
 	if (i) return i;
 	return 0;
