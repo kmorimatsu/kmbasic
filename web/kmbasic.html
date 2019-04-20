@@ -19,7 +19,7 @@
 	<script type="text/javascript" src="./audio.js"></script>
 	<script type="text/javascript" src="./music.js"></script>
 	<script type="text/javascript" src="./basic.js"></script>
-	<title>KM-BASIC web v0.5 for KM-1120</title>
+	<title>KM-BASIC web v0.6 for KM-1120</title>
 </head>
 <body>
 	<div class="side" id="side">
@@ -34,12 +34,12 @@
 		<div class="buttons">
 			<input id="RUNbutton" value="Run" type="button" onclick="button.run();"/>
 			<input id="STOPbutton" value="Stop" type="button" onclick="button.stop();" /><br />
-			<input id="Sbutton" value="S" type="button" onmousedown="button.start(1);" onmouseout="button.start(0);" onmouseup="button.start(0);"/>
-			<input id="Fbutton" value="F" type="button" onmousedown="button.fire(1);" onmouseout="button.fire(0);" onmouseup="button.fire(0);"/>
-			<input id="Lbutton" value="←" type="button" onmousedown="button.left(1);" onmouseout="button.left(0);" onmouseup="button.left(0);"/>
-			<input id="Ubutton" value="↑" type="button" onmousedown="button.up(1);" onmouseout="button.up(0);" onmouseup="button.up(0);"/>
-			<input id="Dbutton" value="↓" type="button" onmousedown="button.down(1);" onmouseout="button.down(0);" onmouseup="button.down(0);"/>
-			<input id="Rbutton" value="→" type="button" onmousedown="button.right(1);" onmouseout="button.right(0);" onmouseup="button.right(0);"/>
+			<input id="Sbutton" value="S" type="button" ontouchstart="button.start(1);" ontouchend="button.start(0);" onmousedown="button.start(1);" onmouseout="button.start(0);" onmouseup="button.start(0);"/>
+			<input id="Fbutton" value="F" type="button" ontouchstart="button.fire(1);" ontouchend="button.fire(0);" onmousedown="button.fire(1);" onmouseout="button.fire(0);" onmouseup="button.fire(0);"/>
+			<input id="Lbutton" value="←" type="button" ontouchstart="button.left(1);" ontouchend="button.left(0);" onmousedown="button.left(1);" onmouseout="button.left(0);" onmouseup="button.left(0);"/>
+			<input id="Ubutton" value="↑" type="button" ontouchstart="button.up(1);" ontouchend="button.up(0);" onmousedown="button.up(1);" onmouseout="button.up(0);" onmouseup="button.up(0);"/>
+			<input id="Dbutton" value="↓" type="button" ontouchstart="button.down(1);" ontouchend="button.down(0);" onmousedown="button.down(1);" onmouseout="button.down(0);" onmouseup="button.down(0);"/>
+			<input id="Rbutton" value="→" type="button" ontouchstart="button.right(1);" ontouchend="button.right(0);" onmousedown="button.right(1);" onmouseout="button.right(0);" onmouseup="button.right(0);"/>
 		</div>
 		<!-- BASIC Source -->
 		<textarea id="basicsource" class="basicsource">REM Write BASIC code here.</textarea>

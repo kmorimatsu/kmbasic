@@ -261,6 +261,7 @@ basic.compileCommand=function(command){
 		case "USEPCG":
 		case "PCG":
 		case "DEBUG":
+		case "LOG":
 			return [{"command": m[1], "param": m[2]}];
 		case "LABEL":
 			if (!m[2].match(/^[A-Z][A-Z0-9]{0,5}$/)) {
@@ -597,6 +598,10 @@ basic.run=function(){
 	runenv.DEBUG=function(param){
 		param=runenv.eval(param);
 		alert(""+(typeof param)+"\n"+param);
+	};
+	runenv.LOG=function(param){
+		param=runenv.eval(param);
+		console.log(""+(typeof param)+": "+param);
 	};
 	// Functions
 	var INT=function(param){
