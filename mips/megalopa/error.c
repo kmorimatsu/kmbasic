@@ -41,6 +41,7 @@ const char* g_err_str[]={
 	"Valid only in class file",
 	"Invalid in class file",
 	"INIT method does not exist",
+	"ERR_OPTION_CLASSCODE",
 };
 
 char* resolve_label(int s6){

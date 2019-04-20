@@ -569,7 +569,7 @@ char* _obj_field(char mode){
 			// Record wasn't found
 			fastfield=0;
 		} else if (1!=g_num_classes && !g_option_fastfield) {
-			// No fast field opttion
+			// No fast field option
 			fastfield=0;
 		} else if (!(record[0]&0xffff)) {
 			// The same field name used twice at the different positions

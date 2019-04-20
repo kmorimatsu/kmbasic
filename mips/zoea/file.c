@@ -16,6 +16,7 @@
 static FSFILE* g_fhandle;
 static char* g_fbuff;
 static int g_size;
+static int g_filepoint;
 
 char* init_file(char* buff,char* appname){
 	// Open file
@@ -29,11 +30,16 @@ char* init_file(char* buff,char* appname){
 	g_fileline=0;
 	g_source=buff;
 	g_srcpos=0;
+	g_filepoint=0;
 	return 0;
 }
 
 void close_file(){
 	FSfclose(g_fhandle);
+}
+
+int filepoint(){
+	return g_filepoint+g_srcpos;
 }
 
 void read_file(int blocklen){
@@ -51,6 +57,7 @@ void read_file(int blocklen){
 		// Shift buffer and source position 256 bytes.
 		for(i=0;i<256;i++) g_fbuff[i]=g_fbuff[i+256];
 		g_srcpos-=256;
+		g_filepoint+=256;
 	}
 	// Read 512 or 256 bytes from SD card.
 	g_size=512-blocklen+FSfread((void*)&g_fbuff[512-blocklen],1,blocklen,g_fhandle);
@@ -83,7 +90,12 @@ char* compile_file(){
 	// Compile line by line
 	while (g_size==512) {
 		err=compile_line();
-		if (err) return err;
+		if (err==ERR_OPTION_CLASSCODE) {
+			g_size=g_srcpos=0;
+			break;
+		} else if (err) {
+			return err;
+		}
 		// Maintain at least 256 characters in cache.
 		if (256<=g_srcpos) read_file(256);
 	}
@@ -92,7 +104,11 @@ char* compile_file(){
 	// Compile last few lines.
 	while(g_srcpos<g_size-1){
 		err=compile_line();
-		if (err) return err;
+		if (err==ERR_OPTION_CLASSCODE) {
+			break;
+		} else if (err) {
+			return err;
+		}
 	}
 	// Add "DATA 0" and "END" statements.
 	if (g_compiling_class) {

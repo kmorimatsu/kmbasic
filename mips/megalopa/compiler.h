@@ -240,6 +240,7 @@ int endOfStatement();
 
 char* init_file(char* buff,char* appname);
 void close_file();
+int filepoint();
 void read_file(int blocklen);
 char* compile_file();
 int compile_and_link_file(char* buff,char* appname);
@@ -412,6 +413,7 @@ char* interrupt_statement();
 #define ERR_INVALID_NON_CLASS (char*)(g_err_str[26])
 #define ERR_INVALID_CLASS (char*)(g_err_str[27])
 #define ERR_NO_INIT (char*)(g_err_str[28])
+#define ERR_OPTION_CLASSCODE (char*)(g_err_str[29])
 
 /* compile data type numbers */
 #define CMPDATA_RESERVED  0

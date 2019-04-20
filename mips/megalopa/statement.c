@@ -1571,6 +1571,16 @@ char* option_statement(){
 			g_option_nolinenum=1;
 		} else if (nextCodeIs("FASTFIELD")) {
 			g_option_fastfield=1;
+		} else if (nextCodeIs("CLASSCODE")) {
+			if (g_compiling_class) {
+				// Do nothing. Do not try to rewind the object,
+				// as an exception will occur if you will do this.
+				// There are many things to reset if the created
+				// object will be deleted.
+			} else {
+				// End the compile of main file
+				return ERR_OPTION_CLASSCODE;
+			}
 		} else {
 			return ERR_SYNTAX;
 		}
