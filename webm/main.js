@@ -12,49 +12,61 @@ display.all();
 system.reset('MACHIKAM.HEX');
 
 main=function(maxspeed){
+	if (get.debug) {
+		dom.getElement("debug").style.display="block";
+		return;
+	}
+	maxspeed=parseInt(maxspeed);
 	var speed=1;
 	var time=new Date().getTime();
+	var lastint=time;
 	setTimeout(function(){
 			var i;
 			var from=time;
 			var to=time=new Date().getTime();
 			var msec=to-from;
-			if (msec<50 && speed<maxspeed) {
+			if (msec<20 && speed<maxspeed) {
 				speed<<=1;
 				if (maxspeed<speed) speed=maxspeed;
-			} else if (100<msec) {
+			} else if (50<msec) {
 				speed>>=1;
 				if (speed<1) speed=1;
 			}
 			// Show the current speed
-			if (msec<25) {
-				dom.getElement('speed').innerHTML='clock: '+parseInt(speed*1000/15)+' hz';
+			if (msec<20) {
+				dom.getElement('speed').innerHTML='clock: '+parseInt(speed*1000/5)+' hz';
 			} else {
 				dom.getElement('speed').innerHTML='clock: '+parseInt(speed*(1000/msec))+' hz';
 			}
-			// Refresh somethings every 15 msec
-			system.waitFlag=0;
-			display.all();
 			// Execute MIPS32 1/4 times
 			// This corresponds to using NTSC video in MachiKania
-			for(i=0;i<(speed>>2);i++){
+			var exectimes=speed>>2;
+			for(i=0;i<exectimes;i++){
 				mips32.exec();
 				if (system.waitFlag) break;
 			}
+			system.waitFlag=0;
 			// Increment core timer for remaining time
-			mips32.incTimer(speed*15/msec-i);
-			// Interrupts
-			// Always for T2 (vector 9) and CS0 (vector 1)
-			SFR.IFS0SET((1<<9)+(1<<1));
-			interrupt.check();
-			
+			mips32.incTimer(speed*5/msec-i);
+			// Things to do every 16 msec
+			if (16<time-lastint) {
+				// Refresh somethings every 15 msec
+				display.all();
+				// Interrupts
+				// Always for T2 (vector 9) and CS0 (vector 1)
+				SFR.IFS0SET((1<<9)+(1<<1));
+				interrupt.check();
+				// Decide next time
+				if (100>time-lastint) lastint-=16;
+				else lastint=time;
+			}
 			// Check halt state
 			if (mips32.checkHalt()||system.exceptionFlag) {
 				mips32.logreg();
 			} else {
-				setTimeout(arguments.callee,15);
+				setTimeout(arguments.callee,5);
 			}
-		},15);
+		},5);
 };
 steprun=function(codenum){
 	var i;
@@ -96,5 +108,4 @@ breakat=function(breakpoint){
 	dom.log(t);
 };
 
-main(1431818);// 95.4545 MHz (1431818 times in 15 msec)
-
+main(95454.533*5);// 95.4545 MHz

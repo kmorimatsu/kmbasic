@@ -73,14 +73,14 @@ mips32.GPR.unsigned=function(num){
 	return num;
 };
 mips32.HI=function(){
-	if (arguments.length=0) {
+	if (0==arguments.length) {
 		return this.GPR(32);
 	} else {
 		this.GPR.set(32,arguments[0]);
 	}
 };
 mips32.LO=function(){
-	if (arguments.length=0) {
+	if (0==arguments.length) {
 		return this.GPR(33);
 	} else {
 		this.GPR.set(33,arguments[0]);
@@ -137,7 +137,9 @@ mips32.logreg=function(){
 	text+=" $gp:"+hex8(this.GPR(28));
 	text+=" $sp:"+hex8(this.GPR(29));
 	text+=" $fp:"+hex8(this.GPR(30));
-	text+=" $ra:"+hex8(this.GPR(31));
+	text+=" $ra:"+hex8(this.GPR(31))+"\n";
+	text+="$hi:"+hex8(this.HI());
+	text+=" $lo:"+hex8(this.LO());
 	text+="\n";
 	this.log(text);
 }
@@ -207,19 +209,14 @@ mips32.exec=function(){
 	var code;
 	code=system.read32(this.pc);
 	this.pc+=4;
-	if (typeof code =="undefined") {
-		this.exception("Executing undefined flash area");
-		return;
-	}
 	// _mnh__ _rs__ _rt__ _rd__ _sa__ _mnl__
 	//        _____________index____________
 	//                    _____signed16_____
 	// xxxxxx xxxxx xxxxx xxxxx xxxxx xxxxxx
 	this.code=code;
 	this.index=code&0x3ffffff;
-	this.unsigned16=code&0xffff;
-	this.signed16=code&0xffff;
-	if (0x8000<this.signed16) this.signed16-=0x10000;
+	this.signed16=this.unsigned16=code&0xffff;
+	if (0x8000<=this.signed16) this.signed16-=0x10000;
 	this.mnl=code&0x3f;
 	code>>=6;
 	this.sa=code&0x1f;

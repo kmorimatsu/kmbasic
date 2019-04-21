@@ -95,16 +95,16 @@ system.read32=function(address){
 	if (RAM_BASE_ADDRESS<=address && address<=RAM_END_ADDRESS) {
 		return  this.unsigned32(this.RAM[(address-RAM_BASE_ADDRESS)>>2]);
 	}
+	if (SFR_BASE_ADDRESS<=address && address<=SFR_END_ADDRESS) {
+		var sfr=SFR[address];
+		return  this.unsigned32(sfr());
+	}
 	if (BOOT_BASE_ADDRESS<=address && address<=BOOT_END_ADDRESS) {
 		return  this.unsigned32(this.BOOT[(address-BOOT_BASE_ADDRESS)>>2]);
 	}
 	if (CONFIG_BASE_ADDRESS<=address && address<=CONFIG_END_ADDRESS) {
 		this.log("Read from config address: 0x"+address.toString(16));
 		return 0;
-	}
-	if (SFR_BASE_ADDRESS<=address && address<=SFR_END_ADDRESS) {
-		var sfr=SFR[address];
-		return  this.unsigned32(sfr());
 	}
 	this.exception("Memory access (reading) error: 0x"+address.toString(16));
 };
@@ -199,44 +199,6 @@ system.write16=function(address,data){
 	}
 	this.write32(address&0xFFFFFFFC,data);
 };
-system.interrupt=function(){
-/*
-       vector  IF       IE      Priority    Subprioriy
-	CS0  1   IFS0<1>  IEC0<1>  IPC0<12:10> IPC0<9:8>
-	CS1  2   IFS0<2>  IEC0<2>  IPC0<20:18> IPC0<17:16>
-	T1   4   IFS0<4>  IEC0<4>  IPC1<4:2>   IPC1<1:0>
-	T2   8   IFS0<9>  IEC0<9>  IPC2<4:2>   IPC2<1:0>
-	T3   12  IFS0<14> IEC0<14> IPC3<4:2>   IPC3<1:0>
-	T4   16  IFS0<19> IEC0<19> IPC4<4:2>   IPC4<1:0>
-	T5   20  IFS0<24> IEC0<24> IPC5<4:2>   IPC5<1:0>
-
-When servicing an interrupt, the processor core pushes the Program Counter into the Exception Program Counter (EPC) register in the CPU and sets the Exception Level (EXL) bit (Status<1>) in the CPU. The EXL bit disables further interrupts until the application explicitly re-enables them by clearing the EXL bit, and then it branches to the vector address calculated from the presented vector number.
-The INTSTAT register contains the interrupt request location and SRIPL<2:0> bits (INTSTAT<10:8>) of the current pending interrupt. This may not be the same as the interrupt that caused the core to diverge from normal execution.
-The processor returns to the previous state when the Exception Return (ERET) instruction is executed. The ERET instruction clears the EXL bit, restores the Program Counter, and reverts the current shadow set to the previous one.
-
-
-Following rountine can be installed to mips32 object for all possible interruption types.
-
-
-*/
-	if ((SFR.IFS0() & 0x02) && (SFR.IEC0() & 0x02)) {
-		// CS0
-		system.interruptHandler(1);
-	}
-	if ((SFR.IFS0() & 0x04) && (SFR.IEC0() & 0x04)) {
-		// CS0
-		system.interruptHandler(2);
-	}
-};
-system.interruptHandler=function(vector){
-	if (mips32.interrupt) {
-		// Only an interrupt is valid.
-		// Wait until previous one will be done.
-		return;
-	}
-	mips32.interrupt=1;
-	mips32.EPC=mips32.pc;
-};
 system.log=function(text){
 	text+=" at PC:0x"+(mips32.pc-4).toString(16);
 	try{
@@ -272,7 +234,16 @@ system.init=function(){
 	coretimer.interrupt=function(){
 		SFR.IFS0SET(0x01);
 	};
-	// Initialize interrupt
+	/* Initialize interrupt
+	       vector  IF       IE      Priority    Subprioriy
+		CS0  1   IFS0<1>  IEC0<1>  IPC0<12:10> IPC0<9:8>
+		CS1  2   IFS0<2>  IEC0<2>  IPC0<20:18> IPC0<17:16>
+		T1   4   IFS0<4>  IEC0<4>  IPC1<4:2>   IPC1<1:0>
+		T2   8   IFS0<9>  IEC0<9>  IPC2<4:2>   IPC2<1:0>
+		T3   12  IFS0<14> IEC0<14> IPC3<4:2>   IPC3<1:0>
+		T4   16  IFS0<19> IEC0<19> IPC4<4:2>   IPC4<1:0>
+		T5   20  IFS0<24> IEC0<24> IPC5<4:2>   IPC5<1:0>
+	*/
 	new interrupt(0,'IFS0<0>','IEC0<0>','IPC0<4:2>',  'IPC0<1:0>'  ); // CT
 	new interrupt(1,'IFS0<1>','IEC0<1>','IPC0<12:10>','IPC0<9:8>'  ); // CS0
 	new interrupt(2,'IFS0<2>','IEC0<2>','IPC0<20:18>','IPC0<17:16>'); // CS1

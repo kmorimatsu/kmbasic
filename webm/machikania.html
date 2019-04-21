@@ -36,12 +36,12 @@
 		<div class="buttons">
 			<span id="speed">clock: 0 hz</span>
 		</div>
-		<div class="buttons" style="display:none;">
+		<div id="debug" class="buttons" style="display:none;">
 			<!-- debug -->
 			<input id="stepnum" value="100000" type="text" />
 			<input id="step" value="STEP" type="button" onclick="steprun(dom.getElement('stepnum').value);"/><br />
 			<input id="goto" value="GOTO" type="button" onclick="breakat(dom.getElement('breakat').value);"/>
-			<input id="breakat" value="0x9D019494" type="text" /><br />
+			<input id="breakat" value="0x9D007000" type="text" /><br />
 			<input id="step" value="Regsters" type="button" onclick=";mips32.logreg();"/>
 		</div>
 	</div>
