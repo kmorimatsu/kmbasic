@@ -39,7 +39,7 @@ int lastMem(){
 void init(void){
 	// Starting message
 	newLine();
-	printStr("BASIC KM-1011\x0D");
+	printStr("BASIC KM-1013\x0D");
 	newLine();
 	// Determine the first address of available area.
 	if (!g_firstMemory) {

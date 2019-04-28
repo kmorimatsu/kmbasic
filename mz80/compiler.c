@@ -48,16 +48,22 @@ char compileStr(){
 		copyInt((int)source);
 		while(source[0]!='"') source++;
 		source++;
-	} else if (source[0]=='$') {
+	} else if (source[1]=='$') {
+		source[0];// This line is required (don't know why).
+		source++;
 		source++;
 		if (b<'A' || 'Z'<b) return 1;
-		source++;
 		copyCode("\xED\x5B",2); // LD DE,(XXXX)
 		((int*)object)[1]=(int)(&g_variables)+2*(int)(b-'A');
 		object+=4;
 		if (skipBlank()=='(') {
 			// A$(xx) or A$(xx,yy) (substring function)
-			return funcSubStr();
+			source++;
+			b=funcSubStr();
+			if (b) return b;
+			if (skipBlank()!=')') return 1;
+			source++;
+			return 0;
 		}
 	} else {
 		// Functions
@@ -848,6 +854,8 @@ char compile (){
 			e=compileIf();
 			continue;
 		} else if (command("REM")) {
+			// Skip until 0x00
+			while(source[0]) source++;
 			break;
 		} else {
 			sfunc=(char(*)())seekList(slist);

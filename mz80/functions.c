@@ -206,9 +206,9 @@ char funcSgn(){
 	char e;
 	e=compileInt();
 	if (e) return e;
-	// LD A,D; OR E; JR Z,end:; LD A,80; AND D; JR Z,skip:; LD A,FF; skip: LD D,A; LD E,A; end:
-	copyCode("\x7A\xB3\x28\x09\x3E\x80\xA2\x28\x02\x3E\xFF\x57\x5F",13);
-	object+=13;
+	// LD A,D; OR E; JR Z,end:; LD A,80; AND D; LD DE,0001; JR Z,end:; DEC DE; DEC DE; end:
+	copyCode("\x7A\xB3\x28\x0A\x3E\x80\xA2\x11\x01\x00\x28\x02\x1B\x1B",14);
+	object+=14;
 	return 0;
 }
 char funcNot(){

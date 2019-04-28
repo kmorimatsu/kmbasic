@@ -24,7 +24,7 @@
 	unsigned int g_objPointer, g_ifElseJump, g_seed;
 	unsigned int g_temp161, g_temp162;
 	char* g_tempStr;
-	char* source;
+	volatile char* source;
 	char* object;
 #else
 	extern const char g_strBuff[];
@@ -33,7 +33,7 @@
 	extern unsigned int g_objPointer, g_ifElseJump, g_seed;
 	extern unsigned int g_temp161, g_temp162;
 	extern char* g_tempStr;
-	extern char* source;
+	volatile extern char* source;
 	extern char* object;
 #endif
 
