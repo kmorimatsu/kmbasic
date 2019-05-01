@@ -61,7 +61,14 @@ void init_timer(){
 	IPC0bits.CS0IP=3;
 	IPC0bits.CS0IS=0;
 	IFS0bits.CS0IF=0;
-	IEC0bits.CS0IE=1;	
+	IEC0bits.CS0IE=1;
+	// Reset IPL in Status register of coprocessor
+	asm volatile("di");
+	asm volatile("ehb");
+	asm volatile("mfc0 $t0,$12,0");
+	asm volatile("ins $t0,$zero,1,15");
+	asm volatile("mtc0 $t0,$12,0");
+	asm volatile("ei");
 }
 
 void stop_timer(){
