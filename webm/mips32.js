@@ -684,7 +684,7 @@ mips32.ADDI=function(){
 	var rs=this.GPR.signed(this.rs);
 	var val16=this.signed16;
 	var rt=rs+val16;
-	if ((rd&0x80000000)==(rs&0x80000000)) {
+	if ((rt&0x80000000)==(rs&0x80000000)) {
 		this.GPR.set(this.rt,rt);
 	} else {
 		this.exception("IntegerOverflow");

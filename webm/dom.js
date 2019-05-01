@@ -5,14 +5,14 @@
 ************************************/
 
 window.onkeydown=function(e){
-// 	i8255.keydown(e.keyCode);
-//	return false;
-	return true;
+ 	keyboard.keydown(e.keyCode);
+	if (get.debug) return true;
+	else return false;
 };
 window.onkeyup=function(e){
-// 	i8255.keyup(e.keyCode);
-//	return false;
-	return true;
+ 	keyboard.keyup(e.keyCode);
+	if (get.debug) return true;
+	else return false;
 };
 
 dom=Object();

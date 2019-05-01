@@ -79,7 +79,97 @@ system.loadFlash=function(address,data){
 	} else {
 		this.exception("Writing to wrong flash address: 0x"+address.toString(16));
 	}
-}
+};
+system.html5functions=function(address,type){
+/*
+	#define HTML5FUNC_ps2readkey "0"
+	#define HTML5FUNC_FindFirst  "1"
+	#define HTML5FUNC_FindNext   "2"
+	#define HTML5FUNC_FSmkdir    "3"
+	#define HTML5FUNC_FSgetcwd   "4"
+	#define HTML5FUNC_FSchdir    "5"
+	#define HTML5FUNC_FSfwrite   "6"
+	#define HTML5FUNC_FSremove   "7"
+	#define HTML5FUNC_FSrename   "8"
+	#define HTML5FUNC_FSfeof     "9"
+	#define HTML5FUNC_FSftell    "10"
+	#define HTML5FUNC_FSfseek    "11"
+	#define HTML5FUNC_FSfread    "12"
+	#define HTML5FUNC_FSrewind   "13"
+	#define HTML5FUNC_FSfclose   "14"
+	#define HTML5FUNC_FSfopen    "15"
+	#define HTML5FUNC_FSInit     "16"
+*/
+	if (address!=mips32.pc) return;
+	var v0;
+	var a0=parseInt(mips32.GPR(4));
+	var a1=parseInt(mips32.GPR(5));
+	var a2=parseInt(mips32.GPR(6));
+	var a3=parseInt(mips32.GPR(7));
+	if (a0<0) a0+=0x100000000;
+	if (a1<0) a1+=0x100000000;
+	if (a2<0) a2+=0x100000000;
+	if (a3<0) a3+=0x100000000;
+	switch(type){
+		case 0: // ps2readkey
+			v0=keyboard.ps2readkey(a0,a1,a2,a3);
+			break;
+		case 1: // FindFirst  
+			v0=filesystem.FindFirst(a0,a1,a2,a3);
+			break;
+		case 2: // FindNext   
+			v0=filesystem.FindNext(a0,a1,a2,a3);
+			break;
+		case 3: // FSmkdir    
+			v0=filesystem.FSmkdir(a0,a1,a2,a3);
+			break;
+		case 4: // FSgetcwd   
+			v0=filesystem.FSgetcwd(a0,a1,a2,a3);
+			break;
+		case 5: // FSchdir    
+			v0=filesystem.FSchdir(a0,a1,a2,a3);
+			break;
+		case 6: // FSfwrite   
+			v0=filesystem.FSfwrite(a0,a1,a2,a3);
+			break;
+		case 7: // FSremove   
+			v0=filesystem.FSremove(a0,a1,a2,a3);
+			break;
+		case 8: // FSrename   
+			v0=filesystem.FSrename(a0,a1,a2,a3);
+			break;
+		case 9: // FSfeof     
+			v0=filesystem.FSfeof(a0,a1,a2,a3);
+			break;
+		case 10: // FSftell    
+			v0=filesystem.FSftell(a0,a1,a2,a3);
+			break;
+		case 11: // FSfseek    
+			v0=filesystem.FSfseek(a0,a1,a2,a3);
+			break;
+		case 12: // FSfread    
+			v0=filesystem.FSfread(a0,a1,a2,a3);
+			break;
+		case 13: // FSrewind   
+			v0=filesystem.FSrewind(a0,a1,a2,a3);
+			break;
+		case 14: // FSfclose   
+			v0=filesystem.FSfclose(a0,a1,a2,a3);
+			break;
+		case 15: // FSfopen    
+			v0=filesystem.FSfopen(a0,a1,a2,a3);
+			break;
+		case 16: // FSInit     
+			v0=filesystem.FSInit(a0,a1,a2,a3);
+			break;
+		default:
+			this.exception("Wrong HTML5 request: "+type);
+			break;
+	}
+	// Set $v0 return value
+	v0=parseInt(v0);
+	mips32.GPR.set(2,v0);
+};
 system.unsigned32=function(num){
 	return (num<0) ? (num+0x100000000):num;
 };
@@ -90,6 +180,7 @@ system.read32=function(address){
 		this.exception("Address Error (read32)");
 	}
 	if (PROGRAM_FLASH_BASE_ADDRESS<=address && address<=PROGRAM_FLASH_END_ADDRESS) {
+		if (0x9D006080==address) this.html5functions(address,mips32.GPR(2));
 		return this.unsigned32(this.FLASH[(address-PROGRAM_FLASH_BASE_ADDRESS)>>2]);
 	}
 	if (RAM_BASE_ADDRESS<=address && address<=RAM_END_ADDRESS) {
@@ -218,13 +309,17 @@ system.exception=function(text){
 	this.log(text);
 	this.exceptionFlag=1;
 	this.waitFlag=1;
-	//this.reset();
 };
 // Initialization routine.
 system.init=function(){
 	// Initialize pointers for used by HTML5
-	this.pTVRAM    = this.read32(0x9d006000);
-	this.pFontData = this.read32(0x9d006004);
+	this.pTVRAM        = this.read32(0x9d006000);
+	this.pFontData     = this.read32(0x9d006004);
+	this.pHtml5data    = this.read32(0x9d006008);
+	this.pPs2keystatus = this.read32(0x9d00600C); // volatile unsigned char ps2keystatus[256];
+	this.pVkey         = this.read32(0x9d006010); // volatile unsigned short vkey;
+	this.pGFileArray0  = this.read32(0x9d006014); // FSFILE gFileArray[]
+	this.pGFileArray1  = this.read32(0x9d006018); // FSFILE gFileArray[]
 	// Initialize timers
 	this.initTimer(timer1,1,'IFS0<4>');
 	this.initTimer(timer2,2,'IFS0<9>');

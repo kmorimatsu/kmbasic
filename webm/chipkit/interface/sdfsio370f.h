@@ -12,58 +12,16 @@
 
 typedef struct
 {
-    unsigned write :1;
-    unsigned read :1;
-    unsigned FileWriteEOF :1;
-}FILEFLAGS;
-
-typedef struct
-{
-    BYTE* buffer;
-    DWORD firsts;
-    DWORD fat;
-    DWORD root;
-    DWORD data;
-    WORD  maxroot;
-    DWORD maxcls;
-    DWORD sectorSize;
-    DWORD fatsize;
-    BYTE  fatcopy;
-    BYTE  SecPerClus;
-    BYTE  type;
-    BYTE  mount;
-} __attribute__ ((packed)) DISK;
-
-typedef struct
-{
-    DISK*     dsk;
-    DWORD     cluster;
-    DWORD     ccls;
-    WORD      sec;
-    WORD      pos;
-    DWORD     seek;
-    DWORD     size;
-    FILEFLAGS flags;
-    WORD      time;
-    WORD      date;
-    char      name[11];
-    WORD      entry;
-    WORD      chk;
-    WORD      attributes;
-    DWORD     dirclus;
-    DWORD     dirccls;
+    unsigned long seek;
+    unsigned long size;
+    unsigned char flags;
+    char          name[11];
 } FSFILE;
 typedef struct
 {
-    char          filename[13];
-    unsigned char attributes;
     unsigned long filesize;
-    unsigned long timestamp;
-    unsigned int  entry;
-    char          searchname[13];
-    unsigned char searchattr;
-    unsigned long cwdclus;
-    unsigned char initialized;
+    unsigned char attributes;   // 0 or ATTR_DIRECTORY(0x10)
+    char          filename[13];
 } SearchRec;
 
 int FindFirst (const char * fileName, unsigned int attr, SearchRec * rec);
