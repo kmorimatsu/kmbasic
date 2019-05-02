@@ -20,8 +20,11 @@ void pre_run(void);
 void post_run(void);
 void err_peri_not_init(void);
 
-// 30 or 40 characters per line for Zoea
-#define printcomma() printstr("          "+rem10_32((unsigned int)(cursor-TVRAM)))
+// KEYPORT mask for available button inputs
+#define KEYPORTMASK (KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE)
+
+// 30, 36, 40, 48, 64, 80 characters per line for Megalopa
+void printcomma(void);
 
 // Check break key or buttons when executing BASIC code.
 // In PS/2 mode, detect ctrl-break.

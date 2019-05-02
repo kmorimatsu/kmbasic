@@ -11,6 +11,32 @@
 #include "api.h"
 
 /*
+	void printcomma();
+	30, 36, 40, 48, 64, 80 characters per line for Megalopa
+*/
+
+void printcomma(void){
+	switch(textmode){
+		case TMODE_STDTEXT: // 36
+			// Every 9 characters
+			printstr("         "+rem9_32((unsigned int)(cursor-TVRAM)));
+			break;
+		case TMODE_WIDETEXT: // 48
+		case TMODE_WIDETEXT6dot: // 64
+			// Every 8 characters
+			printstr("        "+rem8_32((unsigned int)(cursor-TVRAM)));
+			break;
+		case TMODE_T30: // 30
+		case TMODE_T40: // 40
+		case TMODE_MONOTEXT: // 80
+		default:
+			// Every 10 characters
+			printstr("          "+rem10_32((unsigned int)(cursor-TVRAM)));
+			break;
+	}
+}
+
+/*
 	int readbuttons();
 	Read the tact switches.
 	For Zoea, disable PS/2 keyboard and enable tact switches, then read.
