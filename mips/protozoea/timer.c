@@ -42,6 +42,9 @@ int g_interrupt_flags;
 // Jump address when interrupt
 int g_int_vector[NUM_INTERRUPT_TYPES];
 
+// Current button status
+static int g_keys_interrupt;
+
 /*
 	Initialize and termination
 */
@@ -56,6 +59,7 @@ void init_timer(){
 	g_timer=0;
 	// Disable interrupt
 	IEC0bits.CS1IE=0;
+	IFS0bits.CS1IF=0;
 	for(i=0;i<NUM_INTERRUPT_TYPES;i++) g_int_vector[i]=0;
 	// CS0 interrupt every 1/60 sec (triggered by Timer2)
 	IPC0bits.CS0IP=3;
@@ -69,6 +73,8 @@ void init_timer(){
 	asm volatile("ins $t0,$zero,1,15");
 	asm volatile("mtc0 $t0,$12,0");
 	asm volatile("ei");
+	// The other initialization(s)
+	g_keys_interrupt=-1;
 }
 
 void stop_timer(){
@@ -330,9 +336,7 @@ const int* g_keystatus=(int*)&ps2keystatus[0];
 
 #pragma interrupt CS0Handler IPL3SOFT vector 1
 void CS0Handler(void){
-	static int s_keys=-1;
-	static char s_inkey=0;
-	int i;
+	int keys;
 	IFS0bits.CS0IF=0;
 	// Call music function
 	if (g_music_active) musicint();
@@ -341,21 +345,21 @@ void CS0Handler(void){
 		// Raise DRAWCOUNT interrupt flag
 		raise_interrupt_flag(INTERRUPT_DRAWCOUNT);
 		// Check buttons
-		if (0<=s_keys && s_keys!=(KEYPORT&(KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE))) {
+		if (inPS2MODE()) {
+			keys=readbuttons();
+			ps2mode();
+		} else {
+			keys=readbuttons();
+		}
+		keys=keys  & (KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE);
+		if (0<=g_keys_interrupt && g_keys_interrupt!=keys) {
 			// Raise KEYS interrupt flag
 			raise_interrupt_flag(INTERRUPT_KEYS);
 		}
-		s_keys=KEYPORT&(KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE);
-		// Check PS/2 keyboard down
+		g_keys_interrupt=keys;
+		// Check PS/2 keyboard input
 		if (g_int_vector[INTERRUPT_INKEY]) {
-			for(i=0;i<64;i++){
-				if (g_keystatus[i]) {
-					// Raise INKEY interrupt flag
-					if (!s_inkey) raise_interrupt_flag(INTERRUPT_INKEY);
-					break;
-				}
-			}
-			s_inkey=(i==64) ? 0:1;
+			if (keycodeExists()) raise_interrupt_flag(INTERRUPT_INKEY);
 		}
 	}
 }

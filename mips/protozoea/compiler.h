@@ -125,6 +125,7 @@ enum libs{
 	LIB_SETDIR         =LIB_STEP*51,
 	LIB_SETDIRFUNC     =LIB_STEP*52,
 	LIB_GETDIR         =LIB_STEP*53,
+	LIB_READKEY        =LIB_STEP*54,
 	LIB_DEBUG          =LIB_STEP*127,
 };
 
@@ -515,6 +516,10 @@ extern int g_int_vector[];
 // Division macro for unsigned long
 // Valid for 31 bits for all cases and 32 bits for some cases
 #define div32(x,y,z) ((((unsigned long long)((unsigned long)(x)))*((unsigned long long)((unsigned long)(y))))>>(z))
+
+// Divide by 8 (valid for 32 bits)
+#define div8_32(x) (((unsigned long)(x))>>3)
+#define rem8_32(x) ((x)&0x07)
 
 // Divide by 9 (valid for 32 bits)
 #define div9_32(x) div32(x,0xe38e38e4,35)

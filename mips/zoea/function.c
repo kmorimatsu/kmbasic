@@ -395,6 +395,11 @@ char* exec_function(){
 	return exec_statement();
 }
 
+char* readkey_function(){
+	call_lib_code(LIB_READKEY);
+	return 0;
+}
+
 char* float_constant(float val){
 	volatile int i;
 	((float*)(&i))[0]=val;
@@ -603,6 +608,7 @@ static const void* int_func_list[]={
 	"TIMER(",timer_function,
 	"EXEC(",exec_function,
 	"CORETIMER(",coretimer_function,
+	"READKEY(",readkey_function,
 	// Additional functions follow
 	ADDITIONAL_INT_FUNCTIONS
 };
