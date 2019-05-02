@@ -12,6 +12,9 @@ display.all();
 system.reset('MACHIKAM.HEX');
 
 main=function(maxspeed,breakpoint){
+	// Show display every 40 msec (25 frames/sec)
+	display.show(40);
+	// Preare for MIPS32
 	maxspeed=parseInt(maxspeed);
 	breakpoint=parseInt(breakpoint);
 	var speed=1;
@@ -48,7 +51,6 @@ main=function(maxspeed,breakpoint){
 			// Things to do every 16 msec
 			if (16<time-lastint) {
 				// Refresh somethings every 15 msec
-				display.all();
 				// Interrupts
 				// Always for T2 (vector 9) and CS0 (vector 1)
 				SFR.IFS0SET((1<<9)+(1<<1));

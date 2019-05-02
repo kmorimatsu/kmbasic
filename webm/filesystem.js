@@ -410,8 +410,15 @@ filesystem.FSchdir=function(path){
 	}
 };
 filesystem.FSremove=function(fileName){
-//int FSremove (const char * fileName);
-alert('remove');
+	//int FSremove (const char * fileName);
+	// Check file name
+	fileName=this.checkFileName(this.toString(fileName));
+	if (typeof this.curdir[fileName]=='string') {
+		delete this.curdir[fileName];
+		return 0;
+	} else {
+		return -1;
+	}
 };
 filesystem.FSrename=function(fileName,fo){
 //int FSrename (const char * fileName, FSFILE * fo);

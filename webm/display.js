@@ -46,3 +46,9 @@ display.all=function(){
 		}
 	}
 };
+display.show=function(msec){
+	setTimeout(function(){
+			display.all();
+			setTimeout(arguments.callee,msec);
+		},msec);
+};
