@@ -172,3 +172,8 @@ unsigned char ps2readkey();
 void ps2mode(); // PS/2を有効にする
 void buttonmode(); // ボタンを有効にする
 #define inPS2MODE() ((LATA&2)>>1) // モード確認用マクロ。PS/2モードの場合1、ボタンモードの場合0を返す
+
+// Macro(s) follows(s)
+extern unsigned short * volatile keycodebufp1; //キーコード書き込み先頭ポインタ
+extern unsigned short * volatile keycodebufp2; //キーコード読み出し先頭ポインタ
+#define keycodeExists() (keycodebufp1!=keycodebufp2)

@@ -176,3 +176,5 @@ unsigned char ps2readkey();
 #define buttonmode() (0)
 //#define inPS2MODE() ((LATA&2)>>1) // モード確認用マクロ。PS/2モードの場合1、ボタンモードの場合0を返す
 #define inPS2MODE() (0)
+//#define keycodeExists() (keycodebufp1!=keycodebufp2)
+#define keycodeExists() (0)
