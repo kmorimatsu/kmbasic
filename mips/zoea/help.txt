@@ -206,6 +206,8 @@ KEYS([x])
 		KEYRIGHT: 8
 		KEYSTART: 16
 		KEYFIRE:  32
+	Type Zでこの機能を使うと、INKEY割り込みやREADKEY()等のキーボードを利
+	用した機能が使えなくなる事に注意。Type Mでは、その限りではない。
 LEN(x$)
 	文字列の長さを返す。
 MUSIC()
@@ -566,7 +568,9 @@ INTERRUPT xxx,yyy[,z1[,z2 ... ]]
 		DRAWCOUNT
 			1/60秒毎の割り込み。
 		KEYS
-			ボタンの押下状態が変化した時。
+			ボタンの押下状態が変化した時。Type Zでこの機能を使うと、INKEY割り込
+			みやREADKEY()、INKEY()等のキーボードを利用した機能が使えなくなる事に
+			注意。Type Mでは、その限りではない。
 		INKEY
 			キーボード押下時。READKEY()関数と組み合わせて使う。
 		MUSIC

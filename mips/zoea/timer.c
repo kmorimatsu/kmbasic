@@ -60,6 +60,7 @@ void init_timer(){
 	// Disable interrupt
 	IEC0bits.CS1IE=0;
 	IFS0bits.CS1IF=0;
+	g_interrupt_flags=0;
 	for(i=0;i<NUM_INTERRUPT_TYPES;i++) g_int_vector[i]=0;
 	// CS0 interrupt every 1/60 sec (triggered by Timer2)
 	IPC0bits.CS0IP=3;
@@ -74,7 +75,7 @@ void init_timer(){
 	asm volatile("mtc0 $t0,$12,0");
 	asm volatile("ei");
 	// The other initialization(s)
-	g_keys_interrupt=-1;
+	g_keys_interrupt=-2;
 }
 
 void stop_timer(){
@@ -345,18 +346,21 @@ void CS0Handler(void){
 		// Raise DRAWCOUNT interrupt flag
 		raise_interrupt_flag(INTERRUPT_DRAWCOUNT);
 		// Check buttons
-		if (inPS2MODE()) {
+		if (g_int_vector[INTERRUPT_KEYS]) {
 			keys=readbuttons();
-			ps2mode();
-		} else {
-			keys=readbuttons();
+			keys&=(KEYSTART | KEYFIRE | KEYUP | KEYDOWN | KEYLEFT | KEYRIGHT);
+			if (g_keys_interrupt<-1) {
+				g_keys_interrupt++;
+			} else if (g_keys_interrupt<0) {
+				g_keys_interrupt=keys;
+			} else {
+				if (g_keys_interrupt!=keys) {
+					// Raise KEYS interrupt flag
+					raise_interrupt_flag(INTERRUPT_KEYS);
+				}
+				g_keys_interrupt=keys;
+			}
 		}
-		keys=keys  & (KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE);
-		if (0<=g_keys_interrupt && g_keys_interrupt!=keys) {
-			// Raise KEYS interrupt flag
-			raise_interrupt_flag(INTERRUPT_KEYS);
-		}
-		g_keys_interrupt=keys;
 		// Check PS/2 keyboard input
 		if (g_int_vector[INTERRUPT_INKEY]) {
 			if (keycodeExists()) raise_interrupt_flag(INTERRUPT_INKEY);
