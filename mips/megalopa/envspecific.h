@@ -20,9 +20,6 @@ void pre_run(void);
 void post_run(void);
 void err_peri_not_init(void);
 
-// KEYPORT mask for available button inputs
-#define KEYPORTMASK (KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE)
-
 // 30, 36, 40, 48, 64, 80 characters per line for Megalopa
 void printcomma(void);
 

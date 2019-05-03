@@ -44,7 +44,6 @@ int g_int_vector[NUM_INTERRUPT_TYPES];
 
 // Current button status
 static int g_keys_interrupt;
-static unsigned short g_keys_mask;
 
 /*
 	Initialize and termination
@@ -346,13 +345,18 @@ void CS0Handler(void){
 		// Raise DRAWCOUNT interrupt flag
 		raise_interrupt_flag(INTERRUPT_DRAWCOUNT);
 		// Check buttons
-		keys=KEYPORT&KEYPORTMASK;
-		if (g_keys_mask==KEYPORTMASK && 0<=g_keys_interrupt && g_keys_interrupt!=keys) {
+		if (inPS2MODE()) {
+			keys=readbuttons();
+			ps2mode();
+		} else {
+			keys=readbuttons();
+		}
+		keys=keys  & (KEYUP|KEYDOWN|KEYLEFT|KEYRIGHT|KEYSTART|KEYFIRE);
+		if (0<=g_keys_interrupt && g_keys_interrupt!=keys) {
 			// Raise KEYS interrupt flag
 			raise_interrupt_flag(INTERRUPT_KEYS);
 		}
 		g_keys_interrupt=keys;
-		g_keys_mask=KEYPORTMASK;
 		// Check PS/2 keyboard input
 		if (g_int_vector[INTERRUPT_INKEY]) {
 			if (keycodeExists()) raise_interrupt_flag(INTERRUPT_INKEY);
