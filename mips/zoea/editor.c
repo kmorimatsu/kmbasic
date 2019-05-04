@@ -4,14 +4,10 @@
    http://www.ze.em-net.ne.jp/~kenken/index.html
 */
 
-/*
-	This file is shared by Megalopa and Zoea
-*/
-
 #include <xc.h>
 #include "api.h"
 #include "editor.h"
-#include "keyinput.h"
+#include "interface/keyinput.h"
 #include "compiler.h"
 #include "main.h"
 

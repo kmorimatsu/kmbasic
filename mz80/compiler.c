@@ -48,16 +48,22 @@ char compileStr(){
 		copyInt((int)source);
 		while(source[0]!='"') source++;
 		source++;
-	} else if (source[0]=='$') {
+	} else if (source[1]=='$') {
+		source[0];// This line is required (don't know why).
+		source++;
 		source++;
 		if (b<'A' || 'Z'<b) return 1;
-		source++;
 		copyCode("\xED\x5B",2); // LD DE,(XXXX)
 		((int*)object)[1]=(int)(&g_variables)+2*(int)(b-'A');
 		object+=4;
 		if (skipBlank()=='(') {
 			// A$(xx) or A$(xx,yy) (substring function)
-			return funcSubStr();
+			source++;
+			b=funcSubStr();
+			if (b) return b;
+			if (skipBlank()!=')') return 1;
+			source++;
+			return 0;
 		}
 	} else {
 		// Functions
@@ -752,9 +758,6 @@ char* statementList(){
 //		.dw #_compileDebug
 //		.ascii "DEBUG"
 //		.db 0x00
-		.dw #_compileIf
-		.ascii "IF "
-		.db 0x00
 		.dw #_compileBye
 		.ascii "BYE"
 		.db 0x00
@@ -803,7 +806,7 @@ char* statementList(){
 		.dw #_compileClear
 		.ascii "CLEAR"
 		.db 0x00
-		.dw #_compileReturn
+		.dw #_compileRet
 		.ascii "RETURN"
 		.db 0x00
 		.dw #_compileGosub
@@ -847,7 +850,12 @@ char compile (){
 	g_ifElseJump=0;
 	slist=statementList();
 	while (skipBlank()!=0x00) {
-		if (command("REM")) {
+		if (command("IF ")) {
+			e=compileIf();
+			continue;
+		} else if (command("REM")) {
+			// Skip until 0x00
+			while(source[0]) source++;
 			break;
 		} else {
 			sfunc=(char(*)())seekList(slist);

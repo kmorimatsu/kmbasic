@@ -160,8 +160,9 @@ extern volatile unsigned short vkey; //仮想キーコード
 extern unsigned char lockkey; // 初期化時にLockキーの状態指定。下位3ビットが<CAPSLK><NUMLK><SCRLK>
 extern unsigned char keytype; // キーボードの種類。0：日本語109キー、1：英語104キー
 
-int ps2init(); // PS/2ライブラリ関連初期化。正常終了0、エラーで-1を返す
-unsigned char shiftkeys(); // SHIFT関連キーの押下状態を返す
+//int ps2init(); // PS/2ライブラリ関連初期化。正常終了0、エラーで-1を返す
+//unsigned char shiftkeys(); // SHIFT関連キーの押下状態を返す
+#define shiftkeys() 0 // SHIFT関連キーの押下状態を返す
 unsigned char ps2readkey();
 // 入力された1つのキーのキーコードをグローバル変数vkeyに格納（押されていなければ0を返す）
 // 下位8ビット：キーコード
@@ -169,6 +170,11 @@ unsigned char ps2readkey();
 // 英数・記号文字の場合、戻り値としてASCIIコード（それ以外は0を返す）
 
 // PIC32MX1xx/2xx版のキーボードとボタンの排他利用システムで使用する関数、マクロ
-void ps2mode(); // PS/2を有効にする
-void buttonmode(); // ボタンを有効にする
-#define inPS2MODE() ((LATA&2)>>1) // モード確認用マクロ。PS/2モードの場合1、ボタンモードの場合0を返す
+//void ps2mode(); // PS/2を有効にする
+#define ps2mode() (0)
+//void buttonmode(); // ボタンを有効にする
+#define buttonmode() (0)
+//#define inPS2MODE() ((LATA&2)>>1) // モード確認用マクロ。PS/2モードの場合1、ボタンモードの場合0を返す
+#define inPS2MODE() (0)
+//#define keycodeExists() (keycodebufp1!=keycodebufp2)
+#define keycodeExists() (0)

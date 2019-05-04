@@ -5,6 +5,7 @@
    kmorimatsu@users.sourceforge.jp
 */
 
+#define CPU_CLOCK_HZ (g_use_graphic ? 53693175 : 57272720)
 #define PERSISTENT_RAM_SIZE (1024*52)
 
 int readbuttons();
@@ -33,4 +34,4 @@ int lib_system(int a0, int a1 ,int v0, int a3, int g_gcolor, int g_prev_x, int g
 #define ADDITIONAL_INT_FUNCTIONS
 #define ADDITIONAL_STR_FUNCTIONS
 #define ADDITIONAL_RESERVED_VAR_NAMES
-
+#define ADDITIONAL_INTERRUPT_FUNCTIONS
